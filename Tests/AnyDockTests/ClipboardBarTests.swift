@@ -1,8 +1,8 @@
-import AnyDockCore
 import AppKit
 import Testing
 
 @testable import AnyDock
+@testable import AnyDockCore
 
 @MainActor
 private func makeTray(with texts: [String]) -> (
@@ -52,4 +52,31 @@ func barCollapsesForEachOpening() {
   tray.clipboardBar.setExpanded(true, animated: false)
   tray.trayDidClose()
   #expect(!tray.clipboardBar.isExpanded)
+}
+
+@MainActor
+@Test("展开后点击剪贴板标题行会收起，和收起时点整行展开对称")
+func clickingHeaderCollapsesExpandedBar() throws {
+  let bar = ClipboardBar()
+  let window = NSWindow(
+    contentRect: NSRect(x: 0, y: 0, width: 400, height: 200), styleMask: [], backing: .buffered,
+    defer: true)
+  window.contentView?.addSubview(bar)
+  bar.translatesAutoresizingMaskIntoConstraints = false
+  bar.widthAnchor.constraint(equalToConstant: 400).isActive = true
+  bar.update([ClipboardClip(text: "clip", copiedAt: Date())])
+  let click = { (point: NSPoint) in
+    window.contentView?.layoutSubtreeIfNeeded()
+    let location = bar.header.convert(point, to: nil)
+    let event = try #require(
+      NSEvent.mouseEvent(
+        with: .leftMouseDown, location: location, modifierFlags: [], timestamp: 0,
+        windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1,
+        pressure: 1))
+    bar.mouseDown(with: event)
+  }
+  try click(NSPoint(x: bar.title.frame.midX, y: bar.title.frame.midY))
+  #expect(bar.isExpanded)
+  try click(NSPoint(x: bar.title.frame.midX, y: bar.title.frame.midY))
+  #expect(!bar.isExpanded)
 }
