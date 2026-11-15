@@ -37,30 +37,139 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
 
     destination = action("gettext", WFTextActionText=url)
     secret = action("gettext", WFTextActionText=key)
+    def variable(name):
+        return {"Type": "Variable", "VariableName": name}
+
+    def assign(name, value):
+        action("setvariable", WFVariableName=name, WFInput=attachment(value))
+
+    def literal(value):
+        return action("gettext", WFTextActionText=value)
+
+    def condition(value, operator, **parameters):
+        if operator not in {100, 101}:
+            value = action("gettext", WFTextActionText=text(reference=value))
+        group = str(uuid.uuid4()).upper()
+        action("conditional", WFInput={"Type": "Variable", "Variable": attachment(value)},
+               WFCondition=operator, GroupingIdentifier=group, WFControlFlowMode=0, **parameters)
+        return group
+
+    def otherwise(group):
+        action("conditional", GroupingIdentifier=group, WFControlFlowMode=1)
+
+    def end(group):
+        return action("conditional", GroupingIdentifier=group, WFControlFlowMode=2)
+
+    def increment(name):
+        value = action("math", WFInput=attachment(variable(name)), WFMathOperation="+", WFMathOperand=1)
+        assign(name, value)
+
+    def message(parts):
+        value = ""
+        references = {}
+        for part in parts:
+            if isinstance(part, str):
+                value += part
+            else:
+                offset = len(value.encode("utf-16-le")) // 2
+                references[f"{{{offset}, 1}}"] = part
+                value += "\ufffc"
+        return {"Value": {"string": value, "attachmentsByRange": references},
+                "WFSerializationType": "WFTextTokenString"}
+
+    source_group = condition({"Type": "ExtensionInput"}, 101)
+    action("getclipboard")
+    otherwise(source_group)
+    action("getvariable", WFVariable=attachment({"Type": "ExtensionInput"}))
+    source = end(source_group)
+    zero = action("number", WFNumberActionNumber=0)
+    for counter_name in ["Success", "Failure", "Oversize", "Unauthorized", "Unsupported", "Other"]:
+        assign(counter_name, zero)
+    text_sample = literal("AnyDock")
+    text_type = action("getitemtype", WFInput=attachment(text_sample))
+    rich_sample = action("getrichtextfrommarkdown", WFInput=attachment(text_sample))
+    rich_type = action("getitemtype", WFInput=attachment(rich_sample))
+    url_sample = action("url", WFURLActionURL="https://example.invalid")
+    url_type = action("getitemtype", WFInput=attachment(url_sample))
     repeat_group = str(uuid.uuid4()).upper()
-    error_group = str(uuid.uuid4()).upper()
-    empty_group = str(uuid.uuid4()).upper()
-    action("conditional", WFInput={"Type": "Variable", "Variable": attachment({"Type": "ExtensionInput"})},
-           WFCondition=101, GroupingIdentifier=empty_group, WFControlFlowMode=0)
-    action("alert", WFAlertActionTitle="先选择图片", WFAlertActionMessage="请在照片中选图，再通过分享菜单运行「发送到 Mac」。", WFAlertActionCancelButtonShown=False)
-    action("exit")
-    action("conditional", GroupingIdentifier=empty_group, WFControlFlowMode=2)
-    action("repeat.each", WFInput=attachment({"Type": "ExtensionInput"}),
+    action("repeat.each", WFInput=attachment(source),
            GroupingIdentifier=repeat_group, WFControlFlowMode=0)
+    item = variable("Repeat Item")
+    item_type = action("getitemtype", WFInput=attachment(item))
+    item_name = action("getitemname", WFInput=attachment(item), GetWebPageTitle=False)
+    encoded_name = action("urlencode", WFInput=text(reference=item_name), WFEncodeMode="Encode")
+    assign("Filename", encoded_name)
+    assign("Kind", literal("file"))
+    assign("Mime", literal("application/octet-stream"))
+    assign("Body", item)
+    for reference, kind, mime in [
+        (url_type, "link", "text/uri-list"),
+        (text_type, "text", "text/plain; charset=utf-8"),
+        (rich_type, "text", "text/plain; charset=utf-8"),
+    ]:
+        group = condition(item_type, 4, WFConditionalActionString=text(reference=reference))
+        assign("Kind", literal(kind))
+        assign("Mime", literal(mime))
+        assign("Filename", literal(""))
+        converted = action("gettext", WFTextActionText=text(reference=item))
+        assign("Body", converted)
+        end(group)
+    size = action("properties.files", WFInput=attachment(variable("Body")),
+                  WFContentItemPropertyName="File Size")
+    numeric_size = action("math", WFInput=attachment(size), WFMathOperation="+", WFMathOperand=0)
+    ratio = action("math", WFInput=attachment(numeric_size), WFMathOperation="÷", WFMathOperand=50_000_001)
+    oversize = action("round", WFInput=attachment(ratio), WFRoundTo="Ones Place", WFRoundMode="Always Round Down")
+    size_group = condition(oversize, 4, WFConditionalActionString="0")
     response = action(
         "downloadurl", WFURL=text(reference=destination), WFHTTPMethod="POST",
         WFHTTPBodyType="File", WFFormValues=dictionary([]),
-        WFRequestVariable=attachment({"Type": "Variable", "VariableName": "Repeat Item"}),
-        WFHTTPHeaders=dictionary([("X-SnapDock-Key", text(reference=secret))]),
+        WFRequestVariable=attachment(variable("Body")),
+        WFHTTPHeaders=dictionary([
+            ("X-SnapDock-Key", text(reference=secret)),
+            ("X-AnyDock-Type", text(reference=variable("Kind"))),
+            ("X-AnyDock-Filename", text(reference=variable("Filename"))),
+            ("Content-Type", text(reference=variable("Mime"))),
+        ]),
     )
+    status = action("getvalueforkey", WFDictionaryKey="status", WFInput=attachment(response))
+    success_group = condition(status, 4, WFConditionalActionString="saved")
+    increment("Success")
+    otherwise(success_group)
+    increment("Failure")
     error = action("getvalueforkey", WFDictionaryKey="error", WFInput=attachment(response))
-    action("conditional", WFInput={"Type": "Variable", "Variable": attachment(error)}, WFCondition=100,
-           GroupingIdentifier=error_group, WFControlFlowMode=0)
-    action("alert", WFAlertActionTitle="发送失败", WFAlertActionMessage="Mac 没有保存这张图片。请检查接收地址、密钥和 Mac 的设置。", WFAlertActionCancelButtonShown=False)
-    action("exit")
-    action("conditional", GroupingIdentifier=error_group, WFControlFlowMode=2)
+    error_groups = []
+    for code, counter in [(413, "Oversize"), (401, "Unauthorized"), (415, "Unsupported")]:
+        group = condition(error, 4, WFConditionalActionString=str(code))
+        error_groups.append(group)
+        increment(counter)
+        otherwise(group)
+    increment("Other")
+    for group in reversed(error_groups):
+        end(group)
+    end(success_group)
+    otherwise(size_group)
+    increment("Failure")
+    increment("Oversize")
+    end(size_group)
     action("repeat.each", GroupingIdentifier=repeat_group, WFControlFlowMode=2)
-    action("notification", WFNotificationActionTitle="随手坞", WFNotificationActionBody="图片已发送到 Mac", WFNotificationActionSound=False)
+    assign("Summary", action("gettext", WFTextActionText=message(["成功 ", variable("Success"), " 项"])))
+    failure_group = condition(variable("Failure"), 4, WFConditionalActionString="0")
+    otherwise(failure_group)
+    assign("Details", literal(""))
+    assign("Separator", literal(""))
+    for counter, label in [("Oversize", "超过 50MB "), ("Unauthorized", "密钥无效 "),
+                           ("Unsupported", "格式不支持 "), ("Other", "其他错误 ")]:
+        group = condition(variable(counter), 4, WFConditionalActionString="0")
+        otherwise(group)
+        assign("Details", action("gettext", WFTextActionText=message([
+            variable("Details"), variable("Separator"), label, variable(counter), " 项"])))
+        assign("Separator", literal("，"))
+        end(group)
+    assign("Summary", action("gettext", WFTextActionText=message([
+        variable("Summary"), "，失败 ", variable("Failure"), " 项：", variable("Details")])))
+    end(failure_group)
+    action("notification", WFNotificationActionTitle="随手坞",
+           WFNotificationActionBody=message([variable("Summary")]), WFNotificationActionSound=False)
     return {
         "WFWorkflowName": name,
         "WFWorkflowClientVersion": "2700",
@@ -68,7 +177,11 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
         "WFWorkflowMinimumClientVersionString": "900",
         "WFWorkflowIcon": {"WFWorkflowIconStartColor": 4282601983, "WFWorkflowIconGlyphNumber": 59799},
         "WFWorkflowTypes": ["ActionExtension"],
-        "WFWorkflowInputContentItemClasses": ["WFImageContentItem"],
+        "WFWorkflowInputContentItemClasses": [
+            "WFImageContentItem", "WFStringContentItem", "WFRichTextContentItem",
+            "WFURLContentItem", "WFSafariWebPageContentItem", "WFGenericFileContentItem",
+            "WFPDFContentItem", "WFAVAssetContentItem",
+        ],
         "WFWorkflowOutputContentItemClasses": [],
         "WFWorkflowHasShortcutInputVariables": True,
         "WFWorkflowHasOutputFallback": False,

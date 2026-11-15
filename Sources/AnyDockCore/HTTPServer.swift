@@ -12,7 +12,7 @@ public actor HTTPServer {
 
   public func start(
     configuration: ReceiverConfiguration,
-    onReceive: @escaping @Sendable (ReceivedImage) async -> Void,
+    onReceive: @escaping @Sendable (ReceivedItem) async -> Void,
     onFailure: @escaping @Sendable (String) async -> Void
   ) async throws {
     stop()
@@ -73,7 +73,7 @@ public actor HTTPServer {
 
   private func accept(
     _ connection: NWConnection, generation current: UUID, configuration: ReceiverConfiguration,
-    onReceive: @escaping @Sendable (ReceivedImage) async -> Void
+    onReceive: @escaping @Sendable (ReceivedItem) async -> Void
   ) {
     guard current == generation, connections.count < 4 else {
       connection.cancel()
@@ -87,7 +87,7 @@ public actor HTTPServer {
 
   private func serve(
     _ connection: NWConnection, id: UUID, configuration: ReceiverConfiguration,
-    onReceive: @Sendable (ReceivedImage) async -> Void
+    onReceive: @Sendable (ReceivedItem) async -> Void
   ) async {
     let timeout = Task {
       try await Task.sleep(for: .seconds(45))
@@ -105,7 +105,7 @@ public actor HTTPServer {
         let data = try await Self.receive(connection)
         guard !data.isEmpty else { throw HTTPFailure(400, "Incomplete Request") }
         if let request = try decoder.append(data) {
-          let image = try await store.save(request.body, in: configuration.directory)
+          let image = try await store.save(request, in: configuration.directory)
           await onReceive(image)
           try await Self.send(
             connection, status: 201, reason: "Created", body: "{\"ok\":true,\"status\":\"saved\"}")

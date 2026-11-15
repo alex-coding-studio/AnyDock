@@ -28,7 +28,7 @@ final class ConfigurationStore {
       throw CocoaError(.fileWriteUnknown)
     }
     let directory = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
-      "Downloads/SnapDock", isDirectory: true)
+      "Downloads/AnyDock", isDirectory: true)
     let configuration = ReceiverConfiguration(
       directory: directory, token: bytes.map { String(format: "%02x", $0) }.joined())
     try save(configuration)

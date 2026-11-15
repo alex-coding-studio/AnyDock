@@ -97,6 +97,41 @@ func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     #expect(json["status"] as? String == "saved")
     let image = try #require(try await store.list(in: directory).first)
     #expect(try Data(contentsOf: image.url) == request.httpBody)
+    request.setValue("text", forHTTPHeaderField: "X-AnyDock-Type")
+    request.setValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    request.httpBody = Data("hello".utf8)
+    let (_, textResponse) = try await URLSession.shared.data(for: request)
+    #expect((textResponse as? HTTPURLResponse)?.statusCode == 201)
+    request.httpBody = Data([255])
+    let (_, invalidResponse) = try await URLSession.shared.data(for: request)
+    #expect((invalidResponse as? HTTPURLResponse)?.statusCode == 415)
+    request.setValue("file", forHTTPHeaderField: "X-AnyDock-Type")
+    request.setValue("notes.json", forHTTPHeaderField: "X-AnyDock-Filename")
+    request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+    request.httpBody = Data("{}".utf8)
+    let (_, fileResponse) = try await URLSession.shared.data(for: request)
+    #expect((fileResponse as? HTTPURLResponse)?.statusCode == 201)
+    let saved = try await store.list(in: directory)
+    #expect(Set(saved.map(\.kind)) == Set([.image, .text, .file]))
+    let partialResponse = try await Task.detached {
+      let header =
+        "POST /upload HTTP/1.1\r\nContent-Length: 100\r\nX-SnapDock-Key: test-key\r\n"
+        + "X-AnyDock-Type: file\r\nX-AnyDock-Filename: partial.bin\r\n\r\nabc"
+      return try sendRawRequest(port: port, data: Data(header.utf8))
+    }.value
+    #expect(partialResponse.hasPrefix("HTTP/1.1 400"))
+    let oversizedResponse = try await Task.detached {
+      let header =
+        "POST /upload HTTP/1.1\r\nContent-Length: 50000001\r\n"
+        + "X-SnapDock-Key: test-key\r\n\r\n"
+      return try sendRawRequest(port: port, data: Data(header.utf8))
+    }.value
+    #expect(oversizedResponse.hasPrefix("HTTP/1.1 413"))
+    #expect(try await store.list(in: directory).count == saved.count)
+    let contents = try FileManager.default.contentsOfDirectory(
+      atPath: directory.appendingPathComponent("Files").path)
+    #expect(contents.count == 1)
+    #expect(contents.allSatisfy { $0.hasPrefix("AnyDock-") })
     await server.stop()
     await conflicting.stop()
   } catch {

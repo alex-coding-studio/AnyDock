@@ -14,7 +14,7 @@ Read `ProjectContext.md` and `docs/PROJECT.md` before changing the project. Thes
 ## Protect user data
 
 - Never overwrite or automatically delete received originals. Changing receive folders must not move or delete existing files.
-- User-requested recycling must be limited to the AnyDock images returned by `ImageStore.list` in the current receive folder. Use `NSWorkspace.recycle`, report failures and keep remaining images visible. Never permanently delete inbox files.
+- User-requested recycling must be limited to the generated items returned by `ImageStore.list` (the current image-only tray uses `listImages`) in the current receive folder. Use `NSWorkspace.recycle`, report failures and keep remaining images visible. Never permanently delete inbox files.
 - Keep receive credentials and personalized shortcuts out of source files, bundled resources, logs and shared test output. Personalized shortcuts belong in temporary storage and must be cleaned up after sharing or failure.
 - Use temporary directories and separate ports for tests. Do not use real user configuration or received images as fixtures.
 - Do not launch, replace or terminate an installed running copy, or perform interactive UI/device checks, unless the task explicitly requests it.
@@ -32,4 +32,4 @@ Choose checks appropriate to the change and follow any narrower task instruction
 
 ## Rename compatibility
 
-Keep the `studio.alex.snapdock` bundle identifier and Logger subsystem, all UserDefaults keys, `Application Support/SnapDock` configuration directory and existing receive-folder behavior unchanged. New files use `AnyDock-`; `ImageStore.list` must also include legacy `SnapDock-` images, and recycling must use that same set. Retain the `X-SnapDock-Key` upload header so installed phone shortcuts keep working. Product names are localized as AnyDock in English and 随手坞 in Simplified Chinese.
+Keep the `studio.alex.snapdock` bundle identifier and Logger subsystem, all UserDefaults keys, `Application Support/SnapDock` configuration directory and existing configured receive paths unchanged; fresh configurations use `~/Downloads/AnyDock`. New files use `AnyDock-`; `ImageStore.list` must also include legacy `SnapDock-` images, and recycling must use that same set. Retain the `X-SnapDock-Key` upload header so installed phone shortcuts keep working. Product names are localized as AnyDock in English and 随手坞 in Simplified Chinese.
