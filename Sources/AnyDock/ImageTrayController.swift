@@ -57,7 +57,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private var singleColumn: Bool { contents.filter == .kind(.text) }
 
   override func loadView() {
-    let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 520))
+    let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))
     view = content
     layout.aspectRatio = { [weak self] path in self?.aspectRatio(at: path.item) ?? 1 }
     collection.collectionViewLayout = layout

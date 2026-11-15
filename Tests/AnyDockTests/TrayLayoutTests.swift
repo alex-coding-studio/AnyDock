@@ -23,10 +23,10 @@ private func makeTray(texts: [String]) throws -> (ImageTrayController, NSWindow)
     ReceivedItem(url: link, kind: .link, thumbnail: nil, receivedAt: Date(), isPlainText: false))
   let tray = ImageTrayController()
   let window = NSWindow(
-    contentRect: NSRect(x: 0, y: 0, width: 480, height: 520), styleMask: .borderless,
+    contentRect: NSRect(x: 0, y: 0, width: 480, height: 640), styleMask: .borderless,
     backing: .buffered, defer: true)
   window.contentViewController = tray
-  window.setContentSize(NSSize(width: 480, height: 520))
+  window.setContentSize(NSSize(width: 480, height: 640))
   tray.replaceItems(items)
   return (tray, window)
 }
