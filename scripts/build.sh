@@ -16,7 +16,8 @@ done
 cp Resources/Info.plist "$anydock_app/Contents/Info.plist"
 cp Resources/AppIcon.icns "$anydock_app/Contents/Resources/AppIcon.icns"
 mkdir -p "$anydock_app/Contents/Resources/Brand"
-cp Resources/Brand/AnyDockIcon.png "$anydock_app/Contents/Resources/Brand/AnyDockIcon.png"
+cp Resources/Brand/AnyDockIcon.png Resources/Brand/MenuBarTemplate.png \
+  Resources/Brand/MenuBarTemplate@2x.png "$anydock_app/Contents/Resources/Brand/"
 if [[ -d Resources/Shortcuts ]]; then
   ditto Resources/Shortcuts "$anydock_app/Contents/Resources/Shortcuts"
 fi
