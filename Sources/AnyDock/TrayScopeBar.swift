@@ -178,13 +178,20 @@ final class TrayScopeBar: NSView {
   @objc private func tapped(_ sender: NSButton) {
     guard segments.indices.contains(sender.tag) else { return }
     let filter = segments[sender.tag].filter
-    if let event = NSApp.currentEvent,
-      event.type == .leftMouseUp || event.type == .leftMouseDown, event.clickCount >= 2
-    {
+    if Self.togglesSelection(NSApp.currentEvent) {
       onSelectAll?(filter)
     } else {
       onSelect?(filter)
     }
+  }
+}
+
+extension TrayScopeBar {
+  nonisolated static func togglesSelection(_ event: NSEvent?) -> Bool {
+    guard let event, event.type == .leftMouseUp || event.type == .leftMouseDown else {
+      return false
+    }
+    return event.clickCount >= 2 && event.clickCount % 2 == 0
   }
 }
 
