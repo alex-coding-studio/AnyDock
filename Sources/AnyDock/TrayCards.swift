@@ -333,10 +333,12 @@ class PolaroidCardItem: TrayCardItem {
     caption.font = .systemFont(ofSize: 11, weight: .medium)
     caption.lineBreakMode = .byTruncatingMiddle
     caption.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    caption.setContentCompressionResistancePriority(.required, for: .vertical)
     meta.font = .monospacedDigitSystemFont(ofSize: 10, weight: .regular)
     meta.textColor = .secondaryLabelColor
     meta.lineBreakMode = .byTruncatingTail
     meta.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    meta.setContentCompressionResistancePriority(.required, for: .vertical)
     let metaRow = NSStackView(views: [dot, meta])
     metaRow.spacing = Space.s4
     let strip = NSStackView(views: [caption, metaRow])
@@ -413,7 +415,7 @@ final class LinkCardItem: PolaroidCardItem {
 
   override func buildPreview(in area: NSView) {
     address.textColor = .secondaryLabelColor
-    domain.setContentCompressionResistancePriority(.required, for: .vertical)
+    domain.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
     fill(domain, in: area, top: Space.s24)
     fill(address, in: area, below: domain)
   }
@@ -435,6 +437,8 @@ final class FileCardItem: PolaroidCardItem {
 
   override func buildPreview(in area: NSView) {
     preview.imageScaling = .scaleProportionallyUpOrDown
+    preview.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    preview.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
     preview.translatesAutoresizingMaskIntoConstraints = false
     area.addSubview(preview, positioned: .below, relativeTo: badge)
     NSLayoutConstraint.activate([
