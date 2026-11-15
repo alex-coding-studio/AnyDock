@@ -6,13 +6,27 @@ import Security
 final class ConfigurationStore {
   private let url: URL
 
+  static var defaultDirectory: URL {
+    FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
+      "Downloads/AnyDock", isDirectory: true)
+  }
+
   init() throws {
-    let directory = try FileManager.default.url(
-      for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true
-    ).appendingPathComponent("SnapDock", isDirectory: true)
-    try FileManager.default.createDirectory(
-      at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-    url = directory.appendingPathComponent("configuration.json")
+    url = try Self.applicationSupportDirectory()
+      .appendingPathComponent("AnyDock/configuration.json")
+  }
+
+  static func migrate() -> ConfigurationMigration.Failure? {
+    guard let support = try? applicationSupportDirectory() else { return .supportUnavailable }
+    return ConfigurationMigration.migrate(
+      defaults: .standard, legacyDomain: "studio.alex.snapdock", domain: "com.cuxiao.mac.anydock",
+      legacyConfiguration: support.appendingPathComponent("SnapDock/configuration.json"),
+      configuration: support.appendingPathComponent("AnyDock/configuration.json"))
+  }
+
+  private static func applicationSupportDirectory() throws -> URL {
+    try FileManager.default.url(
+      for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
   }
 
   func load() throws -> ReceiverConfiguration {
@@ -27,16 +41,18 @@ final class ConfigurationStore {
     guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
       throw CocoaError(.fileWriteUnknown)
     }
-    let directory = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
-      "Downloads/AnyDock", isDirectory: true)
     let configuration = ReceiverConfiguration(
-      directory: directory, token: bytes.map { String(format: "%02x", $0) }.joined())
+      directory: Self.defaultDirectory, token: bytes.map { String(format: "%02x", $0) }.joined())
     try save(configuration)
     return configuration
   }
 
   func save(_ configuration: ReceiverConfiguration) throws {
+    try FileManager.default.createDirectory(
+      at: url.deletingLastPathComponent(), withIntermediateDirectories: true,
+      attributes: [.posixPermissions: 0o700])
     try JSONEncoder().encode(configuration).write(to: url, options: .atomic)
     try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+    UserDefaults.standard.set(true, forKey: ConfigurationMigration.completionKey)
   }
 }

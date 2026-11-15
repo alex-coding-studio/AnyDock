@@ -8,7 +8,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private var selectedDirectory: URL
   private let appearance = NSPopUpButton(frame: .zero, pullsDown: false)
   private let language = NSPopUpButton(frame: .zero, pullsDown: false)
-  private let launchLanguage = AppLanguage.current(domain: "studio.alex.snapdock")
+  private let launchLanguage = AppLanguage.current(domain: "com.cuxiao.mac.anydock")
   private let languageNotice = NSTextField(
     wrappingLabelWithString: L10n.text("Restart AnyDock to apply the language change."))
   private let restart = NSButton(title: L10n.text("Restart Now"), target: nil, action: nil)
@@ -393,11 +393,13 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private func updateShortcutName() {
     do {
       let name = try ShortcutInstaller.normalizedName(shortcutName.stringValue)
-      UserDefaults.standard.set(name, forKey: shortcutNamePreference)
+      if !configuration.token.isEmpty {
+        UserDefaults.standard.set(name, forKey: shortcutNamePreference)
+      }
       shortcutNameStatus.stringValue = L10n.text("shortcut.name.normalized", name)
       shortcutNameStatus.textColor = .secondaryLabelColor
       shortcutNameStatus.isHidden = name == shortcutName.stringValue
-      send.isEnabled = !isSending
+      send.isEnabled = !isSending && !configuration.token.isEmpty
     } catch {
       shortcutNameStatus.stringValue = error.localizedDescription
       shortcutNameStatus.textColor = .systemRed
