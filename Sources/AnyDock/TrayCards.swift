@@ -361,12 +361,22 @@ class PolaroidCardItem: TrayCardItem {
   func buildPreview(in area: NSView) {}
 
   func fill(_ subview: NSView, in area: NSView, top: CGFloat) {
+    fill(subview, in: area, topAnchor: area.topAnchor, offset: top)
+  }
+
+  func fill(_ subview: NSView, in area: NSView, below anchor: NSView) {
+    fill(subview, in: area, topAnchor: anchor.bottomAnchor, offset: Space.s4)
+  }
+
+  private func fill(
+    _ subview: NSView, in area: NSView, topAnchor: NSLayoutYAxisAnchor, offset: CGFloat
+  ) {
     subview.translatesAutoresizingMaskIntoConstraints = false
     area.addSubview(subview, positioned: .below, relativeTo: badge)
     NSLayoutConstraint.activate([
       subview.leadingAnchor.constraint(equalTo: area.leadingAnchor, constant: Space.s8),
       subview.trailingAnchor.constraint(equalTo: area.trailingAnchor, constant: -Space.s8),
-      subview.topAnchor.constraint(equalTo: area.topAnchor, constant: top),
+      subview.topAnchor.constraint(equalTo: topAnchor, constant: offset),
       subview.bottomAnchor.constraint(lessThanOrEqualTo: area.bottomAnchor, constant: -Space.s8),
     ])
   }
@@ -398,14 +408,14 @@ final class TextCardItem: PolaroidCardItem {
 @MainActor
 final class LinkCardItem: PolaroidCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("LinkCard")
-  private lazy var domain = label(size: 13, weight: .bold, lines: 2)
-  private lazy var address = label(size: 11, lines: 0)
+  lazy var domain = label(size: 13, weight: .bold, lines: 2)
+  lazy var address = label(size: 11, lines: 0)
 
   override func buildPreview(in area: NSView) {
     address.textColor = .secondaryLabelColor
+    domain.setContentCompressionResistancePriority(.required, for: .vertical)
     fill(domain, in: area, top: Space.s24)
-    fill(address, in: area, top: Space.s24)
-    address.topAnchor.constraint(equalTo: domain.bottomAnchor, constant: Space.s4).isActive = true
+    fill(address, in: area, below: domain)
   }
 
   override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {

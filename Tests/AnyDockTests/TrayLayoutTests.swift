@@ -81,6 +81,12 @@ func cardsStayInsideTrayMarginsWithBadgesAtTopLeft() throws {
       #expect(cardBounds.contains(meta.insetBy(dx: 1, dy: 1)))
       #expect(meta.maxY <= preview.minY + 1)
       #expect(abs(preview.minX - (cardBounds.maxX - preview.maxX)) < 1)
+      if let link = card as? LinkCardItem {
+        let domain = link.domain.convert(link.domain.bounds, to: card.view)
+        let address = link.address.convert(link.address.bounds, to: card.view)
+        #expect(domain.height > 0 && !link.domain.stringValue.isEmpty)
+        #expect(domain.minY >= address.maxY - 1)
+      }
       if let text = card as? TextCardItem {
         #expect(preview.contains(text.body.frame.offsetBy(dx: preview.minX, dy: preview.minY)))
         #expect(polaroid.meta.stringValue.rangeOfCharacter(from: .decimalDigits) != nil)
