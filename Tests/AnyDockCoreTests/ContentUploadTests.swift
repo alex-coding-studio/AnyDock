@@ -112,6 +112,33 @@ func classifiesImagesByContentAndDeclaration() async throws {
   #expect(try await store.list(in: directory).count == 2)
 }
 
+@Test("缺少或不符的扩展名按文件头补上，识别不出的内容和其他已知格式保持原名")
+func appendsExtensionFromContentSignature() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let store = ImageStore()
+  let pdf = Data("%PDF-1.7\n".utf8)
+  let cases: [(String, Data, String)] = [
+    ("SECRETARY OF STATE", pdf, "-SECRETARY OF STATE.pdf"),
+    ("report.txt", pdf, "-report.txt.pdf"),
+    ("scan.pdf", pdf, "-scan.pdf"),
+    ("art.ai", pdf, "-art.ai"),
+    ("scan.png", pdf, "-scan.png.pdf"),
+    ("draft.v2", pdf, "-draft.v2.pdf"),
+    ("book.epub", Data([0x50, 0x4B, 0x03, 0x04, 0]), "-book.epub"),
+    ("archive", Data([0x50, 0x4B, 0x03, 0x04, 0]), "-archive.zip"),
+    ("notes", Data("plain words".utf8), "-notes"),
+  ]
+  for (name, body, suffix) in cases {
+    let item = try await store.save(
+      try decodeContent(kind: "file", name: name, body: body), in: directory)
+    #expect(item.kind == .file)
+    #expect(item.url.lastPathComponent.hasSuffix(suffix))
+    #expect(!item.isPlainText)
+    #expect(getxattr(item.url.path, "com.apple.quarantine", nil, 0, 0, 0) > 0)
+  }
+}
+
 @Test("旧根目录图片保持原位，符号链接和普通文件不扩大列表或接收范围")
 func listsLegacyImagesAndRejectsDirectoryEscape() async throws {
   let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
