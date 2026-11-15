@@ -51,7 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     popover.behavior = .transient
     popover.delegate = self
     popover.contentViewController = tray
-    popover.contentSize = NSSize(width: 450, height: 520)
+    popover.contentSize = NSSize(width: 480, height: 520)
     tray.openSettings = { [weak self] in self?.showSettings() }
     tray.openFolder = { [weak self] in self?.openFolder() }
     tray.didFinishDragging = { [weak self] in self?.popover.performClose(nil) }

@@ -28,7 +28,7 @@ func pdfCardShowsFirstPageThumbnail(filename: String) async throws {
   try (data as Data).write(to: url)
   let tray = ImageTrayController()
   let window = NSWindow(
-    contentRect: NSRect(x: 0, y: 0, width: 450, height: 520), styleMask: .borderless,
+    contentRect: NSRect(x: 0, y: 0, width: 480, height: 520), styleMask: .borderless,
     backing: .buffered, defer: true)
   window.contentViewController = tray
   tray.replaceItems([
