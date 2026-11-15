@@ -6,9 +6,10 @@ import OSLog
 @MainActor
 enum AnyDockApp {
   static func main() {
+    let migrationFailure = ConfigurationStore.migrate()
     let app = NSApplication.shared
     AppAppearance.current.apply()
-    let delegate = AppDelegate()
+    let delegate = AppDelegate(migrationFailure: migrationFailure)
     app.delegate = delegate
     app.setActivationPolicy(.accessory)
     withExtendedLifetime(delegate) { app.run() }
@@ -25,7 +26,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var configurationStore: ConfigurationStore?
   private var configuration: ReceiverConfiguration?
   private var settings: SettingsController?
-  private let logger = Logger(subsystem: "studio.alex.snapdock", category: "Receiver")
+  private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
+  private let migrationFailure: ConfigurationMigration.Failure?
+
+  init(migrationFailure: ConfigurationMigration.Failure?) {
+    self.migrationFailure = migrationFailure
+    super.init()
+  }
+
+  private var migrationWarning: String? {
+    migrationFailure.map { L10n.text("migration.failed", L10n.text("migration." + $0.rawValue)) }
+  }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -49,9 +60,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     tray.loadItems = { [weak self] in try await self?.currentItems() ?? [] }
     tray.recycleItems = { [weak self] urls in try await self?.recycleItems(urls) }
     do {
-      let storage = try ConfigurationStore()
+      let storage = try? ConfigurationStore()
       configurationStore = storage
-      let current = try storage.load()
+      let current: ReceiverConfiguration
+      if migrationFailure != nil {
+        current = ReceiverConfiguration(directory: ConfigurationStore.defaultDirectory, token: "")
+      } else {
+        guard let storage else { throw CocoaError(.fileReadUnknown) }
+        current = try storage.load()
+      }
       configuration = current
       let preferences = SettingsController(configuration: current)
       preferences.apply = { [weak self] next in try await self?.apply(next) }
@@ -75,6 +92,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   private func startReceiver(_ next: ReceiverConfiguration) async {
+    if let migrationWarning {
+      settings?.setStatus(migrationWarning, isError: true)
+      setErrorIcon(true)
+      return
+    }
     guard let server else { return }
     do {
       try await server.start(
@@ -103,7 +125,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   private func receiverFailed(_ message: String) {
     logger.error("Listener failed: \(message, privacy: .public)")
-    settings?.setStatus(message, isError: true)
+    let status = migrationWarning.map { message + "\n" + $0 } ?? message
+    settings?.setStatus(status, isError: true)
     setErrorIcon(true)
   }
 
@@ -159,11 +182,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   private func apply(_ next: ReceiverConfiguration) async throws {
+    if let migrationWarning {
+      throw NSError(
+        domain: "com.cuxiao.mac.anydock", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: migrationWarning])
+    }
+    guard let configurationStore else { throw CocoaError(.fileWriteUnknown) }
     try FileManager.default.createDirectory(at: next.directory, withIntermediateDirectories: true)
     guard FileManager.default.isWritableFile(atPath: next.directory.path) else {
       throw CocoaError(.fileWriteNoPermission)
     }
-    try configurationStore?.save(next)
+    try configurationStore.save(next)
     configuration = next
     await reloadImages()
     await startReceiver(next)

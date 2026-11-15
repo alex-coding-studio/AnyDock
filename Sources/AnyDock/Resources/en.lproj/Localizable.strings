@@ -84,7 +84,7 @@
 "settings.manual.note" = "Use only on a trusted LAN; HTTP is not encrypted. Resend the shortcut after changing the port. Enter the address and key when importing the generic shortcut.";
 "shortcut.name.normalized" = "Will use “%@”. Leading and trailing spaces are removed; / and : become -.";
 "You can restore them from the Trash." = "You can restore them from the Trash.";
-"configuration.recovery" = "Your configuration has not been changed. Check Application Support/SnapDock and restart.";
+"configuration.recovery" = "Your configuration has not been changed. Check Application Support/AnyDock and restart.";
 "[redacted]" = "[redacted]";
 "English" = "English";
 "简体中文" = "简体中文";
@@ -107,3 +107,8 @@
 "Move All Text to Trash…" = "Move All Text to Trash…";
 "Move All Links to Trash…" = "Move All Links to Trash…";
 "Move All Files to Trash…" = "Move All Files to Trash…";
+"migration.failed" = "Old configuration migration failed. The iPhone shortcut is temporarily unavailable. %@ Restart AnyDock to retry.";
+"migration.supportUnavailable" = "Application Support is unavailable.";
+"migration.readFailed" = "The old configuration could not be read.";
+"migration.invalidConfiguration" = "The old configuration is invalid.";
+"migration.copyFailed" = "The old configuration could not be copied to the new location.";

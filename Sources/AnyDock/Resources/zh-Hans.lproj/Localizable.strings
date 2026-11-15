@@ -84,7 +84,7 @@
 "settings.manual.note" = "仅在可信局域网使用，HTTP 传输不加密。更改端口后请重新发送快捷指令。手动导入通用版时，需填写接收地址和连接密钥。";
 "shortcut.name.normalized" = "将使用「%@」；首尾空白已移除，/ 和 : 会替换为 -。";
 "You can restore them from the Trash." = "可以在废纸篓中恢复。";
-"configuration.recovery" = "配置文件保持原样。请检查 Application Support/SnapDock 中的配置后重新启动。";
+"configuration.recovery" = "配置文件保持原样。请检查 Application Support/AnyDock 中的配置后重新启动。";
 "[redacted]" = "[已隐藏]";
 "English" = "English";
 "简体中文" = "简体中文";
@@ -107,3 +107,8 @@
 "Move All Text to Trash…" = "将全部文本移到废纸篓…";
 "Move All Links to Trash…" = "将全部链接移到废纸篓…";
 "Move All Files to Trash…" = "将全部文件移到废纸篓…";
+"migration.failed" = "旧配置迁移失败，iPhone 快捷指令暂时不可用。%@ 请重启随手坞重试。";
+"migration.supportUnavailable" = "无法访问 Application Support。";
+"migration.readFailed" = "无法读取旧配置文件。";
+"migration.invalidConfiguration" = "旧配置文件无效。";
+"migration.copyFailed" = "无法将旧配置复制到新位置。";
