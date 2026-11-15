@@ -14,6 +14,7 @@ final class ClipboardBar: NSView {
   let title = NSTextField(labelWithString: "")
   let clearButton = NSButton()
   let chevron = NSButton()
+  let header = NSStackView()
   private let cells = (0..<ClipboardHistory.limit).map { _ in ClipboardCell() }
   private let cellRow = NSStackView()
   private var height: NSLayoutConstraint?
@@ -40,7 +41,7 @@ final class ClipboardBar: NSView {
     chevron.imagePosition = .imageOnly
     chevron.target = self
     chevron.action = #selector(chevronClicked)
-    let header = NSStackView(views: [icon, title, NSView(), clearButton, chevron])
+    header.setViews([icon, title, NSView(), clearButton, chevron], in: .leading)
     header.spacing = Space.s8
     header.alignment = .centerY
     cellRow.distribution = .fillEqually
@@ -113,7 +114,11 @@ final class ClipboardBar: NSView {
   }
 
   override func mouseDown(with event: NSEvent) {
-    if !isExpanded { setExpanded(true) }
+    if !isExpanded {
+      setExpanded(true)
+    } else if header.frame.contains(convert(event.locationInWindow, from: nil)) {
+      setExpanded(false)
+    }
   }
 
   @objc private func clearClicked() { onClear?() }
