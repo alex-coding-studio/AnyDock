@@ -46,17 +46,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     tray.presentationHeld = { [weak self] held in
       self?.popover.behavior = held ? .applicationDefined : .transient
     }
-    tray.loadImages = { [weak self] in try await self?.currentImages() ?? [] }
-    tray.recycleImages = { [weak self] urls in try await self?.recycleImages(urls) }
+    tray.loadItems = { [weak self] in try await self?.currentItems() ?? [] }
+    tray.recycleItems = { [weak self] urls in try await self?.recycleItems(urls) }
     do {
       let storage = try ConfigurationStore()
       configurationStore = storage
       let current = try storage.load()
       configuration = current
-      let preferences = SettingsController(
-        configuration: current, thumbnailColumns: tray.columnCount)
+      let preferences = SettingsController(configuration: current)
       preferences.apply = { [weak self] next in try await self?.apply(next) }
-      preferences.columnsChanged = { [weak self] count in self?.tray.setColumnCount(count) }
       settings = preferences
       server = HTTPServer(store: store)
       Task {
@@ -81,8 +79,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     do {
       try await server.start(
         configuration: next,
-        onReceive: { [weak self] image in
-          await self?.received(image, directory: next.directory)
+        onReceive: { [weak self] item in
+          await self?.received(item, directory: next.directory)
         },
         onFailure: { [weak self] message in
           await self?.receiverFailed(message)
@@ -120,8 +118,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   private func received(_ item: ReceivedItem, directory: URL) {
-    guard directory == configuration?.directory, let image = item.image else { return }
-    tray.append(image)
+    guard directory == configuration?.directory else { return }
+    tray.append(item)
+    if TrayPreferences.copiesNewItems { tray.copyToPasteboard(item) }
     if !popover.isShown {
       showPopover(refreshImages: false)
     }
@@ -131,23 +130,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private func reloadImages() async {
     guard let directory = configuration?.directory else { return }
     do {
-      let images = try await store.listImages(in: directory)
+      let items = try await store.list(in: directory)
       guard directory == configuration?.directory else { return }
-      tray.replaceImages(images)
+      tray.replaceItems(items)
     } catch {
       receiverFailed(L10n.text("Unable to read the receive folder: %@", error.localizedDescription))
     }
   }
 
-  private func currentImages() async throws -> [ReceivedImage] {
+  private func currentItems() async throws -> [ReceivedItem] {
     guard let directory = configuration?.directory else { return [] }
-    let images = try await store.listImages(in: directory)
+    let items = try await store.list(in: directory)
     guard directory == configuration?.directory else { throw CocoaError(.userCancelled) }
-    return images
+    return items
   }
 
-  private func recycleImages(_ requested: [URL]) async throws {
-    let allowed = Set(try await currentImages().map(\.url))
+  private func recycleItems(_ requested: [URL]) async throws {
+    let allowed = Set(try await currentItems().map(\.url))
     let urls = requested.filter { allowed.contains($0) }
     guard !urls.isEmpty else { return }
     let error: (any Error)? = await withCheckedContinuation { continuation in

@@ -30,14 +30,12 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private let pending = NSTextField(labelWithString: "")
   private let statusIcon = NSImageView()
   private let login = NSSwitch()
-  private let columns = NSSegmentedControl(
-    labels: ["2", "3", "4", "5"], trackingMode: .selectOne, target: nil, action: nil)
+  private let autoCopy = NSSwitch()
   private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
   private let send = NSButton(title: L10n.text("Send to iPhone…"), target: nil, action: nil)
   var apply: ((ReceiverConfiguration) async throws -> Void)?
-  var columnsChanged: ((Int) -> Void)?
 
-  init(configuration: ReceiverConfiguration, thumbnailColumns: Int) {
+  init(configuration: ReceiverConfiguration) {
     self.configuration = configuration
     selectedDirectory = configuration.directory
     let window = NSWindow(
@@ -56,7 +54,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     } else {
       shortcutName.stringValue = L10n.text("Send to Mac")
     }
-    columns.selectedSegment = (2...5).contains(thumbnailColumns) ? thumbnailColumns - 2 : 3
     buildInterface()
   }
 
@@ -109,9 +106,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     login.target = self
     login.action = #selector(toggleLogin)
     login.setAccessibilityLabel(L10n.text("Launch at login"))
-    columns.target = self
-    columns.action = #selector(changeColumns)
-    columns.setAccessibilityLabel(L10n.text("Thumbnail columns"))
+    autoCopy.state = TrayPreferences.copiesNewItems ? .on : .off
+    autoCopy.target = self
+    autoCopy.action = #selector(toggleAutoCopy)
+    autoCopy.setAccessibilityLabel(L10n.text("Copy new items automatically"))
     configureMessage(generalStatus)
     let icon = NSImageView(image: BrandIcon.artwork ?? BrandIcon.menuBar())
     icon.imageScaling = .scaleProportionallyUpOrDown
@@ -133,8 +131,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
       L10n.text("General"), symbol: "gearshape",
       views: [
         section(
-          L10n.text("Tray"), rows: [formRow(L10n.text("Thumbnail columns"), value: columns)],
-          note: L10n.text("settings.columns.note")),
+          L10n.text("Tray"),
+          rows: [formRow(L10n.text("Copy new items automatically"), value: autoCopy)],
+          note: L10n.text("settings.autoCopy.note")),
         section(
           L10n.text("Personalization"),
           rows: [
@@ -539,9 +538,8 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
   }
 
-  @objc private func changeColumns() {
-    guard columns.selectedSegment >= 0 else { return }
-    columnsChanged?(columns.selectedSegment + 2)
+  @objc private func toggleAutoCopy() {
+    TrayPreferences.copiesNewItems = autoCopy.state == .on
   }
 
   @objc private func copyConnectionAddress() { copy(address.stringValue) }

@@ -7,14 +7,14 @@ Read `ProjectContext.md` and `docs/PROJECT.md` before changing the project. Thes
 - AnyDock is a native AppKit menu bar app using Swift 6 and Swift Package Manager, targeting macOS 14 or later. Keep `studio.alex.snapdock` as the bundle identifier.
 - Keep Swift identifiers in English and localize user-visible strings in English and Simplified Chinese. Write contributor documentation in English.
 - Do not add explanatory code comments, documentation comments or `MARK` sections.
-- Keep the tray focused on images, with receipt-time captions, selection feedback and icon controls. Put configuration and listener status in Settings; do not add filenames, file sizes or configuration fields to the tray.
+- Keep the tray focused on received content: cards show only what identifies the item (image, text lines, link, or a file's thumbnail, name and size), receipt-time captions, selection feedback, filter capsules and icon controls. Put configuration and listener status in Settings; do not add configuration fields to the tray.
 - Preserve native collection selection, original-file dragging and Quick Look. Follow the interaction rules in `docs/PROJECT.md` when changing them.
 - Use native AppKit controls and system colors. Guard Liquid Glass APIs with macOS 26 availability checks and retain the material fallback for macOS 14–25. No third-party dependencies are currently required.
 
 ## Protect user data
 
 - Never overwrite or automatically delete received originals. Changing receive folders must not move or delete existing files.
-- User-requested recycling must be limited to the generated items returned by `ImageStore.list` (the current image-only tray uses `listImages`) in the current receive folder. Use `NSWorkspace.recycle`, report failures and keep remaining images visible. Never permanently delete inbox files.
+- User-requested recycling must be limited to the generated items returned by `ImageStore.list` in the current receive folder. Use `NSWorkspace.recycle`, report failures and keep remaining items visible. Never permanently delete inbox files.
 - Keep receive credentials and personalized shortcuts out of source files, bundled resources, logs and shared test output. Personalized shortcuts belong in temporary storage and must be cleaned up after sharing or failure.
 - Use temporary directories and separate ports for tests. Do not use real user configuration or received images as fixtures.
 - Do not launch, replace or terminate an installed running copy, or perform interactive UI/device checks, unless the task explicitly requests it.

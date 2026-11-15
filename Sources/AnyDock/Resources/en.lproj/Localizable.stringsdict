@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>selected_count</key>
+	<key>character_count</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>%#@count@</string>
@@ -12,26 +12,10 @@
 			<string>NSStringPluralRuleType</string>
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
-			<key>other</key>
-			<string>%d images selected</string>
 			<key>one</key>
-			<string>%d image selected</string>
-		</dict>
-	</dict>
-	<key>trash_count</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
+			<string>%d character</string>
 			<key>other</key>
-			<string>Move %d Images to Trash</string>
-			<key>one</key>
-			<string>Move %d Image to Trash</string>
+			<string>%d characters</string>
 		</dict>
 	</dict>
 	<key>copy_count</key>
@@ -44,10 +28,26 @@
 			<string>NSStringPluralRuleType</string>
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
-			<key>other</key>
-			<string>Copy %d Images</string>
 			<key>one</key>
-			<string>Copy %d Image</string>
+			<string>Copy %d Item</string>
+			<key>other</key>
+			<string>Copy %d Items</string>
+		</dict>
+	</dict>
+	<key>selected_count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d item selected</string>
+			<key>other</key>
+			<string>%d items selected</string>
 		</dict>
 	</dict>
 	<key>trash_all_confirmation</key>
@@ -60,10 +60,74 @@
 			<string>NSStringPluralRuleType</string>
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
+			<key>one</key>
+			<string>Move all %d item to the Trash?</string>
+			<key>other</key>
+			<string>Move all %d items to the Trash?</string>
+		</dict>
+	</dict>
+	<key>trash_count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Move %d Item to Trash</string>
+			<key>other</key>
+			<string>Move %d Items to Trash</string>
+		</dict>
+	</dict>
+	<key>trash_files_confirmation</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Move %d file to the Trash?</string>
+			<key>other</key>
+			<string>Move all %d files to the Trash?</string>
+		</dict>
+	</dict>
+	<key>trash_images_confirmation</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Move %d image to the Trash?</string>
 			<key>other</key>
 			<string>Move all %d images to the Trash?</string>
+		</dict>
+	</dict>
+	<key>trash_links_confirmation</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
 			<key>one</key>
-			<string>Move all %d image to the Trash?</string>
+			<string>Move %d link to the Trash?</string>
+			<key>other</key>
+			<string>Move all %d links to the Trash?</string>
 		</dict>
 	</dict>
 	<key>trash_selection_confirmation</key>
@@ -76,10 +140,26 @@
 			<string>NSStringPluralRuleType</string>
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
-			<key>other</key>
-			<string>Move %d images to the Trash?</string>
 			<key>one</key>
-			<string>Move %d image to the Trash?</string>
+			<string>Move %d item to the Trash?</string>
+			<key>other</key>
+			<string>Move %d items to the Trash?</string>
+		</dict>
+	</dict>
+	<key>trash_texts_confirmation</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Move %d text to the Trash?</string>
+			<key>other</key>
+			<string>Move all %d texts to the Trash?</string>
 		</dict>
 	</dict>
 </dict>

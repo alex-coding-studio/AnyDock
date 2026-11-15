@@ -1,28 +1,34 @@
 import AnyDockCore
 import AppKit
 import Quartz
+import QuickLookThumbnailing
+
+enum TrayPreferences {
+  static var copiesNewItems: Bool {
+    get { UserDefaults.standard.bool(forKey: "copyNewItems") }
+    set { UserDefaults.standard.set(newValue, forKey: "copyNewItems") }
+  }
+}
 
 @MainActor
 final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   NSCollectionViewDelegate, NSPopoverDelegate, @MainActor QLPreviewPanelDelegate
 {
-  private let collection = ImageCollectionView()
+  let collection = ImageCollectionView()
   private let layout = MasonryCollectionLayout()
   private let scroll = NSScrollView()
   private let timeFormatter = DateFormatter()
   private let selectionCount = NSTextField(labelWithString: "")
   private let trashButton = NSButton()
+  let filterBar = NSStackView()
   private var selectionCapsule: NSView?
   private var trashSurface: NSView?
   private var emptyState: NSView?
-  private var images: [ReceivedImage] = []
-  private var thumbnails: [NSImage?] = []
-  private var aspectRatios: [CGFloat] = []
+  private var contents = TrayContents()
+  private var entries: [TrayEntry] = []
+  private var cache: [URL: TrayEntry] = [:]
+  private var requestedThumbnails: Set<URL> = []
   private var latestReceivedURL: URL?
-  private(set) var columnCount: Int = {
-    let saved = UserDefaults.standard.integer(forKey: "thumbnailColumns")
-    return (2...5).contains(saved) ? saved : 3
-  }()
   private var previewSource: ImagePreviewSource?
   private var isTrashing = false
   private var trashConfirmation: NSPopover?
@@ -31,21 +37,21 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private var trashConfirmed = false
   var holdsPresentation: Bool { previewSource != nil || isTrashing }
   var presentationHeld: ((Bool) -> Void)?
-  var loadImages: (() async throws -> [ReceivedImage])?
-  var recycleImages: (([URL]) async throws -> Void)?
+  var loadItems: (() async throws -> [ReceivedItem])?
+  var recycleItems: (([URL]) async throws -> Void)?
   var openFolder: (() -> Void)?
   var openSettings: (() -> Void)?
   var didFinishDragging: (() -> Void)?
+
+  private static let filterHeight: CGFloat = 24
+
+  private var singleColumn: Bool { contents.filter == .kind(.text) }
 
   override func loadView() {
     let content = NSView(frame: NSRect(x: 0, y: 0, width: 450, height: 520))
     view = glassSurface(content, cornerRadius: 16)
     view.frame = NSRect(x: 0, y: 0, width: 450, height: 520)
-    layout.columnCount = columnCount
-    layout.aspectRatio = { [weak self] path in
-      guard let self, aspectRatios.indices.contains(path.item) else { return 1 }
-      return aspectRatios[path.item]
-    }
+    layout.aspectRatio = { [weak self] path in self?.aspectRatio(at: path.item) ?? 1 }
     collection.collectionViewLayout = layout
     collection.frame = content.bounds
     collection.autoresizingMask = [.width]
@@ -53,7 +59,10 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     collection.allowsMultipleSelection = true
     collection.allowsEmptySelection = true
     collection.backgroundColors = [.clear]
-    collection.register(ThumbnailItem.self, forItemWithIdentifier: ThumbnailItem.identifier)
+    collection.register(ImageCardItem.self, forItemWithIdentifier: ImageCardItem.identifier)
+    collection.register(TextCardItem.self, forItemWithIdentifier: TextCardItem.identifier)
+    collection.register(LinkCardItem.self, forItemWithIdentifier: LinkCardItem.identifier)
+    collection.register(FileCardItem.self, forItemWithIdentifier: FileCardItem.identifier)
     collection.dataSource = self
     collection.delegate = self
     collection.setDraggingSourceOperationMask(.copy, forLocal: false)
@@ -61,13 +70,15 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     collection.copyImages = { [weak self] in self?.copySelection() }
     collection.revealImages = { [weak self] in self?.revealSelection() }
     collection.previewImages = { [weak self] in self?.previewSelection() }
-    collection.deleteImages = { [weak self] in self?.trashImages(allowAll: false) }
+    collection.deleteImages = { [weak self] in self?.trashItems(allowAll: false) }
     collection.selectionChanged = { [weak self] in self?.updateControls() }
     scroll.documentView = collection
     scroll.hasVerticalScroller = true
     scroll.scrollerStyle = .overlay
     scroll.drawsBackground = false
     scroll.autohidesScrollers = true
+    scroll.automaticallyAdjustsContentInsets = false
+    scroll.contentInsets = NSEdgeInsetsZero
     scroll.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(scroll)
     NSLayoutConstraint.activate([
@@ -77,8 +88,78 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
     ])
     configureEmptyState(in: content)
+    configureFilterBar(in: content)
     configureControls(in: content)
     updateControls()
+  }
+
+  private func configureFilterBar(in content: NSView) {
+    filterBar.orientation = .horizontal
+    filterBar.spacing = Space.s8
+    filterBar.translatesAutoresizingMaskIntoConstraints = false
+    content.addSubview(filterBar)
+    NSLayoutConstraint.activate([
+      filterBar.leadingAnchor.constraint(
+        equalTo: content.leadingAnchor, constant: MasonryCollectionLayout.margin),
+      filterBar.trailingAnchor.constraint(
+        lessThanOrEqualTo: content.trailingAnchor, constant: -MasonryCollectionLayout.margin),
+      filterBar.topAnchor.constraint(
+        equalTo: content.topAnchor, constant: MasonryCollectionLayout.margin),
+      filterBar.heightAnchor.constraint(equalToConstant: Self.filterHeight),
+    ])
+  }
+
+  private func updateFilterBar() {
+    for view in filterBar.arrangedSubviews {
+      filterBar.removeArrangedSubview(view)
+      view.removeFromSuperview()
+    }
+    filterBar.isHidden = contents.items.isEmpty
+    for (index, filter) in contents.availableFilters.enumerated() {
+      let count = filter == .all ? contents.items.count : kindCount(filter)
+      let selected = filter == contents.filter
+      let button = NSButton(
+        title: "\(filterTitle(filter)) \(count)", target: self, action: #selector(filterClicked))
+      button.tag = index
+      button.isBordered = false
+      button.setButtonType(.toggle)
+      button.state = selected ? .on : .off
+      button.font = .systemFont(ofSize: 11, weight: selected ? .semibold : .regular)
+      button.contentTintColor = selected ? .controlAccentColor : .secondaryLabelColor
+      button.setAccessibilityLabel(L10n.text("filter_accessibility", filterTitle(filter), count))
+      let padded = NSStackView(views: [button])
+      padded.edgeInsets = NSEdgeInsets(top: 0, left: Space.s8, bottom: 0, right: Space.s8)
+      let surface = glassSurface(padded, cornerRadius: Self.filterHeight / 2)
+      surface.heightAnchor.constraint(equalToConstant: Self.filterHeight).isActive = true
+      filterBar.addArrangedSubview(surface)
+    }
+  }
+
+  private func kindCount(_ filter: TrayFilter) -> Int {
+    guard case .kind(let kind) = filter else { return contents.items.count }
+    return contents.count(of: kind)
+  }
+
+  private func filterTitle(_ filter: TrayFilter) -> String {
+    switch filter {
+    case .all: L10n.text("All")
+    case .kind(.image): L10n.text("Images")
+    case .kind(.text): L10n.text("Text")
+    case .kind(.link): L10n.text("Links")
+    case .kind(.file): L10n.text("Files")
+    }
+  }
+
+  @objc private func filterClicked(_ sender: NSButton) {
+    let filters = contents.availableFilters
+    guard filters.indices.contains(sender.tag) else { return }
+    select(filters[sender.tag])
+  }
+
+  func select(_ filter: TrayFilter) {
+    contents.select(filter)
+    reloadEntries()
+    scrollToLatestImage()
   }
 
   private func configureControls(in content: NSView) {
@@ -192,35 +273,83 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     return surface
   }
 
-  func replaceImages(_ next: [ReceivedImage]) {
+  func replaceItems(_ next: [ReceivedItem]) {
     loadViewIfNeeded()
-    let selected = Set(selectedImages.map(\.url))
-    images = next
-    thumbnails = next.map { NSImage(data: $0.thumbnail) }
-    aspectRatios = thumbnails.map { image in
-      guard let size = image?.size, size.width > 0, size.height > 0 else { return 1 }
-      return size.height / size.width
+    contents.replace(next)
+    reloadEntries()
+  }
+
+  func append(_ item: ReceivedItem) {
+    loadViewIfNeeded()
+    latestReceivedURL = item.url
+    cache[item.url] = nil
+    contents.receive(item)
+    reloadEntries()
+  }
+
+  private func reloadEntries() {
+    let selected = Set(selectedEntries.map(\.url))
+    let present = Set(contents.items.map(\.url))
+    cache = cache.filter { present.contains($0.key) }
+    requestedThumbnails.formIntersection(present)
+    entries = contents.visibleItems.map { item in
+      if let cached = cache[item.url] { return cached }
+      let entry = TrayEntry(item: item)
+      cache[item.url] = entry
+      return entry
     }
+    layout.columnCount = singleColumn ? 1 : 3
+    layout.topInset = MasonryCollectionLayout.margin + Self.filterHeight + Space.s16
     layout.invalidateLayout()
     collection.reloadData()
     collection.selectionIndexPaths = Set(
-      images.enumerated().compactMap {
+      entries.enumerated().compactMap {
         selected.contains($0.element.url) ? IndexPath(item: $0.offset, section: 0) : nil
       })
+    updateFilterBar()
     updateControls()
+    for entry in entries where entry.kind == .file && !entry.item.isPlainText {
+      requestThumbnail(for: entry.url)
+    }
   }
 
-  func append(_ image: ReceivedImage) {
-    latestReceivedURL = image.url
-    replaceImages(([image] + images.filter { $0.url != image.url }).prefix(120).map { $0 })
+  private func aspectRatio(at index: Int) -> CGFloat {
+    guard entries.indices.contains(index) else { return 1 }
+    let entry = entries[index]
+    switch entry.kind {
+    case .image:
+      guard let size = entry.thumbnail?.size, size.width > 0, size.height > 0 else { return 1 }
+      return size.height / size.width
+    case .text:
+      guard singleColumn else { return 1 }
+      return 92 / max(layout.availableWidth, 1)
+    case .link: return 0.8
+    case .file: return 1.25
+    }
   }
 
-  func setColumnCount(_ count: Int) {
-    guard (2...5).contains(count), count != columnCount else { return }
-    columnCount = count
-    UserDefaults.standard.set(count, forKey: "thumbnailColumns")
-    guard isViewLoaded else { return }
-    layout.columnCount = count
+  private func requestThumbnail(for url: URL) {
+    guard !requestedThumbnails.contains(url) else { return }
+    requestedThumbnails.insert(url)
+    let request = QLThumbnailGenerator.Request(
+      fileAt: url, size: CGSize(width: 240, height: 240),
+      scale: NSScreen.main?.backingScaleFactor ?? 2, representationTypes: .thumbnail)
+    QLThumbnailGenerator.shared.generateBestRepresentation(for: request) {
+      [weak self] representation, _ in
+      guard let image = representation?.cgImage else { return }
+      Task { @MainActor in self?.applyThumbnail(image, for: url) }
+    }
+  }
+
+  private func applyThumbnail(_ image: CGImage, for url: URL) {
+    guard var entry = cache[url] else { return }
+    let thumbnail = NSImage(cgImage: image, size: .zero)
+    entry.thumbnail = thumbnail
+    cache[url] = entry
+    guard let index = entries.firstIndex(where: { $0.url == url }) else { return }
+    entries[index] = entry
+    (collection.item(at: IndexPath(item: index, section: 0)) as? FileCardItem)?
+      .showThumbnail(thumbnail)
   }
 
   func focusImages() { view.window?.makeFirstResponder(collection) }
@@ -231,32 +360,51 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   }
 
   func scrollToLatestImage() {
-    guard !images.isEmpty else { return }
+    guard !entries.isEmpty else { return }
     collection.scrollToItems(at: [IndexPath(item: 0, section: 0)], scrollPosition: .top)
   }
 
   func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int)
     -> Int
-  { images.count }
+  { entries.count }
 
   func collectionView(
     _ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath
   ) -> NSCollectionViewItem {
-    let item = collectionView.makeItem(withIdentifier: ThumbnailItem.identifier, for: indexPath)
-    let image = images[indexPath.item]
-    item.imageView?.image = thumbnails[indexPath.item]
-    timeFormatter.dateFormat = Calendar.current.isDateInToday(image.receivedAt) ? "HH:mm" : "M/d"
-    item.textField?.stringValue = timeFormatter.string(from: image.receivedAt)
-    let timestamp = image.receivedAt.formatted(date: .complete, time: .standard)
+    let entry = entries[indexPath.item]
+    let identifier: NSUserInterfaceItemIdentifier =
+      switch entry.kind {
+      case .image: ImageCardItem.identifier
+      case .text: TextCardItem.identifier
+      case .link: LinkCardItem.identifier
+      case .file: FileCardItem.identifier
+      }
+    let item = collectionView.makeItem(withIdentifier: identifier, for: indexPath)
+    let card = item as? TrayCardItem
+    card?.configure(entry, singleColumn: singleColumn)
+    timeFormatter.dateFormat =
+      Calendar.current.isDateInToday(entry.item.receivedAt) ? "HH:mm" : "M/d"
+    item.textField?.stringValue = timeFormatter.string(from: entry.item.receivedAt)
+    let timestamp = entry.item.receivedAt.formatted(date: .complete, time: .standard)
     item.view.toolTip = timestamp
-    (item as? ThumbnailItem)?.isLatestReceipt = image.url == latestReceivedURL
+    let latest = entry.url == latestReceivedURL
+    card?.isLatestReceipt = latest
     item.view.setAccessibilityElement(true)
-    item.view.setAccessibilityRole(.image)
+    item.view.setAccessibilityRole(entry.kind == .image ? .image : .group)
     item.view.setAccessibilityLabel(
       L10n.text(
-        image.url == latestReceivedURL ? "New image %d, %@" : "Received image %d, %@",
-        indexPath.item + 1, timestamp))
+        latest ? "New %@: %@, %@" : "%@: %@, %@", kindName(entry.kind), entry.summary,
+        timestamp))
     return item
+  }
+
+  private func kindName(_ kind: ReceivedKind) -> String {
+    switch kind {
+    case .image: L10n.text("Image")
+    case .text: L10n.text("Text")
+    case .link: L10n.text("Link")
+    case .file: L10n.text("File")
+    }
   }
 
   func collectionView(
@@ -277,7 +425,21 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   func collectionView(
     _ collectionView: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath
   ) -> (any NSPasteboardWriting)? {
-    images[indexPath.item].url as NSURL
+    let entry = entries[indexPath.item]
+    switch entry.kind {
+    case .image, .file:
+      return entry.url as NSURL
+    case .text:
+      return entry.fullText as NSString
+    case .link:
+      let item = NSPasteboardItem()
+      if let link = entry.link {
+        item.setString(link.absoluteString, forType: .URL)
+        item.setString(link.absoluteString, forType: .string)
+      }
+      item.setString(entry.url.absoluteString, forType: .fileURL)
+      return item
+    }
   }
 
   func collectionView(
@@ -299,29 +461,41 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     if !operation.isEmpty { didFinishDragging?() }
   }
 
-  private var selectedImages: [ReceivedImage] {
+  private var selectedEntries: [TrayEntry] {
     collection.selectionIndexPaths.sorted { $0.item < $1.item }.compactMap {
-      images.indices.contains($0.item) ? images[$0.item] : nil
+      entries.indices.contains($0.item) ? entries[$0.item] : nil
     }
   }
 
   private func updateControls() {
-    let count = selectedImages.count
+    let count = selectedEntries.count
     selectionCount.stringValue = L10n.text("selected_count", count)
     selectionCapsule?.isHidden = count == 0
-    trashSurface?.isHidden = images.isEmpty
+    trashSurface?.isHidden = entries.isEmpty
     trashButton.isEnabled = !isTrashing
-    let title = count > 0 ? L10n.text("trash_count", count) : L10n.text("Move All to Trash…")
+    let title = count > 0 ? L10n.text("trash_count", count) : trashAllTitle
     trashButton.toolTip = title
     trashButton.setAccessibilityLabel(title)
-    emptyState?.isHidden = !images.isEmpty
-    scroll.isHidden = images.isEmpty
+    emptyState?.isHidden = !contents.items.isEmpty
+    scroll.isHidden = contents.items.isEmpty
   }
 
-  private func trashImages(allowAll: Bool) {
-    guard !isTrashing, let loadImages, let recycleImages else { return }
-    let selected = selectedImages.map(\.url)
+  private var trashAllTitle: String {
+    switch contents.filter {
+    case .all: L10n.text("Move All to Trash…")
+    case .kind(.image): L10n.text("Move All Images to Trash…")
+    case .kind(.text): L10n.text("Move All Text to Trash…")
+    case .kind(.link): L10n.text("Move All Links to Trash…")
+    case .kind(.file): L10n.text("Move All Files to Trash…")
+    }
+  }
+
+  private func trashItems(allowAll: Bool) {
+    guard !isTrashing, let loadItems, let recycleItems else { return }
+    let selected = selectedEntries.map(\.url)
     guard allowAll || !selected.isEmpty else { return }
+    let targets = contents.trashTargets(selected: selected)
+    let filter = contents.filter
     isTrashing = true
     presentationHeld?(holdsPresentation)
     updateControls()
@@ -333,27 +507,36 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         updateControls()
       }
       do {
-        let current = try await loadImages()
-        let allowed = Set(current.map(\.url))
-        let urls = selected.isEmpty ? current.map(\.url) : selected.filter { allowed.contains($0) }
+        let allowed = Set(try await loadItems().map(\.url))
+        let urls = targets.filter { allowed.contains($0) }
         guard !urls.isEmpty else { return }
-        if allowAll, !(await confirmTrash(count: urls.count, all: selected.isEmpty)) {
+        if allowAll,
+          !(await confirmTrash(count: urls.count, filter: selected.isEmpty ? filter : nil))
+        {
           return
         }
         closePreview()
-        try await recycleImages(urls)
+        try await recycleItems(urls)
       } catch {
         presentError(error)
       }
     }
   }
 
-  private func confirmTrash(count: Int, all: Bool) async -> Bool {
+  private func confirmationText(count: Int, filter: TrayFilter?) -> String {
+    switch filter {
+    case nil: L10n.text("trash_selection_confirmation", count)
+    case .all: L10n.text("trash_all_confirmation", count)
+    case .kind(.image): L10n.text("trash_images_confirmation", count)
+    case .kind(.text): L10n.text("trash_texts_confirmation", count)
+    case .kind(.link): L10n.text("trash_links_confirmation", count)
+    case .kind(.file): L10n.text("trash_files_confirmation", count)
+    }
+  }
+
+  private func confirmTrash(count: Int, filter: TrayFilter?) async -> Bool {
     guard trashButton.window != nil else { return false }
-    let title = NSTextField(
-      wrappingLabelWithString: all
-        ? L10n.text("trash_all_confirmation", count)
-        : L10n.text("trash_selection_confirmation", count))
+    let title = NSTextField(wrappingLabelWithString: confirmationText(count: count, filter: filter))
     title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
     title.alignment = .center
     title.preferredMaxLayoutWidth = 244
@@ -362,7 +545,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     detail.textColor = .secondaryLabelColor
     detail.alignment = .center
     let confirm = NSButton(
-      title: all ? L10n.text("Move All to Trash") : L10n.text("trash_count", count),
+      title: filter == .all ? L10n.text("Move All to Trash") : L10n.text("trash_count", count),
       target: self, action: #selector(confirmTrashClicked))
     confirm.bezelStyle = .rounded
     confirm.hasDestructiveAction = true
@@ -427,21 +610,40 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     DispatchQueue.main.async { continuation?.resume(returning: confirmed) }
   }
 
-  private func copySelection() {
-    let selected = selectedImages
-    guard !selected.isEmpty else { return }
-    let items: [NSPasteboardItem] = selected.map { image in
-      let item = NSPasteboardItem()
-      item.setString(image.url.absoluteString, forType: .fileURL)
-      item.setDataProvider(ImageClipboardProvider(url: image.url), forTypes: [.png])
-      return item
-    }
+  func copyToPasteboard(_ item: ReceivedItem) {
+    let entry = cache[item.url] ?? TrayEntry(item: item)
     NSPasteboard.general.clearContents()
-    NSPasteboard.general.writeObjects(items)
+    NSPasteboard.general.writeObjects([pasteboardItem(for: entry)])
+  }
+
+  private func pasteboardItem(for entry: TrayEntry) -> NSPasteboardItem {
+    let item = NSPasteboardItem()
+    switch entry.kind {
+    case .image:
+      item.setString(entry.url.absoluteString, forType: .fileURL)
+      item.setDataProvider(ImageClipboardProvider(url: entry.url), forTypes: [.png])
+    case .text:
+      item.setString(entry.fullText, forType: .string)
+    case .link:
+      if let link = entry.link {
+        item.setString(link.absoluteString, forType: .URL)
+        item.setString(link.absoluteString, forType: .string)
+      }
+    case .file:
+      item.setString(entry.url.absoluteString, forType: .fileURL)
+    }
+    return item
+  }
+
+  private func copySelection() {
+    let selected = selectedEntries
+    guard !selected.isEmpty else { return }
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.writeObjects(selected.map(pasteboardItem(for:)))
   }
 
   private func revealSelection() {
-    NSWorkspace.shared.activateFileViewerSelecting(selectedImages.map(\.url))
+    NSWorkspace.shared.activateFileViewerSelecting(selectedEntries.map(\.url))
   }
 
   private func previewSelection() {
@@ -449,7 +651,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       closePreview()
       return
     }
-    let urls = selectedImages.map(\.url)
+    let urls = selectedEntries.map(\.url)
     guard !urls.isEmpty, let panel = QLPreviewPanel.shared() else { return }
     previewSource = ImagePreviewSource(urls: urls)
     presentationHeld?(holdsPresentation)
@@ -527,144 +729,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   @objc private func folderClicked() { openFolder?() }
   @objc private func settingsClicked() { openSettings?() }
-  @objc private func trashClicked() { trashImages(allowAll: true) }
-}
-
-@MainActor
-private final class ThumbnailItem: NSCollectionViewItem {
-  static let identifier = NSUserInterfaceItemIdentifier("Thumbnail")
-  var isLatestReceipt = false { didSet { updateSelection() } }
-
-  override func loadView() {
-    let container = ThumbnailView()
-    let image = TopAlignedImageView()
-    image.translatesAutoresizingMaskIntoConstraints = false
-    image.wantsLayer = true
-    image.layer?.cornerRadius = 6
-    image.layer?.masksToBounds = true
-    let time = NSTextField(labelWithString: "")
-    time.font = .monospacedDigitSystemFont(ofSize: 9, weight: .medium)
-    time.textColor = .white
-    time.translatesAutoresizingMaskIntoConstraints = false
-    time.setContentCompressionResistancePriority(.required, for: .vertical)
-    time.setContentHuggingPriority(.required, for: .vertical)
-    let capsule = NSView()
-    capsule.wantsLayer = true
-    capsule.layer?.cornerRadius = 7
-    capsule.translatesAutoresizingMaskIntoConstraints = false
-    capsule.addSubview(time)
-    let check = NSImageView(
-      image: NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
-        ?? NSImage())
-    check.symbolConfiguration = NSImage.SymbolConfiguration(
-      paletteColors: [.white, .controlAccentColor])
-    check.translatesAutoresizingMaskIntoConstraints = false
-    container.addSubview(image)
-    container.addSubview(capsule)
-    container.addSubview(check)
-    NSLayoutConstraint.activate([
-      image.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-      image.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-      image.topAnchor.constraint(equalTo: container.topAnchor),
-      image.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-      capsule.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 4),
-      capsule.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),
-      time.leadingAnchor.constraint(equalTo: capsule.leadingAnchor, constant: 3),
-      time.trailingAnchor.constraint(equalTo: capsule.trailingAnchor, constant: -3),
-      time.topAnchor.constraint(equalTo: capsule.topAnchor, constant: 1),
-      time.bottomAnchor.constraint(equalTo: capsule.bottomAnchor, constant: -1),
-      check.topAnchor.constraint(equalTo: container.topAnchor, constant: 4),
-      check.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -4),
-      check.widthAnchor.constraint(equalToConstant: 16),
-      check.heightAnchor.constraint(equalToConstant: 16),
-    ])
-    container.timeCapsule = capsule
-    container.checkmark = check
-    view = container
-    imageView = image
-    textField = time
-    updateSelection()
-  }
-
-  override var isSelected: Bool { didSet { updateSelection() } }
-  override var highlightState: NSCollectionViewItem.HighlightState { didSet { updateSelection() } }
-
-  override var draggingImageComponents: [NSDraggingImageComponent] {
-    guard let snapshot = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
-      return super.draggingImageComponents
-    }
-    view.cacheDisplay(in: view.bounds, to: snapshot)
-    let image = NSImage(size: view.bounds.size)
-    image.addRepresentation(snapshot)
-    let component = NSDraggingImageComponent(key: .icon)
-    component.contents = image
-    component.frame = view.bounds
-    return [component]
-  }
-
-  private func updateSelection() {
-    guard isViewLoaded else { return }
-    (view as? ThumbnailView)?.selected =
-      highlightState == .forSelection || (isSelected && highlightState != .forDeselection)
-    (view as? ThumbnailView)?.latestReceipt = isLatestReceipt
-  }
-}
-
-@MainActor
-private final class TopAlignedImageView: NSImageView {
-  override func draw(_ dirtyRect: NSRect) {
-    guard let image, image.size.width > 0, image.size.height > 0 else { return }
-    let scale = max(bounds.width / image.size.width, bounds.height / image.size.height)
-    let size = NSSize(width: image.size.width * scale, height: image.size.height * scale)
-    let rect = NSRect(
-      x: (bounds.width - size.width) / 2, y: isFlipped ? 0 : bounds.height - size.height,
-      width: size.width, height: size.height)
-    NSBezierPath(rect: bounds).addClip()
-    image.draw(
-      in: rect, from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
-  }
-}
-
-@MainActor
-private final class ThumbnailView: NSView {
-  var timeCapsule: NSView?
-  var checkmark: NSImageView?
-  var selected = false {
-    didSet {
-      setAccessibilitySelected(selected)
-      updateColors()
-    }
-  }
-  var latestReceipt = false { didSet { updateColors() } }
-
-  override init(frame: NSRect) {
-    super.init(frame: frame)
-    wantsLayer = true
-    layer?.cornerRadius = 6
-    updateColors()
-  }
-
-  required init?(coder: NSCoder) { nil }
-
-  override func viewDidChangeEffectiveAppearance() {
-    super.viewDidChangeEffectiveAppearance()
-    updateColors()
-  }
-
-  private func updateColors() {
-    effectiveAppearance.performAsCurrentDrawingAppearance {
-      layer?.borderWidth = selected ? 2 : (latestReceipt ? 1 : 0)
-      layer?.borderColor = NSColor.controlAccentColor.withAlphaComponent(selected ? 1 : 0.6).cgColor
-      layer?.shadowColor = NSColor.controlAccentColor.cgColor
-      layer?.shadowOpacity = latestReceipt ? 0.45 : 0
-      layer?.shadowRadius = 5
-      layer?.shadowOffset = .zero
-      timeCapsule?.layer?.backgroundColor =
-        (latestReceipt
-        ? NSColor.controlAccentColor : NSColor.black.withAlphaComponent(0.6)).cgColor
-      checkmark?.isHidden = !selected
-    }
-  }
+  @objc private func trashClicked() { trashItems(allowAll: true) }
 }
 
 private final class ImagePreviewSource: NSObject, QLPreviewPanelDataSource {
@@ -693,7 +758,7 @@ private final class ImageClipboardProvider: NSObject, NSPasteboardItemDataProvid
 }
 
 @MainActor
-private final class ImageCollectionView: NSCollectionView {
+final class ImageCollectionView: NSCollectionView {
   var copyImages: (() -> Void)?
   var revealImages: (() -> Void)?
   var previewImages: (() -> Void)?
@@ -715,7 +780,7 @@ private final class ImageCollectionView: NSCollectionView {
     let menu = NSMenu()
     let count = selectionIndexPaths.count
     let copy = NSMenuItem(
-      title: count > 1 ? L10n.text("copy_count", count) : L10n.text("Copy Image"),
+      title: count > 1 ? L10n.text("copy_count", count) : L10n.text("Copy"),
       action: #selector(copy(_:)), keyEquivalent: "c"
     )
     copy.target = self

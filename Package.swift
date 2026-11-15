@@ -12,5 +12,6 @@ let package = Package(
     .executableTarget(
       name: "AnyDock", dependencies: ["AnyDockCore"], resources: [.process("Resources")]),
     .testTarget(name: "AnyDockCoreTests", dependencies: ["AnyDockCore"]),
+    .testTarget(name: "AnyDockTests", dependencies: ["AnyDock", "AnyDockCore"]),
   ]
 )
