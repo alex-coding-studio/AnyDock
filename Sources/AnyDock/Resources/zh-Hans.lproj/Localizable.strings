@@ -115,3 +115,12 @@
 "Collapse Clipboard" = "收起剪贴板";
 "Expand Clipboard" = "展开剪贴板";
 "Double-click to copy" = "双击复制";
+"Keyboard" = "键盘";
+"Wake shortcut" = "唤醒快捷键";
+"Record Shortcut" = "录制快捷键";
+"Type shortcut…" = "请按下快捷键…";
+"hotkey.clear" = "清除";
+"hotkey.clear.accessibility" = "清除唤醒快捷键";
+"settings.hotkey.note" = "在任何 App 中按下即可打开或关闭托盘。录制时按 Esc 取消。";
+"hotkey.modifierRequired" = "快捷键需要包含 ⌘、⌥ 或 ⌃，只按 ⇧ 不够。";
+"hotkey.unavailable" = "%@ 已被 macOS 或其他 App 占用，请换一个快捷键。";

@@ -23,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let tray = ImageTrayController()
   private let store = ImageStore()
   private let clipboard = ClipboardMonitor()
+  private let hotKeys = HotKeyCenter()
   private var server: HTTPServer?
   private var configurationStore: ConfigurationStore?
   private var configuration: ReceiverConfiguration?
@@ -81,6 +82,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       preferences.clipboardHistoryChanged = { [weak self] enabled in
         self?.clipboard.setEnabled(enabled)
       }
+      hotKeys.onPress = { [weak self] in self?.togglePopover() }
+      preferences.registerHotKey = { [weak self] hotKey in self?.hotKeys.register(hotKey) ?? false }
+      preferences.registerSavedHotKey()
       settings = preferences
       server = HTTPServer(store: store)
       Task {
