@@ -1,7 +1,7 @@
 import CoreGraphics
 import Testing
 
-@testable import SnapDockCore
+@testable import AnyDockCore
 
 @Test("每张图放进当前最短列，等高时放左列，长图高度封顶 2.5 倍列宽")
 func masonryPlacesItemsInShortestColumn() {

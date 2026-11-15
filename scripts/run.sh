@@ -2,4 +2,4 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ./scripts/build.sh
-open dist/SnapDock.app
+open dist/AnyDock.app

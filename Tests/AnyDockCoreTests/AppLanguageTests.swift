@@ -1,11 +1,11 @@
 import Foundation
 import Testing
 
-@testable import SnapDockCore
+@testable import AnyDockCore
 
 @Test("语言覆盖只使用 App 自己的偏好，跟随系统会移除覆盖")
 func languageOverrideUsesOnlyApplicationPreferences() throws {
-  let domain = "SnapDockTests.\(UUID().uuidString)"
+  let domain = "AnyDockTests.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: domain))
   defer { defaults.removePersistentDomain(forName: domain) }
   defaults.register(defaults: ["AppleLanguages": ["zh-Hans"]])

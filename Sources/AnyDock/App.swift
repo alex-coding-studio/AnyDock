@@ -1,10 +1,10 @@
+import AnyDockCore
 import AppKit
 import OSLog
-import SnapDockCore
 
 @main
 @MainActor
-enum SnapDockApp {
+enum AnyDockApp {
   static func main() {
     let app = NSApplication.shared
     AppAppearance.current.apply()
@@ -30,11 +30,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     item.button?.image = BrandIcon.menuBar()
-    item.button?.setAccessibilityLabel("SnapDock")
+    item.button?.setAccessibilityLabel(L10n.text("AnyDock"))
     item.button?.image?.isTemplate = true
     item.button?.target = self
     item.button?.action = #selector(togglePopover)
-    item.button?.toolTip = "SnapDock"
+    item.button?.toolTip = L10n.text("AnyDock")
     statusItem = item
     popover.behavior = .transient
     popover.delegate = self
@@ -69,7 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       logger.error(
         "Configuration could not be loaded: \(error.localizedDescription, privacy: .public)")
       let alert = NSAlert(error: error)
-      alert.messageText = L10n.text("Unable to Read SnapDock Configuration")
+      alert.messageText = L10n.text("Unable to Read AnyDock Configuration")
       alert.informativeText = L10n.text("configuration.recovery")
       alert.runModal()
       NSApp.terminate(nil)
@@ -114,7 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       failed
       ? NSImage(
         systemSymbolName: "exclamationmark.triangle",
-        accessibilityDescription: L10n.text("SnapDock receiver failed. Open Settings."))
+        accessibilityDescription: L10n.text("AnyDock receiver failed. Open Settings."))
       : BrandIcon.menuBar()
     statusItem?.button?.image?.isTemplate = true
   }

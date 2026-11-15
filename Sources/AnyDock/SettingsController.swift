@@ -1,6 +1,6 @@
+import AnyDockCore
 import AppKit
 import ServiceManagement
-import SnapDockCore
 
 @MainActor
 final class SettingsController: NSWindowController, NSTextFieldDelegate, NSSharingServiceDelegate {
@@ -10,7 +10,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private let language = NSPopUpButton(frame: .zero, pullsDown: false)
   private let launchLanguage = AppLanguage.current(domain: "studio.alex.snapdock")
   private let languageNotice = NSTextField(
-    wrappingLabelWithString: L10n.text("Restart SnapDock to apply the language change."))
+    wrappingLabelWithString: L10n.text("Restart AnyDock to apply the language change."))
   private let restart = NSButton(title: L10n.text("Restart Now"), target: nil, action: nil)
   private var isApplying = false
   private var isSending = false
@@ -43,7 +43,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     let window = NSWindow(
       contentRect: NSRect(x: 0, y: 0, width: 600, height: 600), styleMask: [.titled, .closable],
       backing: .buffered, defer: false)
-    window.title = L10n.text("SnapDock Settings")
+    window.title = L10n.text("AnyDock Settings")
     window.toolbarStyle = .preference
     window.center()
     super.init(window: window)
@@ -117,7 +117,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     icon.imageScaling = .scaleProportionallyUpOrDown
     icon.widthAnchor.constraint(equalToConstant: 40).isActive = true
     icon.heightAnchor.constraint(equalToConstant: 40).isActive = true
-    let title = NSTextField(labelWithString: "SnapDock")
+    let title = NSTextField(labelWithString: L10n.text("AnyDock"))
     title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
     let identity = NSStackView(views: [title, footnote(L10n.text("An iPhone screenshot inbox"))])
     identity.orientation = .vertical
@@ -125,7 +125,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     identity.spacing = 3
     let quit = NSButton(
       title: L10n.text(
-        "Quit SnapDock"), target: NSApp, action: #selector(NSApplication.terminate(_:)))
+        "Quit AnyDock"), target: NSApp, action: #selector(NSApplication.terminate(_:)))
     quit.bezelStyle = .rounded
     let card = row([icon, identity, NSView(), quit])
     card.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
@@ -484,7 +484,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
   @objc private func restartApplication() {
     guard !isSending else {
-      generalStatus.stringValue = L10n.text("Finish sharing before restarting SnapDock.")
+      generalStatus.stringValue = L10n.text("Finish sharing before restarting AnyDock.")
       generalStatus.isHidden = false
       return
     }
@@ -502,7 +502,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
       while /bin/kill -0 "$1" 2>/dev/null; do /bin/sleep 0.1; done
       /usr/bin/open -n "$2" --args --settings
       """,
-      "SnapDockRestart", String(ProcessInfo.processInfo.processIdentifier),
+      "AnyDockRestart", String(ProcessInfo.processInfo.processIdentifier),
       Bundle.main.bundleURL.path,
     ]
     process.standardInput = FileHandle.nullDevice
@@ -514,7 +514,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
       NSApp.terminate(nil)
     } catch {
       generalStatus.stringValue = L10n.text(
-        "Unable to restart SnapDock: %@", error.localizedDescription)
+        "Unable to restart AnyDock: %@", error.localizedDescription)
       generalStatus.isHidden = false
     }
   }
@@ -528,7 +528,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         try SMAppService.mainApp.unregister()
       }
       if SMAppService.mainApp.status == .requiresApproval {
-        generalStatus.stringValue = L10n.text("Allow SnapDock in System Settings → Login Items.")
+        generalStatus.stringValue = L10n.text("Allow AnyDock in System Settings → Login Items.")
         generalStatus.isHidden = false
       }
     } catch {

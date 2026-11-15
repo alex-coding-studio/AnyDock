@@ -1,6 +1,6 @@
+import AnyDockCore
 import Foundation
 import Security
-import SnapDockCore
 
 @MainActor
 final class ConfigurationStore {

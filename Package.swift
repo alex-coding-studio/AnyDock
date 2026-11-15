@@ -3,14 +3,14 @@
 import PackageDescription
 
 let package = Package(
-  name: "SnapDock",
+  name: "AnyDock",
   defaultLocalization: "en",
   platforms: [.macOS(.v14)],
-  products: [.executable(name: "SnapDock", targets: ["SnapDock"])],
+  products: [.executable(name: "AnyDock", targets: ["AnyDock"])],
   targets: [
-    .target(name: "SnapDockCore"),
+    .target(name: "AnyDockCore"),
     .executableTarget(
-      name: "SnapDock", dependencies: ["SnapDockCore"], resources: [.process("Resources")]),
-    .testTarget(name: "SnapDockCoreTests", dependencies: ["SnapDockCore"]),
+      name: "AnyDock", dependencies: ["AnyDockCore"], resources: [.process("Resources")]),
+    .testTarget(name: "AnyDockCoreTests", dependencies: ["AnyDockCore"]),
   ]
 )

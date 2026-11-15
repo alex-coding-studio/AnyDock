@@ -1,11 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-snapdock_iconset="$PWD/.build/Brand.iconset"
-mkdir -p "$snapdock_iconset"
-for snapdock_size in 16 32 128 256 512; do
-  sips -z "$snapdock_size" "$snapdock_size" Resources/Brand/SnapDockIcon.png --out "$snapdock_iconset/icon_${snapdock_size}x${snapdock_size}.png" >/dev/null
-  snapdock_retina=$((snapdock_size * 2))
-  sips -z "$snapdock_retina" "$snapdock_retina" Resources/Brand/SnapDockIcon.png --out "$snapdock_iconset/icon_${snapdock_size}x${snapdock_size}@2x.png" >/dev/null
+anydock_iconset="$PWD/.build/Brand.iconset"
+mkdir -p "$anydock_iconset"
+for anydock_size in 16 32 128 256 512; do
+  sips -z "$anydock_size" "$anydock_size" Resources/Brand/AnyDockIcon.png --out "$anydock_iconset/icon_${anydock_size}x${anydock_size}.png" >/dev/null
+  anydock_retina=$((anydock_size * 2))
+  sips -z "$anydock_retina" "$anydock_retina" Resources/Brand/AnyDockIcon.png --out "$anydock_iconset/icon_${anydock_size}x${anydock_size}@2x.png" >/dev/null
 done
-iconutil -c icns "$snapdock_iconset" -o Resources/AppIcon.icns
+iconutil -c icns "$anydock_iconset" -o Resources/AppIcon.icns

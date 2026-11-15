@@ -20,8 +20,8 @@ class ShortcutTests(unittest.TestCase):
             template.write_bytes(plistlib.dumps(module.make_shortcut("http://Mac.local:8765/upload", "PASTE_CONNECTION_KEY")))
             executable = directory / "installer-checks"
             subprocess.run(["swiftc", "-swift-version", "6", "-parse-as-library",
-                            str(root / "Sources/SnapDock/ShortcutInstaller.swift"),
-                            str(root / "Sources/SnapDock/Localization.swift"),
+                            str(root / "Sources/AnyDock/ShortcutInstaller.swift"),
+                            str(root / "Sources/AnyDock/Localization.swift"),
                             str(root / "Tests/ShortcutTests/InstallerChecks.swift"),
                             "-o", str(executable)], check=True, capture_output=True)
             subprocess.run([str(executable), str(template)], check=True, capture_output=True)

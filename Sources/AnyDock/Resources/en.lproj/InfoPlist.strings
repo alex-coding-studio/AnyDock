@@ -1,1 +1,3 @@
+"CFBundleName" = "AnyDock";
+"CFBundleDisplayName" = "AnyDock";
 "NSLocalNetworkUsageDescription" = "Receive images shared from an iPhone on the same local network.";

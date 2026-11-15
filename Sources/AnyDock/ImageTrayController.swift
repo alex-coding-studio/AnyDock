@@ -1,6 +1,6 @@
+import AnyDockCore
 import AppKit
 import Quartz
-import SnapDockCore
 
 @MainActor
 final class ImageTrayController: NSViewController, NSCollectionViewDataSource,

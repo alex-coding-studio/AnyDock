@@ -4,7 +4,7 @@ import ImageIO
 import Testing
 import UniformTypeIdentifiers
 
-@testable import SnapDockCore
+@testable import AnyDockCore
 
 @Test("分段到达的图片请求保持原始字节")
 func fragmentedUploadPreservesBody() throws {
@@ -51,6 +51,22 @@ func storesOriginalsWithoutOverwriting() async throws {
     try await store.save(Data("not an image".utf8), in: directory)
   }
   #expect(try await store.list(in: directory).count == 2)
+}
+
+@Test("新图片使用 AnyDock 前缀，旧 SnapDock 图片仍列入托盘与回收范围")
+func listsNewAndLegacyOriginals() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let data = try makeImage()
+  let store = ImageStore()
+  let received = try await store.save(data, in: directory)
+  let legacy = directory.appendingPathComponent("SnapDock-legacy.png")
+  try data.write(to: legacy)
+  try data.write(to: directory.appendingPathComponent("holiday.png"))
+  #expect(received.url.lastPathComponent.hasPrefix("AnyDock-"))
+  let listed = try await store.list(in: directory)
+  let names = Set(listed.map { $0.url.lastPathComponent })
+  #expect(names == Set([received.url.lastPathComponent, legacy.lastPathComponent]))
 }
 
 @Test("真实 HTTP 上传仅在鉴权和原图落盘后返回成功，端口冲突不会换端口")

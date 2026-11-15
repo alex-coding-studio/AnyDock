@@ -54,7 +54,7 @@ enum ShortcutInstaller {
     let data = try personalized(
       template: Data(contentsOf: templateURL), address: address, key: key, name: shortcutName)
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
-      "SnapDock-Shortcut-\(UUID().uuidString)", isDirectory: true)
+      "AnyDock-Shortcut-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(
       at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
     let inputDirectory = directory.appendingPathComponent("Input", isDirectory: true)
