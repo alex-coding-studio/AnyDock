@@ -3,6 +3,8 @@
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>SnapDock</string>
 <key>CFBundleIdentifier</key><string>studio.alex.snapdock</string>
+<key>CFBundleDevelopmentRegion</key><string>en</string>
+<key>CFBundleLocalizations</key><array><string>en</string><string>zh-Hans</string></array>
 <key>CFBundleName</key><string>SnapDock</string>
 <key>CFBundleDisplayName</key><string>SnapDock</string>
 <key>CFBundleIconFile</key><string>AppIcon.icns</string>
@@ -12,5 +14,5 @@
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
-<key>NSLocalNetworkUsageDescription</key><string>接收同一局域网内 iPhone 分享的图片。</string>
+<key>NSLocalNetworkUsageDescription</key><string>Receive images shared from an iPhone on the same local network.</string>
 </dict></plist>

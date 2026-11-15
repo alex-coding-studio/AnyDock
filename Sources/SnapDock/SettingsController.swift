@@ -6,6 +6,12 @@ import SnapDockCore
 final class SettingsController: NSWindowController, NSTextFieldDelegate, NSSharingServiceDelegate {
   private var configuration: ReceiverConfiguration
   private var selectedDirectory: URL
+  private let appearance = NSPopUpButton(frame: .zero, pullsDown: false)
+  private let language = NSPopUpButton(frame: .zero, pullsDown: false)
+  private let launchLanguage = AppLanguage.current(domain: "studio.alex.snapdock")
+  private let languageNotice = NSTextField(
+    wrappingLabelWithString: L10n.text("Restart SnapDock to apply the language change."))
+  private let restart = NSButton(title: L10n.text("Restart Now"), target: nil, action: nil)
   private var isApplying = false
   private var isSending = false
   private let shortcutNamePreference = "personalizedShortcutName"
@@ -16,7 +22,8 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private let folder = NSTextField(labelWithString: "")
   private let port = NSTextField()
   private let address = NSTextField(wrappingLabelWithString: "")
-  private let receiverStatus = NSTextField(wrappingLabelWithString: "正在启动接收服务…")
+  private let receiverStatus = NSTextField(
+    wrappingLabelWithString: L10n.text("Starting the receiver…"))
   private let receivingError = NSTextField(wrappingLabelWithString: "")
   private let generalStatus = NSTextField(wrappingLabelWithString: "")
   private let connectionStatus = NSTextField(wrappingLabelWithString: "")
@@ -25,8 +32,8 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private let login = NSSwitch()
   private let columns = NSSegmentedControl(
     labels: ["2", "3", "4", "5"], trackingMode: .selectOne, target: nil, action: nil)
-  private let save = NSButton(title: "应用", target: nil, action: nil)
-  private let send = NSButton(title: "发送到 iPhone…", target: nil, action: nil)
+  private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
+  private let send = NSButton(title: L10n.text("Send to iPhone…"), target: nil, action: nil)
   var apply: ((ReceiverConfiguration) async throws -> Void)?
   var columnsChanged: ((Int) -> Void)?
 
@@ -34,9 +41,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     self.configuration = configuration
     selectedDirectory = configuration.directory
     let window = NSWindow(
-      contentRect: NSRect(x: 0, y: 0, width: 600, height: 480), styleMask: [.titled, .closable],
+      contentRect: NSRect(x: 0, y: 0, width: 600, height: 600), styleMask: [.titled, .closable],
       backing: .buffered, defer: false)
-    window.title = "SnapDock 设置"
+    window.title = L10n.text("SnapDock Settings")
     window.toolbarStyle = .preference
     window.center()
     super.init(window: window)
@@ -45,9 +52,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     } else if let computerName = Host.current().localizedName?
       .trimmingCharacters(in: .whitespacesAndNewlines), !computerName.isEmpty
     {
-      shortcutName.stringValue = "发送到 " + computerName
+      shortcutName.stringValue = L10n.text("Send to %@", computerName)
     } else {
-      shortcutName.stringValue = "发送到 Mac"
+      shortcutName.stringValue = L10n.text("Send to Mac")
     }
     columns.selectedSegment = (2...5).contains(thumbnailColumns) ? thumbnailColumns - 2 : 3
     buildInterface()
@@ -61,7 +68,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     statusIcon.contentTintColor = isError ? .systemRed : .systemGreen
     statusIcon.image = NSImage(
       systemSymbolName: isError ? "exclamationmark.circle.fill" : "circle.fill",
-      accessibilityDescription: isError ? "接收失败" : "正在监听")
+      accessibilityDescription: isError ? L10n.text("Receiver Failed") : L10n.text("Listening"))
   }
 
   private func buildInterface() {
@@ -76,13 +83,35 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   }
 
   private func generalTab() -> NSTabViewItem {
+    appearance.addItems(withTitles: [
+      L10n.text("Follow System"), L10n.text("Light"), L10n.text("Dark"),
+    ])
+    appearance.selectItem(at: AppAppearance.allCases.firstIndex(of: .current) ?? 0)
+    appearance.target = self
+    appearance.action = #selector(changeAppearance)
+    appearance.setAccessibilityLabel(L10n.text("Appearance"))
+    language.addItems(withTitles: [
+      L10n.text("Follow System"), L10n.text("English"), L10n.text("简体中文"),
+    ])
+    language.selectItem(at: AppLanguage.allCases.firstIndex(of: launchLanguage) ?? 0)
+    language.target = self
+    language.action = #selector(changeLanguage)
+    language.setAccessibilityLabel(L10n.text("Language"))
+    languageNotice.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+    languageNotice.textColor = .secondaryLabelColor
+    languageNotice.isHidden = true
+    languageNotice.setContentCompressionResistancePriority(.required, for: .vertical)
+    restart.target = self
+    restart.action = #selector(restartApplication)
+    restart.bezelStyle = .rounded
+    restart.isHidden = true
     login.state = SMAppService.mainApp.status == .enabled ? .on : .off
     login.target = self
     login.action = #selector(toggleLogin)
-    login.setAccessibilityLabel("登录时自动启动")
+    login.setAccessibilityLabel(L10n.text("Launch at login"))
     columns.target = self
     columns.action = #selector(changeColumns)
-    columns.setAccessibilityLabel("缩略图列数")
+    columns.setAccessibilityLabel(L10n.text("Thumbnail columns"))
     configureMessage(generalStatus)
     let icon = NSImageView(image: BrandIcon.artwork ?? BrandIcon.menuBar())
     icon.imageScaling = .scaleProportionallyUpOrDown
@@ -90,22 +119,30 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     icon.heightAnchor.constraint(equalToConstant: 40).isActive = true
     let title = NSTextField(labelWithString: "SnapDock")
     title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-    let identity = NSStackView(views: [title, footnote("iPhone 截图收件箱")])
+    let identity = NSStackView(views: [title, footnote(L10n.text("An iPhone screenshot inbox"))])
     identity.orientation = .vertical
     identity.alignment = .leading
     identity.spacing = 3
     let quit = NSButton(
-      title: "退出 SnapDock", target: NSApp, action: #selector(NSApplication.terminate(_:)))
+      title: L10n.text(
+        "Quit SnapDock"), target: NSApp, action: #selector(NSApplication.terminate(_:)))
     quit.bezelStyle = .rounded
     let card = row([icon, identity, NSView(), quit])
     card.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
     return tab(
-      "通用", symbol: "gearshape",
+      L10n.text("General"), symbol: "gearshape",
       views: [
         section(
-          "托盘", rows: [formRow("缩略图列数", value: columns)],
-          note: "立即生效。列越多，一屏看到的截图越多。"),
-        section("启动", rows: [formRow("登录时自动启动", value: login)]),
+          L10n.text("Tray"), rows: [formRow(L10n.text("Thumbnail columns"), value: columns)],
+          note: L10n.text("settings.columns.note")),
+        section(
+          L10n.text("Personalization"),
+          rows: [
+            formRow(L10n.text("Appearance"), value: appearance),
+            formRow(L10n.text("Language"), value: language),
+          ]),
+        languageNotice, row([NSView(), restart]),
+        section(L10n.text("Startup"), rows: [formRow(L10n.text("Launch at login"), value: login)]),
         generalStatus, group(rows: [card]),
       ])
   }
@@ -126,37 +163,35 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     configureMessage(connectionStatus)
     configureMessage(shortcutNameStatus)
     shortcutName.delegate = self
-    shortcutName.setAccessibilityLabel("快捷指令名称")
+    shortcutName.setAccessibilityLabel(L10n.text("Shortcut name"))
     shortcutName.widthAnchor.constraint(equalToConstant: 260).isActive = true
     updateShortcutName()
-    let copyAddress = button("复制", #selector(copyConnectionAddress))
-    copyAddress.setAccessibilityLabel("复制接收地址")
-    let copyKey = button("复制", #selector(copyToken))
-    copyKey.setAccessibilityLabel("复制连接密钥")
+    let copyAddress = button(L10n.text("Copy"), #selector(copyConnectionAddress))
+    copyAddress.setAccessibilityLabel(L10n.text("Copy receive address"))
+    let copyKey = button(L10n.text("Copy"), #selector(copyToken))
+    copyKey.setAccessibilityLabel(L10n.text("Copy connection key"))
     return tab(
-      "连接", symbol: "iphone",
+      L10n.text("Connection"), symbol: "iphone",
       views: [
         section(
-          "一步设置",
+          L10n.text("One-step Setup"),
           rows: [
-            formRow("快捷指令名称", value: shortcutName),
-            formRow("发送到 Mac", value: send),
+            formRow(L10n.text("Shortcut name"), value: shortcutName),
+            formRow(L10n.text("Send to Mac"), value: send),
           ],
-          note: """
-            通过 AirDrop 发送，在 iPhone 上点「添加快捷指令」即可使用。\
-            快捷指令含连接密钥；系统签名会将副本交给 Apple 验证，请仅发送给自己的 iPhone。
-            """),
+          note: L10n.text("settings.shortcut.note")),
         shortcutNameStatus, connectionStatus,
         section(
-          "手动设置",
+          L10n.text("Manual Setup"),
           rows: [
-            formRow("接收地址", value: address, action: copyAddress),
-            formRow("连接密钥", value: key, action: copyKey),
+            formRow(L10n.text("Receive address"), value: address, action: copyAddress),
+            formRow(L10n.text("Connection key"), value: key, action: copyKey),
             formRow(
-              "通用快捷指令", value: NSTextField(labelWithString: "发送到 Mac"),
-              action: button("导出…", #selector(exportShortcut))),
+              L10n.text(
+                "Generic shortcut"), value: NSTextField(labelWithString: L10n.text("Send to Mac")),
+              action: button(L10n.text("Export…"), #selector(exportShortcut))),
           ],
-          note: "仅在可信局域网使用，HTTP 传输不加密。更改端口后请重新发送快捷指令。手动导入通用版时，需填写接收地址和连接密钥。"),
+          note: L10n.text("settings.manual.note")),
       ])
   }
 
@@ -169,8 +204,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     port.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
     port.widthAnchor.constraint(equalToConstant: 76).isActive = true
     port.delegate = self
-    port.setAccessibilityLabel("监听端口")
-    statusIcon.image = NSImage(systemSymbolName: "circle.fill", accessibilityDescription: "正在启动")
+    port.setAccessibilityLabel(L10n.text("Listening port"))
+    statusIcon.image = NSImage(
+      systemSymbolName: "circle.fill", accessibilityDescription: L10n.text("Starting"))
     statusIcon.contentTintColor = .tertiaryLabelColor
     statusIcon.widthAnchor.constraint(equalToConstant: 9).isActive = true
     statusIcon.heightAnchor.constraint(equalToConstant: 9).isActive = true
@@ -185,16 +221,20 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     save.bezelStyle = .rounded
     updatePending()
     return tab(
-      "接收", symbol: "tray.and.arrow.down",
+      L10n.text("Receiving"), symbol: "tray.and.arrow.down",
       views: [
         group(rows: [statusRow]),
         section(
-          "保存位置",
-          rows: [formRow("文件夹", value: folder, action: button("更改…", #selector(chooseFolder)))],
-          note: "更换位置不会移动或删除已收到的原图。"),
+          L10n.text("Save Location"),
+          rows: [
+            formRow(
+              L10n.text("Folder"), value: folder,
+              action: button(L10n.text("Change…"), #selector(chooseFolder)))
+          ],
+          note: L10n.text("settings.folder.note")),
         section(
-          "网络", rows: [formRow("监听端口", value: port)],
-          note: "端口范围为 1024–65535。更改端口后，请重新发送 iPhone 快捷指令。"),
+          L10n.text("Network"), rows: [formRow(L10n.text("Listening port"), value: port)],
+          note: L10n.text("settings.port.note")),
         receivingError,
       ], bottomBar: row([NSView(), pending, save]))
   }
@@ -204,8 +244,8 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   {
     let controller = NSViewController()
     controller.title = title
-    controller.preferredContentSize = NSSize(width: 600, height: 480)
-    let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 480))
+    controller.preferredContentSize = NSSize(width: 600, height: 600)
+    let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))
     let stack = NSStackView(views: views)
     stack.orientation = .vertical
     stack.alignment = .leading
@@ -347,7 +387,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private func updatePending() {
     let enteredPort = UInt16(port.stringValue.trimmingCharacters(in: .whitespaces))
     let changed = selectedDirectory != configuration.directory || enteredPort != configuration.port
-    pending.stringValue = changed ? "有未应用的更改" : ""
+    pending.stringValue = changed ? L10n.text("Unapplied changes") : ""
     save.isEnabled = changed && !isApplying
   }
 
@@ -355,7 +395,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     do {
       let name = try ShortcutInstaller.normalizedName(shortcutName.stringValue)
       UserDefaults.standard.set(name, forKey: shortcutNamePreference)
-      shortcutNameStatus.stringValue = "将使用「\(name)」；首尾空白已移除，/ 和 : 会替换为 -。"
+      shortcutNameStatus.stringValue = L10n.text("shortcut.name.normalized", name)
       shortcutNameStatus.textColor = .secondaryLabelColor
       shortcutNameStatus.isHidden = name == shortcutName.stringValue
       send.isEnabled = !isSending
@@ -399,7 +439,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     guard !isApplying, save.isEnabled else { return }
     guard let value = UInt16(port.stringValue.trimmingCharacters(in: .whitespaces)), value >= 1024
     else {
-      receivingError.stringValue = "端口需为 1024–65535 之间的整数。"
+      receivingError.stringValue = L10n.text("Enter a whole-number port between 1024 and 65535.")
       receivingError.isHidden = false
       return
     }
@@ -425,6 +465,60 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
   }
 
+  @objc private func changeAppearance() {
+    let index = appearance.indexOfSelectedItem
+    guard AppAppearance.allCases.indices.contains(index) else { return }
+    let selected = AppAppearance.allCases[index]
+    UserDefaults.standard.set(selected.rawValue, forKey: "appearance")
+    selected.apply()
+  }
+
+  @objc private func changeLanguage() {
+    let index = language.indexOfSelectedItem
+    guard AppLanguage.allCases.indices.contains(index) else { return }
+    let selected = AppLanguage.allCases[index]
+    selected.save()
+    languageNotice.isHidden = selected == launchLanguage
+    restart.isHidden = selected == launchLanguage
+  }
+
+  @objc private func restartApplication() {
+    guard !isSending else {
+      generalStatus.stringValue = L10n.text("Finish sharing before restarting SnapDock.")
+      generalStatus.isHidden = false
+      return
+    }
+    guard Bundle.main.bundleURL.pathExtension == "app" else {
+      generalStatus.stringValue = L10n.text(
+        "settings.restart.unbundled")
+      generalStatus.isHidden = false
+      return
+    }
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/bin/sh")
+    process.arguments = [
+      "-c",
+      """
+      while /bin/kill -0 "$1" 2>/dev/null; do /bin/sleep 0.1; done
+      /usr/bin/open -n "$2" --args --settings
+      """,
+      "SnapDockRestart", String(ProcessInfo.processInfo.processIdentifier),
+      Bundle.main.bundleURL.path,
+    ]
+    process.standardInput = FileHandle.nullDevice
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = FileHandle.nullDevice
+    do {
+      guard UserDefaults.standard.synchronize() else { throw CocoaError(.fileWriteUnknown) }
+      try process.run()
+      NSApp.terminate(nil)
+    } catch {
+      generalStatus.stringValue = L10n.text(
+        "Unable to restart SnapDock: %@", error.localizedDescription)
+      generalStatus.isHidden = false
+    }
+  }
+
   @objc private func toggleLogin() {
     generalStatus.isHidden = true
     do {
@@ -434,12 +528,13 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         try SMAppService.mainApp.unregister()
       }
       if SMAppService.mainApp.status == .requiresApproval {
-        generalStatus.stringValue = "请在系统设置的「登录项」中允许 SnapDock。"
+        generalStatus.stringValue = L10n.text("Allow SnapDock in System Settings → Login Items.")
         generalStatus.isHidden = false
       }
     } catch {
       login.state = SMAppService.mainApp.status == .enabled ? .on : .off
-      generalStatus.stringValue = "无法更改登录项：\(error.localizedDescription)"
+      generalStatus.stringValue = L10n.text(
+        "Unable to change the login item: %@", error.localizedDescription)
       generalStatus.isHidden = false
     }
   }
@@ -466,14 +561,14 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     guard send.isEnabled else { return }
     if sharedFile != nil, !cleanUpSharedFile() { return }
     guard let service = NSSharingService(named: .sendViaAirDrop) else {
-      showConnectionMessage("此 Mac 无法使用 AirDrop。请使用下方的手动设置。")
+      showConnectionMessage(L10n.text("shortcut.airdrop.unsupported"))
       return
     }
     guard
       let template = Bundle.main.url(
         forResource: "Template", withExtension: "shortcut", subdirectory: "Shortcuts")
     else {
-      showConnectionMessage("快捷指令模板缺失，请重新构建完整 App。仍可使用下方的手动设置。")
+      showConnectionMessage(L10n.text("shortcut.template.missing"))
       return
     }
     guard let name = try? ShortcutInstaller.normalizedName(shortcutName.stringValue) else {
@@ -484,7 +579,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     let receiveAddress = address.stringValue
     let key = configuration.token
     setSending(true)
-    showConnectionMessage("正在生成并签名快捷指令…", isError: false)
+    showConnectionMessage(L10n.text("Creating and signing the shortcut…"), isError: false)
     Task {
       do {
         let file = try await Task.detached {
@@ -494,17 +589,18 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         sharedFile = file
         guard service.canPerform(withItems: [file]) else {
           if cleanUpSharedFile() {
-            showConnectionMessage("AirDrop 当前不可用，请检查 Wi-Fi 与蓝牙，或使用手动设置。")
+            showConnectionMessage(L10n.text("shortcut.airdrop.unavailable"))
           }
           setSending(false)
           return
         }
         sharingService = service
         service.delegate = self
-        showConnectionMessage("请选择自己的 iPhone，接收后点「添加快捷指令」。", isError: false)
+        showConnectionMessage(L10n.text("shortcut.airdrop.choosePhone"), isError: false)
         service.perform(withItems: [file])
       } catch {
-        showConnectionMessage("无法发送快捷指令：\(error.localizedDescription)")
+        showConnectionMessage(
+          L10n.text("Unable to send the shortcut: %@", error.localizedDescription))
         setSending(false)
       }
     }
@@ -517,7 +613,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
       sharedFile = nil
       return true
     } catch {
-      showConnectionMessage("无法清理含密钥的临时文件：\(error.localizedDescription)。请点击发送按钮重试清理。")
+      showConnectionMessage(L10n.text("shortcut.cleanup.failed", error.localizedDescription))
       return false
     }
   }
@@ -526,7 +622,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     self.sharingService = nil
     setSending(false)
     if cleanUpSharedFile() {
-      showConnectionMessage("快捷指令已发送；请在 iPhone 上添加后分享图片试用。", isError: false)
+      showConnectionMessage(L10n.text("shortcut.airdrop.sent"), isError: false)
     }
   }
 
@@ -536,7 +632,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     self.sharingService = nil
     setSending(false)
     if cleanUpSharedFile() {
-      showConnectionMessage("AirDrop 未完成：\(error.localizedDescription)。可重试或使用手动设置。")
+      showConnectionMessage(L10n.text("shortcut.airdrop.failed", error.localizedDescription))
     }
   }
 
@@ -552,16 +648,16 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
       let source = Bundle.main.url(
         forResource: "发送到 Mac", withExtension: "shortcut", subdirectory: "Shortcuts")
     else {
-      showConnectionMessage("快捷指令资源缺失，请重新构建完整 App。")
+      showConnectionMessage(L10n.text("shortcut.resource.missing"))
       return
     }
     let panel = NSSavePanel()
-    panel.nameFieldStringValue = "发送到 Mac.shortcut"
+    panel.nameFieldStringValue = L10n.text("Send to Mac") + ".shortcut"
     if panel.runModal() == .OK, let destination = panel.url {
       do {
         try Data(contentsOf: source).write(to: destination, options: .atomic)
         NSWorkspace.shared.activateFileViewerSelecting([destination])
-      } catch { showConnectionMessage("导出失败：\(error.localizedDescription)") }
+      } catch { showConnectionMessage(L10n.text("Export failed: %@", error.localizedDescription)) }
     }
   }
 }

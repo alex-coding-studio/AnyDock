@@ -7,6 +7,7 @@ import SnapDockCore
 enum SnapDockApp {
   static func main() {
     let app = NSApplication.shared
+    AppAppearance.current.apply()
     let delegate = AppDelegate()
     app.delegate = delegate
     app.setActivationPolicy(.accessory)
@@ -68,8 +69,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       logger.error(
         "Configuration could not be loaded: \(error.localizedDescription, privacy: .public)")
       let alert = NSAlert(error: error)
-      alert.messageText = "无法读取 SnapDock 配置"
-      alert.informativeText = "配置文件保持原样。请检查 Application Support/SnapDock 中的配置后重新启动。"
+      alert.messageText = L10n.text("Unable to Read SnapDock Configuration")
+      alert.informativeText = L10n.text("configuration.recovery")
       alert.runModal()
       NSApp.terminate(nil)
     }
@@ -86,10 +87,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         onFailure: { [weak self] message in
           await self?.receiverFailed(message)
         })
-      settings?.setStatus("监听中 · \(next.port)", isError: false)
+      settings?.setStatus(L10n.text("Listening · %d", Int(next.port)), isError: false)
       setErrorIcon(false)
     } catch {
-      receiverFailed("端口 \(next.port) 无法监听：\(error.localizedDescription)")
+      receiverFailed(
+        L10n.text("Unable to listen on port %d: %@", Int(next.port), error.localizedDescription))
     }
 
   }
@@ -112,7 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       failed
       ? NSImage(
         systemSymbolName: "exclamationmark.triangle",
-        accessibilityDescription: "SnapDock 监听失败，请打开设置")
+        accessibilityDescription: L10n.text("SnapDock receiver failed. Open Settings."))
       : BrandIcon.menuBar()
     statusItem?.button?.image?.isTemplate = true
   }
@@ -136,7 +138,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       guard directory == configuration?.directory else { return }
       tray.replaceImages(images)
     } catch {
-      receiverFailed("无法读取接收文件夹：\(error.localizedDescription)")
+      receiverFailed(L10n.text("Unable to read the receive folder: %@", error.localizedDescription))
     }
   }
 
