@@ -9,14 +9,14 @@ private func textFields(in view: NSView) -> [NSTextField] {
 }
 
 @MainActor
-@Test("卡片里的文字不能被鼠标选中或编辑，按下文字也是在拖动卡片")
+@Test("卡片和剪贴板格子里的文字不能被鼠标选中或编辑，按下文字也是在操作卡片或格子")
 func cardTextIsNotSelectable() {
   let cards: [TrayCardItem] = [TextCardItem(), LinkCardItem(), FileCardItem(), ImageCardItem()]
-  for card in cards {
-    let fields = textFields(in: card.view)
-    #expect(!fields.isEmpty, "\(type(of: card))")
+  for view in cards.map(\.view) + [ClipboardCell()] {
+    let fields = textFields(in: view)
+    #expect(!fields.isEmpty, "\(type(of: view))")
     for field in fields {
-      #expect(!field.isSelectable && !field.isEditable, "\(type(of: card)) \(field.stringValue)")
+      #expect(!field.isSelectable && !field.isEditable, "\(type(of: view)) \(field.stringValue)")
     }
   }
 }

@@ -134,6 +134,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
     wantsLayer = true
     formatter.dateTimeStyle = .named
     formatter.unitsStyle = .short
+    text.isSelectable = false
     text.font = .systemFont(ofSize: 10)
     text.maximumNumberOfLines = 2
     text.lineBreakMode = .byWordWrapping
