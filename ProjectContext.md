@@ -44,6 +44,8 @@ Run from the project root. No package installation is required; development scri
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint, test and build on the `macos-26` runner with its newest installed Xcode. `scripts/shortcut.sh` signs the generic shortcut with `shortcuts sign`, which needs a signed-in Mac; run it locally and commit the signed `Resources/Shortcuts/发送到 Mac.shortcut`. CI never signs.
 
+Pull requests merge through `.github/workflows/auto-merge.yml`; authors never merge by hand. A PR is squash-merged when its current head is the approved commit, no reviewer's latest decision is `CHANGES_REQUESTED`, CI has run and every other check succeeded, and it has no `needs-acceptance` label. A PR with visible UI changes gets `needs-acceptance` when it is opened; the architect removes it after the user accepts the UI, which retries the merge. After merging, the workflow dispatches CI on `main`, because merges made with `GITHUB_TOKEN` do not trigger push CI. See `docs/PROJECT.md` for details.
+
 ## Trust and contribution boundaries
 
 The receiver is intended for a trusted LAN. HTTP does not encrypt images or the installation-specific connection key; do not expose the listener to the Internet. Validate request sizes and image contents and generate unique filenames. Limit user-requested recycling to AnyDock images listed in the current folder. Tests use temporary directories, fixture credentials and separate ports; never print or publish real keys, configuration or received images.
