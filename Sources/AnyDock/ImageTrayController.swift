@@ -28,7 +28,10 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private(set) var clipboardSurface: NSView?
   private(set) lazy var filterBar = TrayScopeBar(
     surface: glassSurface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2))
-  private var dropZoneSurface: NSView?
+  private(set) var dropZoneSurface: NSView?
+  private(set) var controlGroup: NSView?
+  private var dropZoneAboveClipboard: NSLayoutConstraint?
+  private var dropZoneAtBottom: NSLayoutConstraint?
   private var emptyState: NSView?
   private var contents = TrayContents()
   private var entries: [TrayEntry] = []
@@ -39,6 +42,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private var isTrashing = false
   private var draggedURLs: [URL] = []
   private var droppedOnTrash = false
+  private var releaseWatch: Timer?
   var holdsPresentation: Bool { previewSource != nil || isTrashing }
   var presentationHeld: ((Bool) -> Void)?
   var loadItems: (() async throws -> [ReceivedItem])?
@@ -53,7 +57,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private var singleColumn: Bool { contents.filter == .kind(.text) }
 
   override func loadView() {
-    let content = NSView(frame: NSRect(x: 0, y: 0, width: 450, height: 520))
+    let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))
     view = content
     layout.aspectRatio = { [weak self] path in self?.aspectRatio(at: path.item) ?? 1 }
     collection.collectionViewLayout = layout
@@ -96,12 +100,12 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
     ])
     configureEmptyState(in: content)
-    configureFilterBar(in: content)
-    configureControls(in: content)
+    let group = configureControls(in: content)
+    configureFilterBar(in: content, before: group)
     updateControls()
   }
 
-  private func configureFilterBar(in content: NSView) {
+  private func configureFilterBar(in content: NSView, before group: NSView) {
     filterBar.onSelect = { [weak self] filter in self?.select(filter) }
     filterBar.onSelectAll = { [weak self] filter in self?.toggleSelectAll(in: filter) }
     filterBar.translatesAutoresizingMaskIntoConstraints = false
@@ -110,7 +114,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       filterBar.leadingAnchor.constraint(
         equalTo: content.leadingAnchor, constant: TrayMetrics.margin),
       filterBar.trailingAnchor.constraint(
-        lessThanOrEqualTo: content.trailingAnchor, constant: -TrayMetrics.margin),
+        lessThanOrEqualTo: group.leadingAnchor, constant: -Space.s8),
       filterBar.topAnchor.constraint(equalTo: content.topAnchor, constant: TrayMetrics.margin),
     ])
   }
@@ -155,13 +159,18 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     updateControls()
   }
 
-  private func configureControls(in content: NSView) {
-    let folder = glassButton(
-      NSButton(), symbol: "folder", title: L10n.text("Open Folder"),
-      action: #selector(folderClicked))
-    let settings = glassButton(
-      NSButton(), symbol: "gearshape", title: L10n.text("Settings"),
-      action: #selector(settingsClicked))
+  private func configureControls(in content: NSView) -> NSView {
+    let folder = iconButton(
+      symbol: "folder", title: L10n.text("Open Folder"), action: #selector(folderClicked))
+    let settings = iconButton(
+      symbol: "gearshape", title: L10n.text("Settings"), action: #selector(settingsClicked))
+    let buttons = NSStackView(views: [folder, settings])
+    buttons.spacing = 0
+    buttons.edgeInsets = NSEdgeInsets(
+      top: TrayMetrics.scopeBarInset, left: TrayMetrics.scopeBarInset,
+      bottom: TrayMetrics.scopeBarInset, right: TrayMetrics.scopeBarInset)
+    let group = glassSurface(buttons, cornerRadius: TrayMetrics.scopeBarHeight / 2)
+    controlGroup = group
     dropZone.canAccept = { [weak self] source in
       guard let self else { return false }
       return source === collection && !draggedURLs.isEmpty && !isTrashing
@@ -170,45 +179,54 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     let zone = glassSurface(dropZone, cornerRadius: 17)
     zone.heightAnchor.constraint(equalToConstant: 34).isActive = true
     dropZoneSurface = zone
-    for element in [folder, zone, settings] {
+    for element in [group, zone] {
       element.translatesAutoresizingMaskIntoConstraints = false
       content.addSubview(element)
     }
     NSLayoutConstraint.activate([
-      folder.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
-      folder.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -10),
-      settings.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -10),
-      settings.centerYAnchor.constraint(equalTo: folder.centerYAnchor),
+      group.heightAnchor.constraint(equalToConstant: TrayMetrics.scopeBarHeight),
+      group.topAnchor.constraint(equalTo: content.topAnchor, constant: TrayMetrics.margin),
+      group.trailingAnchor.constraint(
+        equalTo: content.trailingAnchor, constant: -TrayMetrics.margin),
       zone.centerXAnchor.constraint(equalTo: content.centerXAnchor),
-      zone.centerYAnchor.constraint(equalTo: folder.centerYAnchor),
-      zone.leadingAnchor.constraint(greaterThanOrEqualTo: folder.trailingAnchor, constant: 8),
-      zone.trailingAnchor.constraint(lessThanOrEqualTo: settings.leadingAnchor, constant: -8),
+      zone.leadingAnchor.constraint(
+        greaterThanOrEqualTo: content.leadingAnchor, constant: TrayMetrics.margin),
+      zone.trailingAnchor.constraint(
+        lessThanOrEqualTo: content.trailingAnchor, constant: -TrayMetrics.margin),
     ])
-    configureClipboardBar(in: content, between: folder, and: settings)
+    dropZoneAtBottom = zone.bottomAnchor.constraint(
+      equalTo: content.bottomAnchor, constant: -Space.s16)
+    configureClipboardBar(in: content)
+    dropZoneAboveClipboard = clipboardSurface.map {
+      zone.bottomAnchor.constraint(equalTo: $0.topAnchor, constant: -Space.s8)
+    }
+    updateClipboardSurface()
+    return group
   }
 
-  private func configureClipboardBar(
-    in content: NSView, between folder: NSView, and settings: NSView
-  ) {
+  private func configureClipboardBar(in content: NSView) {
     clipboardBar.onClear = { [weak self] in self?.clearClips?() }
     clipboardBar.onCopy = { [weak self] clip in self?.copyClip(clip) }
     clipboardBar.onExpandedChange = { [weak self] _ in self?.updateClipboardSurface() }
     let surface = glassSurface(clipboardBar, cornerRadius: ClipboardBar.collapsedHeight / 2)
     surface.translatesAutoresizingMaskIntoConstraints = false
-    content.addSubview(surface)
+    content.addSubview(surface, positioned: .below, relativeTo: dropZoneSurface)
     NSLayoutConstraint.activate([
-      surface.leadingAnchor.constraint(equalTo: folder.leadingAnchor),
-      surface.trailingAnchor.constraint(equalTo: settings.trailingAnchor),
-      surface.bottomAnchor.constraint(equalTo: folder.topAnchor, constant: -Space.s8),
+      surface.leadingAnchor.constraint(
+        equalTo: content.leadingAnchor, constant: TrayMetrics.margin),
+      surface.trailingAnchor.constraint(
+        equalTo: content.trailingAnchor, constant: -TrayMetrics.margin),
+      surface.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -Space.s16),
     ])
     clipboardSurface = surface
-    updateClipboardSurface()
   }
 
   private func updateClipboardSurface() {
     guard let surface = clipboardSurface else { return }
     let visible = !clipboardBar.clips.isEmpty
     surface.isHidden = !visible
+    dropZoneAtBottom?.isActive = !visible
+    dropZoneAboveClipboard?.isActive = visible
     let radius = clipboardBar.isExpanded ? Space.s16 : ClipboardBar.collapsedHeight / 2
     if #available(macOS 26, *), let glass = surface as? NSGlassEffectView {
       glass.cornerRadius = radius
@@ -273,9 +291,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     emptyState = stack
   }
 
-  private func glassButton(_ button: NSButton, symbol: String, title: String, action: Selector)
-    -> NSView
-  {
+  private func iconButton(symbol: String, title: String, action: Selector) -> NSButton {
+    let button = NSButton()
     button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)?
       .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 14, weight: .regular))
     button.target = self
@@ -285,12 +302,11 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     button.imageScaling = .scaleProportionallyDown
     button.toolTip = title
     button.setAccessibilityLabel(title)
-    let surface = glassSurface(button, cornerRadius: 17)
     NSLayoutConstraint.activate([
-      surface.widthAnchor.constraint(equalToConstant: 34),
-      surface.heightAnchor.constraint(equalToConstant: 34),
+      button.widthAnchor.constraint(equalToConstant: 36),
+      button.heightAnchor.constraint(equalToConstant: 28),
     ])
-    return surface
+    return button
   }
 
   private func glassSurface(_ content: NSView, cornerRadius: CGFloat) -> NSView {
@@ -516,10 +532,29 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     }
     droppedOnTrash = false
     updateControls()
+    watchForRelease()
+  }
+
+  private func watchForRelease() {
+    releaseWatch?.invalidate()
+    let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] _ in
+      MainActor.assumeIsolated { self?.hideTrashTargetIfReleased() }
+    }
+    RunLoop.main.add(timer, forMode: .common)
+    releaseWatch = timer
+  }
+
+  private func hideTrashTargetIfReleased() {
+    guard !draggedURLs.isEmpty, NSEvent.pressedMouseButtons & 1 == 0 else { return }
+    releaseWatch?.invalidate()
+    releaseWatch = nil
+    dropZoneSurface?.alphaValue = 0
   }
 
   func endDrag(operation: NSDragOperation) {
     let trashed = droppedOnTrash
+    releaseWatch?.invalidate()
+    releaseWatch = nil
     draggedURLs = []
     droppedOnTrash = false
     updateControls()
@@ -529,9 +564,13 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   @discardableResult
   func trashDraggedItems() -> Task<Void, Never>? {
     guard !draggedURLs.isEmpty, !isTrashing else { return nil }
+    let targets = draggedURLs
+    draggedURLs = []
     droppedOnTrash = true
     collection.selectionIndexPaths = []
-    return trash(draggedURLs)
+    let task = trash(targets)
+    updateControls()
+    return task
   }
 
   private var selectedEntries: [TrayEntry] {
@@ -553,6 +592,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       dropZone.show(count > 1 ? L10n.text("selected_count", count) : "", armed: false)
     }
     dropZoneSurface?.isHidden = !dragging && dropZone.label.stringValue.isEmpty
+    dropZoneSurface?.alphaValue = 1
     emptyState?.isHidden = !contents.items.isEmpty
     scroll.isHidden = contents.items.isEmpty
   }

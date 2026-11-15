@@ -18,7 +18,7 @@ private func makeTray() throws -> (ImageTrayController, [ReceivedItem], NSWindow
   }
   let tray = ImageTrayController()
   let window = NSWindow(
-    contentRect: NSRect(x: 0, y: 0, width: 450, height: 520), styleMask: .borderless,
+    contentRect: NSRect(x: 0, y: 0, width: 480, height: 640), styleMask: .borderless,
     backing: .buffered, defer: true)
   window.contentViewController = tray
   tray.replaceItems(items)
@@ -38,6 +38,7 @@ func droppingOnTrashRecyclesOnlyDraggedItems() async throws {
   tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
   tray.beginDrag([IndexPath(item: 1, section: 0), IndexPath(item: 3, section: 0)])
   let task = try #require(tray.trashDraggedItems())
+  #expect(tray.dropZoneSurface?.isHidden == true)
   tray.endDrag(operation: .delete)
   await task.value
   #expect(recycled == [items[1].url, items[3].url])

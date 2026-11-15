@@ -37,7 +37,7 @@ func polaroidCaptionsStayFullyVisible() throws {
   ]
   let tray = ImageTrayController()
   let window = NSWindow(
-    contentRect: NSRect(x: 0, y: 0, width: 450, height: 520), styleMask: .borderless,
+    contentRect: NSRect(x: 0, y: 0, width: 480, height: 640), styleMask: .borderless,
     backing: .buffered, defer: true)
   window.contentViewController = tray
   tray.replaceItems(Array(items.dropFirst()))
