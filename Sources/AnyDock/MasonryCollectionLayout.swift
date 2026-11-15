@@ -6,9 +6,8 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
   private static let spacing: CGFloat = 10
   private static let bottomInset: CGFloat = 64
 
-  var columnCount = 5 {
+  var columnCount = 3 {
     didSet {
-      columnCount = min(max(columnCount, 2), 5)
       if columnCount != oldValue {
         invalidateLayout()
       }
