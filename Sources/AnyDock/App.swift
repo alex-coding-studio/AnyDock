@@ -82,7 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       try await server.start(
         configuration: next,
         onReceive: { [weak self] image in
-          await self?.received(image)
+          await self?.received(image, directory: next.directory)
         },
         onFailure: { [weak self] message in
           await self?.receiverFailed(message)
@@ -119,11 +119,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     statusItem?.button?.image?.isTemplate = true
   }
 
-  private func received(_ image: ReceivedImage) {
-    guard
-      image.url.deletingLastPathComponent().standardizedFileURL
-        == configuration?.directory.standardizedFileURL
-    else { return }
+  private func received(_ item: ReceivedItem, directory: URL) {
+    guard directory == configuration?.directory, let image = item.image else { return }
     tray.append(image)
     if !popover.isShown {
       showPopover(refreshImages: false)
@@ -134,7 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private func reloadImages() async {
     guard let directory = configuration?.directory else { return }
     do {
-      let images = try await store.list(in: directory)
+      let images = try await store.listImages(in: directory)
       guard directory == configuration?.directory else { return }
       tray.replaceImages(images)
     } catch {
@@ -144,7 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   private func currentImages() async throws -> [ReceivedImage] {
     guard let directory = configuration?.directory else { return [] }
-    let images = try await store.list(in: directory)
+    let images = try await store.listImages(in: directory)
     guard directory == configuration?.directory else { throw CocoaError(.userCancelled) }
     return images
   }
