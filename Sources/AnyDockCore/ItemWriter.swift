@@ -29,7 +29,8 @@ final class ItemWriter {
     let parent = directoryHandle.fileDescriptor
     let staging = "." + UUID().uuidString + ".pending"
     defer { unlinkat(parent, staging, 0) }
-    let descriptor = openat(parent, staging, O_CREAT | O_EXCL | O_WRONLY | O_NOFOLLOW, 0o600)
+    let descriptor = openat(
+      parent, staging, O_CREAT | O_EXCL | O_WRONLY | O_NOFOLLOW | O_CLOEXEC, 0o600)
     guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
     let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
     try handle.write(contentsOf: data)
