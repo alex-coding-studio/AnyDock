@@ -1,8 +1,16 @@
 简体中文 | [English](README.en.md)
 
-# 随手坞 · AnyDock
+<p align="center"><img src="Resources/Brand/AnyDockIcon.png" alt="随手坞 · AnyDock" width="128"></p>
 
-从 iPhone 到 Mac，随手一递。
+<h1 align="center">随手坞 · AnyDock</h1>
+
+<p align="center">从 iPhone 到 Mac，随手一递。</p>
+
+<p align="center">
+  <a href="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml"><img src="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/alex-coding-studio/AnyDock/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <a href="https://github.com/alex-coding-studio/AnyDock"><img src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey" alt="Platform: macOS 14+"></a>
+</p>
 
 - 分享菜单一键发送
 - 从菜单栏托盘拖进聊天
