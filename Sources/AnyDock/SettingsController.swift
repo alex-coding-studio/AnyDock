@@ -47,14 +47,21 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     super.init(window: window)
     if let savedName = UserDefaults.standard.string(forKey: shortcutNamePreference) {
       shortcutName.stringValue = savedName
-    } else if let computerName = Host.current().localizedName?
+    } else if let computerName = LocalHost.computerName()?
       .trimmingCharacters(in: .whitespacesAndNewlines), !computerName.isEmpty
     {
       shortcutName.stringValue = L10n.text("Send to %@", computerName)
     } else {
       shortcutName.stringValue = L10n.text("Send to Mac")
     }
-    buildInterface()
+  }
+
+  override func showWindow(_ sender: Any?) {
+    if window?.contentViewController == nil {
+      buildInterface()
+      window?.center()
+    }
+    super.showWindow(sender)
   }
 
   required init?(coder: NSCoder) { nil }
@@ -374,8 +381,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   }
 
   private func refreshAddress() {
-    let hostname = ProcessInfo.processInfo.hostName
-    address.stringValue = "http://\(hostname):\(configuration.port)/upload"
+    address.stringValue = LocalHost.receiveAddress(port: configuration.port)
   }
 
   private func refreshFolder() {
