@@ -45,25 +45,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%d item selected</string>
+			<string>%d selected</string>
 			<key>other</key>
-			<string>%d items selected</string>
-		</dict>
-	</dict>
-	<key>trash_all_confirmation</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Move all %d item to the Trash?</string>
-			<key>other</key>
-			<string>Move all %d items to the Trash?</string>
+			<string>%d selected</string>
 		</dict>
 	</dict>
 	<key>trash_count</key>
@@ -80,86 +64,6 @@
 			<string>Move %d Item to Trash</string>
 			<key>other</key>
 			<string>Move %d Items to Trash</string>
-		</dict>
-	</dict>
-	<key>trash_files_confirmation</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Move %d file to the Trash?</string>
-			<key>other</key>
-			<string>Move all %d files to the Trash?</string>
-		</dict>
-	</dict>
-	<key>trash_images_confirmation</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Move %d image to the Trash?</string>
-			<key>other</key>
-			<string>Move all %d images to the Trash?</string>
-		</dict>
-	</dict>
-	<key>trash_links_confirmation</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Move %d link to the Trash?</string>
-			<key>other</key>
-			<string>Move all %d links to the Trash?</string>
-		</dict>
-	</dict>
-	<key>trash_selection_confirmation</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Move %d item to the Trash?</string>
-			<key>other</key>
-			<string>Move %d items to the Trash?</string>
-		</dict>
-	</dict>
-	<key>trash_texts_confirmation</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringPluralRuleType</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>d</string>
-			<key>one</key>
-			<string>Move %d text to the Trash?</string>
-			<key>other</key>
-			<string>Move all %d texts to the Trash?</string>
 		</dict>
 	</dict>
 </dict>
