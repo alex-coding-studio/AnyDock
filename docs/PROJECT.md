@@ -66,6 +66,16 @@ Language selection reads only the app's persistent preference domain, not inheri
 
 Use `./scripts/build.sh`, `./scripts/run.sh`, `./scripts/lint.sh` and `./scripts/test.sh`. Use a compatible Swift 6 compiler and an SDK containing the macOS 26 glass APIs; the development toolchain is Xcode 27.2 / Apple Swift 6.4.2. The selected Xcode compiler builds the Swift package and the build script creates and ad-hoc signs `dist/AnyDock.app`. Build products are disposable. No dependency installation is required. Keep the app bundle identifier `com.cuxiao.mac.anydock`.
 
+## Release
+
+`./scripts/release.sh` produces the distributable DMG on a developer Mac; CI never runs it because it has no certificate, and lint only checks its syntax. It reads the version from `Resources/Info.plist` `CFBundleShortVersionString`, removes the previous `dist/AnyDock.app` and DMG, runs `build.sh`, then re-signs with `--force --options runtime --timestamp`: nested frameworks, dylibs, XPC services, app extensions and apps are signed innermost first (there are none today; the SwiftPM resource bundle and shortcuts are sealed as resources), then the app. It never signs with `--deep`. It verifies the signature and team, builds `dist/AnyDock-<version>.dmg` with `hdiutil` (volume `AnyDock`, the app and an `Applications` link), signs the DMG, submits it with `xcrun notarytool submit --keychain-profile … --wait`, staples and validates the ticket, and checks the DMG with `spctl -a -t open --context context:primary-signature` and the app with `spctl -a -vv`.
+
+Defaults: identity `Developer ID Application: Cunqi Xiao (2PQ63WGMNP)`, team `2PQ63WGMNP`, notary profile `MyQuickFinderApi` (the developer account's shared notarytool keychain profile); override them with `ANYDOCK_SIGN_IDENTITY`, `ANYDOCK_TEAM_ID` and `ANYDOCK_NOTARY_PROFILE`. A missing identity stops before building. A missing or invalid notary profile stops after the signed DMG is created and prints the `xcrun notarytool store-credentials` command to run; the script never prints credentials. On a Mac without it, create a profile once with `xcrun notarytool store-credentials <profile> --apple-id <Apple ID> --team-id 2PQ63WGMNP` and an app-specific password, and pass its name through `ANYDOCK_NOTARY_PROFILE` if it differs.
+
+The hardened runtime needs no entitlements: the app does not use JIT, unsigned executable memory, DYLD variables, non-system libraries, debugging or privacy-protected devices and data. Network listening is restricted only by the App Sandbox, which AnyDock does not use; `SMAppService` login items, launching `/usr/bin/shortcuts` and `/bin/sh` for restart, Quick Look thumbnails and AirDrop sharing need no entitlement. Add the smallest entitlement set only when a new capability requires one.
+
+Publishing a GitHub Release, tagging and uploading the DMG are separate, user-approved steps outside the script.
+
 ## Operation
 
 The app runs as an accessory with no Dock icon. Quit through Settings. No LaunchAgent is installed. Login startup is a user-controlled setting in the app. The default port is 8765. Debug with Console using the AnyDock process, or launch the built executable from a terminal. Do not expose authentication tokens in logs.

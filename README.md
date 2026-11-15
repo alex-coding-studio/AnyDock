@@ -19,7 +19,9 @@
 
 ## 安装
 
-需要 macOS 14+ 和 Xcode 26+。
+需要 macOS 14+。从 [GitHub Releases](https://github.com/alex-coding-studio/AnyDock/releases) 下载 DMG，把 AnyDock 拖进「应用程序」。
+
+从源码构建需要 Xcode 26+：
 
 ```sh
 ./scripts/run.sh
