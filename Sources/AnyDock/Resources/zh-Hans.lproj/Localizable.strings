@@ -103,3 +103,7 @@
 "filter_accessibility" = "%1$@：%2$d";
 "New %@: %@, %@" = "新%1$@：%2$@，%3$@";
 "%@: %@, %@" = "%1$@：%2$@，%3$@";
+"Move All Images to Trash…" = "将全部图片移到废纸篓…";
+"Move All Text to Trash…" = "将全部文本移到废纸篓…";
+"Move All Links to Trash…" = "将全部链接移到废纸篓…";
+"Move All Files to Trash…" = "将全部文件移到废纸篓…";

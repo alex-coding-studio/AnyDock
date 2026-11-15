@@ -418,7 +418,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     case .image, .file:
       return entry.url as NSURL
     case .text:
-      return (entry.text ?? "") as NSString
+      return entry.fullText as NSString
     case .link:
       let item = NSPasteboardItem()
       if let link = entry.link {
@@ -461,11 +461,21 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     selectionCapsule?.isHidden = count == 0
     trashSurface?.isHidden = entries.isEmpty
     trashButton.isEnabled = !isTrashing
-    let title = count > 0 ? L10n.text("trash_count", count) : L10n.text("Move All to Trash…")
+    let title = count > 0 ? L10n.text("trash_count", count) : trashAllTitle
     trashButton.toolTip = title
     trashButton.setAccessibilityLabel(title)
     emptyState?.isHidden = !contents.items.isEmpty
     scroll.isHidden = contents.items.isEmpty
+  }
+
+  private var trashAllTitle: String {
+    switch contents.filter {
+    case .all: L10n.text("Move All to Trash…")
+    case .kind(.image): L10n.text("Move All Images to Trash…")
+    case .kind(.text): L10n.text("Move All Text to Trash…")
+    case .kind(.link): L10n.text("Move All Links to Trash…")
+    case .kind(.file): L10n.text("Move All Files to Trash…")
+    }
   }
 
   private func trashItems(allowAll: Bool) {
@@ -601,7 +611,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       item.setString(entry.url.absoluteString, forType: .fileURL)
       item.setDataProvider(ImageClipboardProvider(url: entry.url), forTypes: [.png])
     case .text:
-      item.setString(entry.text ?? "", forType: .string)
+      item.setString(entry.fullText, forType: .string)
     case .link:
       if let link = entry.link {
         item.setString(link.absoluteString, forType: .URL)

@@ -5,10 +5,15 @@ struct TrayEntry {
   let item: ReceivedItem
   var thumbnail: NSImage?
   let text: String?
+  let characterCount: Int
   let link: URL?
   let size: Int64?
 
   var url: URL { item.url }
+
+  var fullText: String {
+    (try? String(contentsOf: item.url, encoding: .utf8)) ?? text ?? ""
+  }
   var kind: ReceivedKind { item.kind }
 
   var displayName: String {
@@ -36,13 +41,16 @@ struct TrayEntry {
     self.item = item
     var thumbnail: NSImage?
     var text: String?
+    var characterCount = 0
     var link: URL?
     var size: Int64?
     switch item.kind {
     case .image:
       thumbnail = item.thumbnail.flatMap(NSImage.init(data:))
     case .text:
-      text = try? String(contentsOf: item.url, encoding: .utf8)
+      let full = (try? String(contentsOf: item.url, encoding: .utf8)) ?? ""
+      characterCount = full.count
+      text = String(full.prefix(1000))
     case .link:
       if let data = try? Data(contentsOf: item.url),
         let property = try? PropertyListSerialization.propertyList(from: data, format: nil),
@@ -62,6 +70,7 @@ struct TrayEntry {
     }
     self.thumbnail = thumbnail
     self.text = text
+    self.characterCount = characterCount
     self.link = link
     self.size = size
   }
@@ -207,7 +216,7 @@ final class TextCardItem: TrayCardItem {
   override func configure(_ entry: TrayEntry, singleColumn: Bool) {
     card.filled = true
     body.stringValue = entry.text ?? ""
-    count.stringValue = L10n.text("character_count", entry.text?.count ?? 0)
+    count.stringValue = L10n.text("character_count", entry.characterCount)
     count.isHidden = !singleColumn
   }
 }
