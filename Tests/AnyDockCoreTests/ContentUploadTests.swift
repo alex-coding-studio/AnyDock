@@ -112,7 +112,7 @@ func classifiesImagesByContentAndDeclaration() async throws {
   #expect(try await store.list(in: directory).count == 2)
 }
 
-@Test("缺少或不符的扩展名按文件头补上，识别不出或容器格式保持原名")
+@Test("缺少或不符的扩展名按文件头补上，识别不出的内容和其他已知格式保持原名")
 func appendsExtensionFromContentSignature() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { try? FileManager.default.removeItem(at: directory) }
@@ -122,6 +122,9 @@ func appendsExtensionFromContentSignature() async throws {
     ("SECRETARY OF STATE", pdf, "-SECRETARY OF STATE.pdf"),
     ("report.txt", pdf, "-report.txt.pdf"),
     ("scan.pdf", pdf, "-scan.pdf"),
+    ("art.ai", pdf, "-art.ai"),
+    ("scan.png", pdf, "-scan.png.pdf"),
+    ("draft.v2", pdf, "-draft.v2.pdf"),
     ("book.epub", Data([0x50, 0x4B, 0x03, 0x04, 0]), "-book.epub"),
     ("archive", Data([0x50, 0x4B, 0x03, 0x04, 0]), "-archive.zip"),
     ("notes", Data("plain words".utf8), "-notes"),

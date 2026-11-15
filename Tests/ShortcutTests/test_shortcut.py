@@ -129,10 +129,23 @@ class ShortcutTests(unittest.TestCase):
         headers = {f["WFKey"]["Value"]["string"]: f["WFValue"] for f in fields}
         self.assertEqual(headers["X-AnyDock-Filename"]["Value"]["attachmentsByRange"]["{0, 1}"]["VariableName"], "Filename")
         by_uuid = {p["UUID"]: (n, p) for n, p in zip(names, parameters)}
-        filename = next(p for n, p in zip(names, parameters)
-                        if n == "setvariable" and p["WFVariableName"] == "Filename")
-        encode_name, encode = by_uuid[filename["WFInput"]["Value"]["OutputUUID"]]
-        self.assertEqual(encode_name, "urlencode")
+        filename_index, filename = next((i, p) for i, (n, p) in enumerate(zip(names, parameters))
+                                        if n == "setvariable" and p["WFVariableName"] == "Filename"
+                                        and p["WFInput"]["Value"]["Type"] == "ActionOutput"
+                                        and by_uuid[p["WFInput"]["Value"]["OutputUUID"]][0] == "urlencode")
+        _, encode = by_uuid[filename["WFInput"]["Value"]["OutputUUID"]]
+        file_start = max(i for i, (n, p) in enumerate(zip(names, parameters))
+                         if i < filename_index and n == "conditional" and p["WFControlFlowMode"] == 0)
+        file_guard = parameters[file_start]
+        self.assertEqual(file_guard["WFConditionalActionString"], "file")
+        kind_text = by_uuid[file_guard["WFInput"]["Variable"]["Value"]["OutputUUID"]][1]
+        self.assertEqual(kind_text["WFTextActionText"]["Value"]["attachmentsByRange"]["{0, 1}"]["VariableName"], "Kind")
+        file_end = next(i for i, p in enumerate(parameters) if i > file_start
+                        and p.get("GroupingIdentifier") == file_guard["GroupingIdentifier"])
+        self.assertEqual(parameters[file_end]["WFControlFlowMode"], 2)
+        self.assertLess(filename_index, file_end)
+        for n, p in zip(names[repeats[0][0]:file_start], parameters[repeats[0][0]:file_start]):
+            self.assertNotIn(n, {"getitemname", "properties.files"})
         content = encode["WFInput"]["Value"]
         self.assertEqual(content["string"], "\ufffc.\ufffc")
         parts = [by_uuid[content["attachmentsByRange"][key]["OutputUUID"]] for key in ["{0, 1}", "{2, 1}"]]

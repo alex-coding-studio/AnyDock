@@ -96,11 +96,6 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
            GroupingIdentifier=repeat_group, WFControlFlowMode=0)
     item = variable("Repeat Item")
     item_type = action("getitemtype", WFInput=attachment(item))
-    item_name = action("getitemname", WFInput=attachment(item), GetWebPageTitle=False)
-    item_extension = action("properties.files", WFInput=attachment(item),
-                            WFContentItemPropertyName="File Extension")
-    encoded_name = action("urlencode", WFInput=message([item_name, ".", item_extension]), WFEncodeMode="Encode")
-    assign("Filename", encoded_name)
     assign("Kind", literal("file"))
     assign("Mime", literal("application/octet-stream"))
     assign("Body", item)
@@ -116,6 +111,13 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
         converted = action("gettext", WFTextActionText=text(reference=item))
         assign("Body", converted)
         end(group)
+    file_group = condition(variable("Kind"), 4, WFConditionalActionString="file")
+    item_name = action("getitemname", WFInput=attachment(item), GetWebPageTitle=False)
+    item_extension = action("properties.files", WFInput=attachment(item),
+                            WFContentItemPropertyName="File Extension")
+    encoded_name = action("urlencode", WFInput=message([item_name, ".", item_extension]), WFEncodeMode="Encode")
+    assign("Filename", encoded_name)
+    end(file_group)
     size = action("properties.files", WFInput=attachment(variable("Body")),
                   WFContentItemPropertyName="File Size")
     numeric_size = action("math", WFInput=attachment(size), WFMathOperation="+", WFMathOperand=0)

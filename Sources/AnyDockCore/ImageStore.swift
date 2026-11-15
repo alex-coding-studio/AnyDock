@@ -139,10 +139,11 @@ public actor ImageStore {
       let fileExtension = type.preferredFilenameExtension
     else { return filename }
     let current = (filename as NSString).pathExtension
-    if !current.isEmpty,
-      type == .zip || UTType(filenameExtension: current)?.conforms(to: type) == true
-    {
-      return filename
+    if !current.isEmpty, let declared = UTType(filenameExtension: current), declared.isDeclared {
+      let detectable = signatures.contains { declared.conforms(to: $0.type) }
+      if declared.conforms(to: type) || !(detectable || declared.conforms(to: .text)) {
+        return filename
+      }
     }
     return filename + "." + fileExtension
   }
