@@ -35,10 +35,14 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private let login = NSSwitch()
   private let autoCopy = NSSwitch()
   private let clipboardHistory = NSSwitch()
+  let hotKeyRecorder = HotKeyRecorder()
+  private let clearHotKey = NSButton(title: L10n.text("hotkey.clear"), target: nil, action: nil)
+  let hotKeyStatus = NSTextField(wrappingLabelWithString: "")
   private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
   private let send = NSButton(title: L10n.text("Send to iPhone…"), target: nil, action: nil)
   var apply: ((ReceiverConfiguration) async throws -> Void)?
   var clipboardHistoryChanged: ((Bool) -> Void)?
+  var registerHotKey: ((HotKey?) -> Bool)?
 
   init(configuration: ReceiverConfiguration) {
     self.configuration = configuration
@@ -60,6 +64,58 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     } else {
       shortcutName.stringValue = L10n.text("Send to Mac")
     }
+    configureMessage(hotKeyStatus)
+    hotKeyRecorder.hotKey = HotKey.saved
+    hotKeyRecorder.onRecordingChanged = { [weak self] recording in
+      self?.hotKeyStatus.isHidden = true
+      if !recording { self?.registerSavedHotKey() } else { _ = self?.registerHotKey?(nil) }
+    }
+    hotKeyRecorder.onRecord = { [weak self] candidate in self?.recordHotKey(candidate) }
+    hotKeyRecorder.onRejected = { [weak self] in
+      self?.showHotKeyMessage(L10n.text("hotkey.modifierRequired"))
+    }
+    clearHotKey.target = self
+    clearHotKey.action = #selector(clearSavedHotKey)
+    clearHotKey.bezelStyle = .rounded
+    clearHotKey.controlSize = .small
+    clearHotKey.setAccessibilityLabel(L10n.text("hotkey.clear.accessibility"))
+    clearHotKey.isEnabled = HotKey.saved != nil
+  }
+
+  func registerSavedHotKey() {
+    guard let saved = HotKey.saved else {
+      _ = registerHotKey?(nil)
+      return
+    }
+    if registerHotKey?(saved) == false {
+      showHotKeyMessage(L10n.text("hotkey.unavailable", saved.displayString))
+    }
+  }
+
+  func recordHotKey(_ candidate: HotKey) {
+    guard registerHotKey?(candidate) != false else {
+      registerSavedHotKey()
+      showHotKeyMessage(L10n.text("hotkey.unavailable", candidate.displayString))
+      return
+    }
+    HotKey.saved = candidate
+    hotKeyRecorder.hotKey = candidate
+    clearHotKey.isEnabled = true
+    hotKeyStatus.isHidden = true
+  }
+
+  private func showHotKeyMessage(_ text: String) {
+    hotKeyStatus.stringValue = text
+    hotKeyStatus.isHidden = false
+  }
+
+  @objc private func clearSavedHotKey() {
+    hotKeyRecorder.endRecording()
+    HotKey.saved = nil
+    _ = registerHotKey?(nil)
+    hotKeyRecorder.hotKey = nil
+    clearHotKey.isEnabled = false
+    hotKeyStatus.isHidden = true
   }
 
   override func showWindow(_ sender: Any?) {
@@ -154,6 +210,11 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
           L10n.text("Tray"),
           rows: [formRow(L10n.text("Copy new items automatically"), value: autoCopy)],
           note: L10n.text("settings.autoCopy.note")),
+        section(
+          L10n.text("Keyboard"),
+          rows: [formRow(L10n.text("Wake shortcut"), value: row([hotKeyRecorder, clearHotKey]))],
+          note: L10n.text("settings.hotkey.note")),
+        hotKeyStatus,
         section(
           L10n.text("Clipboard"),
           rows: [formRow(L10n.text("Keep last 4 clipboard texts"), value: clipboardHistory)],

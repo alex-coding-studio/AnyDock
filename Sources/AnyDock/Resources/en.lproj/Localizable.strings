@@ -115,3 +115,12 @@
 "Collapse Clipboard" = "Collapse Clipboard";
 "Expand Clipboard" = "Expand Clipboard";
 "Double-click to copy" = "Double-click to copy";
+"Keyboard" = "Keyboard";
+"Wake shortcut" = "Wake shortcut";
+"Record Shortcut" = "Record Shortcut";
+"Type shortcut…" = "Type shortcut…";
+"hotkey.clear" = "Clear";
+"hotkey.clear.accessibility" = "Clear wake shortcut";
+"settings.hotkey.note" = "Press it in any app to open or close the tray. Press Esc to cancel recording.";
+"hotkey.modifierRequired" = "Include ⌘, ⌥ or ⌃ in the shortcut. ⇧ alone is not enough.";
+"hotkey.unavailable" = "%@ is already in use by macOS or another app. Choose a different shortcut.";
