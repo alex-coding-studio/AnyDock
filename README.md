@@ -31,7 +31,7 @@
 
 ## 升级与迁移
 
-新版使用 `com.cuxiao.mac.anydock`。首次启动会把旧偏好及 `Application Support/SnapDock/configuration.json` 复制到新偏好域与 `Application Support/AnyDock/configuration.json`，保留连接密钥、接收目录、端口、外观、语言和快捷指令名称。旧数据不会删除，已有的新配置不会覆盖。
+新版使用 `com.cuxiao.mac.anydock`。首次启动会把旧偏好及 `Application Support/SnapDock/configuration.json` 复制到新偏好域与 `Application Support/AnyDock/configuration.json`，保留连接密钥、接收目录、端口、外观、语言、收到后自动复制和快捷指令名称。旧数据不会删除，已有的新配置不会覆盖。
 
 迁移成功后不再重复；失败时接收页会提示「旧配置迁移失败，iPhone 快捷指令暂时不可用」。此时只显示空密钥的内存默认配置，不接收、不写盘，也不发送个性化快捷指令；修复文件访问或旧配置问题后重启会重试。
 

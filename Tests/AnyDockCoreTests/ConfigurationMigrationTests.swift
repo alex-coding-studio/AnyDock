@@ -11,6 +11,7 @@ func migratesLegacyConfigurationOnce() throws {
   fixture.defaults.setPersistentDomain(
     [
       "appearance": "dark", "AppleLanguages": ["zh-Hans"], "thumbnailColumns": 4,
+      "copyNewItems": true,
       "personalizedShortcutName": "发送到测试 Mac",
     ], forName: fixture.legacyDomain)
 
@@ -20,6 +21,7 @@ func migratesLegacyConfigurationOnce() throws {
   let preferences = fixture.defaults.persistentDomain(forName: fixture.domain)
   #expect(preferences?["appearance"] as? String == "dark")
   #expect(preferences?["thumbnailColumns"] as? Int == 4)
+  #expect(preferences?["copyNewItems"] as? Bool == true)
   #expect(preferences?["personalizedShortcutName"] as? String == "发送到测试 Mac")
   #expect(AppLanguage.current(in: fixture.defaults, domain: fixture.domain) == .simplifiedChinese)
   let legacyPreferences = fixture.defaults.persistentDomain(forName: fixture.legacyDomain)
@@ -38,9 +40,11 @@ func preservesExistingConfiguration() throws {
   fixture.defaults.setPersistentDomain(
     [
       "appearance": "dark", "thumbnailColumns": 5, "AppleLanguages": ["zh-Hans"],
+      "copyNewItems": true,
       "personalizedShortcutName": "发送到原来的 Mac",
     ], forName: fixture.legacyDomain)
-  fixture.defaults.setPersistentDomain(["appearance": "light"], forName: fixture.domain)
+  fixture.defaults.setPersistentDomain(
+    ["appearance": "light", "copyNewItems": false], forName: fixture.domain)
   try FileManager.default.createDirectory(
     at: fixture.configuration.deletingLastPathComponent(), withIntermediateDirectories: true)
   let current = Data("existing-new-configuration".utf8)
@@ -50,6 +54,7 @@ func preservesExistingConfiguration() throws {
   #expect(try Data(contentsOf: fixture.configuration) == current)
   let preferences = fixture.defaults.persistentDomain(forName: fixture.domain)
   #expect(preferences?["appearance"] as? String == "light")
+  #expect(preferences?["copyNewItems"] as? Bool == false)
   #expect(preferences?["thumbnailColumns"] as? Int == 5)
   #expect(preferences?["personalizedShortcutName"] as? String == "发送到原来的 Mac")
   #expect(AppLanguage.current(in: fixture.defaults, domain: fixture.domain) == .simplifiedChinese)
@@ -79,7 +84,8 @@ func retriesMigrationAfterFailure() throws {
   #expect(try Data(contentsOf: fixture.legacyConfiguration) == data)
 
   try FileManager.default.removeItem(at: blockedDirectory)
-  fixture.defaults.setPersistentDomain(["appearance": "light"], forName: fixture.domain)
+  fixture.defaults.setPersistentDomain(
+    ["appearance": "light", "copyNewItems": false], forName: fixture.domain)
   #expect(fixture.migrate() == nil)
   #expect(try Data(contentsOf: fixture.configuration) == data)
   #expect(

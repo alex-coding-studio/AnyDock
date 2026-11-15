@@ -31,7 +31,7 @@ In Settings → Connection, choose "Send to iPhone…", AirDrop it to your phone
 
 ## Upgrading and migration
 
-The app now uses `com.cuxiao.mac.anydock`. Before creating the UI, it copies previous preferences and `Application Support/SnapDock/configuration.json` into the new preference domain and `Application Support/AnyDock/configuration.json`, preserving the connection key, receive folder, port, appearance, language and shortcut name. Old data is retained; existing new configuration files and preference values are not overwritten.
+The app now uses `com.cuxiao.mac.anydock`. Before creating the UI, it copies previous preferences and `Application Support/SnapDock/configuration.json` into the new preference domain and `Application Support/AnyDock/configuration.json`, preserving the connection key, receive folder, port, appearance, language, automatic clipboard copy and shortcut name. Old data is retained; existing new configuration files and preference values are not overwritten.
 
 Successful migration is not repeated. On failure, Receiving explains that the old configuration could not be migrated and the iPhone shortcut is temporarily unavailable. The app shows in-memory defaults with an empty key, pauses receiving and does not save or personalize those fallback settings. Fix the file-access or old-configuration issue, then restart to retry; failure does not set the completion marker.
 
