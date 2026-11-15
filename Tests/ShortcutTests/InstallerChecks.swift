@@ -1,5 +1,9 @@
 import Foundation
 
+extension Bundle {
+  static let module = Bundle.main
+}
+
 @main
 struct InstallerChecks {
   static func main() throws {

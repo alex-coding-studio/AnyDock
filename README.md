@@ -1,11 +1,12 @@
 # SnapDock · 截图坞
 
-Share images from your iPhone to a Mac over your local network, then browse, select and drag the original files from the menu bar into a chat. The app's interface is in Chinese.
+Share images from your iPhone to a Mac over your local network, then browse, select and drag the original files from the menu bar into a chat. The app supports English and Simplified Chinese, follows the system language by default, and offers an app-specific language override.
 
 ## Features
 
 - A 450 × 520 pt masonry tray with three columns by default and a choice of two to five columns. Long images show their top portion without stretching.
-- Liquid Glass on macOS 26 or later, with native materials on older supported systems.
+- Liquid Glass on macOS 26 or later, with native materials on older supported systems. Choose System, Light or Dark appearance; changes apply immediately to the tray and Settings.
+- English and Simplified Chinese interface, with localized counts, menus, tooltips and accessibility labels. Language changes take effect after restarting.
 - Native click, Command/Shift and rubber-band selection, original-file dragging, copying and Finder reveal. A successful drop closes the tray.
 - Quick Look with Space or a double-click; arrow keys browse selected images, and Space closes the preview while preserving selection.
 - Automatic reveal for new receipts, independent latest-receipt highlighting and receipt-time capsules with full timestamps on hover.
@@ -33,14 +34,20 @@ The build script assembles and ad-hoc signs `dist/SnapDock.app`. To build and op
 ./scripts/run.sh
 ```
 
-SnapDock runs in the menu bar without a Dock icon. Open Settings with the gear button in the tray. General (通用) controls thumbnail columns and launch at login and provides Quit; Connection (连接) sets up the iPhone; Receiving (接收) shows receiver status and lets you change the save folder and port. Folder and port changes take effect when you choose Apply (应用). The default folder is `~/Downloads/SnapDock`, and the default receive port is **8765**. Switching folders does not move existing images.
+SnapDock runs in the menu bar without a Dock icon. Open Settings with the gear button in the tray. General (通用) controls thumbnail columns, appearance, language and launch at login and provides Quit; Connection (连接) sets up the iPhone; Receiving (接收) shows receiver status and lets you change the save folder and port. Folder and port changes take effect when you choose Apply (应用). The default folder is `~/Downloads/SnapDock`, and the default receive port is **8765**. Switching folders does not move existing images.
+
+## Settings
+
+- **Appearance:** Follow System, Light or Dark. The choice is saved and applies immediately to both the tray and Settings, including Liquid Glass.
+- **Language:** Follow System, English or 简体中文. This changes only SnapDock's own `AppleLanguages` preference; Follow System removes that override. Settings shows a restart notice and a **Restart Now** button when the selection differs from the one used at launch.
+- **Localization:** English is the development language. SwiftPM bundles `en.lproj` and `zh-Hans.lproj` resources, including plural rules; `scripts/build.sh` embeds the resource bundle and localized app metadata in the `.app`. The generated iPhone shortcut's internal prompts remain in Chinese for now.
 
 ## Set up your iPhone
 
 ### One-step AirDrop setup
 
 1. Open Settings → Connection (连接).
-2. Choose a shortcut name. It is remembered and defaults to **发送到** followed by the computer name. For multiple Macs, send a separately named shortcut from each Mac.
+2. Choose a shortcut name. It is remembered and defaults to **Send to** or **发送到** followed by the computer name, according to the app language. Existing custom names are preserved. For multiple Macs, send a separately named shortcut from each Mac.
 3. Choose **发送到 iPhone…** and select your own iPhone in AirDrop. SnapDock fills the current receive address and connection key into the shortcut and signs it using the system Shortcuts tool.
 4. Accept the file on the iPhone and tap **添加快捷指令**. The connection values are already filled in.
 5. Share an image from the iPhone Share Sheet and choose the shortcut by its name.

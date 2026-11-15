@@ -2,7 +2,7 @@
 
 ## UI Foundation
 
-Use native AppKit controls, semantic colors and system appearance directly. No external UI foundation is installed. The 450 × 520 pt tray uses `NSGlassEffectView` behind a macOS 26 availability check and `NSVisualEffectView` on older supported systems. Keep thumbnail colors intact.
+Use native AppKit controls and semantic colors. General selects system, Light or Dark appearance through `NSApp.appearance` (`nil`, `.aqua`, `.darkAqua`), restored before constructing the UI and applied immediately to existing windows and glass materials. No external UI foundation is installed. The 450 × 520 pt tray uses `NSGlassEffectView` behind a macOS 26 availability check and `NSVisualEffectView` on older supported systems. Keep thumbnail colors intact.
 
 The tray defaults to three masonry columns; General offers two through five, applies the change immediately and persists it without restarting the receiver. Cache image height/width ratios before layout. `MasonryCollectionLayout` uses the pure `SnapDockCore.MasonryLayout` shortest-column placement, preferring the leftmost column on ties. Image heights are capped at 2.5 times the column width and capped images show their top portion with aspect fill. The layout owns the 24 pt top/side margins, 10 pt inter-image spacing and scrollable bottom inset beneath the floating controls.
 
@@ -18,13 +18,21 @@ New receipts reveal the tray and scroll into view; an open tray updates in place
 
 Settings uses native toolbar tabs ordered General, Connection and Receiving, with General selected initially. Content uses grouped inset sections with separators and footnotes.
 
-- **General:** immediate, persisted thumbnail column count; immediate login startup with errors in General; an app identity card and Quit.
-- **Connection:** one-step named AirDrop setup, plus manual receive-address copying, masked connection-key copying and generic shortcut export. The shortcut name persists immediately in UserDefaults and defaults to `发送到 ` plus `Host.current().localizedName`, falling back to `发送到 Mac`. Name validation runs before signing. Each Mac supplies a separate named shortcut, so its entry can be distinguished in the iPhone Share Sheet. There is no Apply button or listener status in this tab.
+- **General:** immediate, persisted thumbnail column count and system/Light/Dark appearance; app-local system/English/Simplified Chinese language selection with a restart notice and Restart Now action; immediate login startup with errors in General; an app identity card and Quit. The restart helper waits for the current process to exit before reopening the same app bundle.
+- **Connection:** one-step named AirDrop setup, plus manual receive-address copying, masked connection-key copying and generic shortcut export. The shortcut name persists immediately in UserDefaults and defaults to localized `Send to ` / `发送到 ` plus `Host.current().localizedName`, falling back to localized `Send to Mac`. Saved custom names are not translated or replaced. Name validation runs before signing. Each Mac supplies a separate named shortcut, so its entry can be distinguished in the iPhone Share Sheet. There is no Apply button or listener status in this tab.
 - **Receiving:** listener status and failures, a save-folder path consistently abbreviated with `~`, and port edits. Only this tab stages changes. Its bottom Apply button is enabled when the selected folder or port differs from the applied configuration, except while applying. Port validation remains 1024–65535; changing folders never moves or deletes existing originals.
 
 `ShortcutInstaller` personalizes the bundled unsigned template with the applied receive address, key and chosen name. It writes sensitive output only in temporary storage, signs with `/usr/bin/shortcuts sign --mode anyone`, and supplies the signed file to the AirDrop sharing service. Sharing completion or failure cleans up temporary files; cleanup failures are reported and can be retried. Never log the key, print sensitive signing output or copy personalized files into the source tree or bundle. Settings explains that system signing submits a copy to Apple for validation and that the shortcut should be sent only to the user's own iPhone. On the iPhone, the recipient adds the shortcut without entering connection values. Signing or AirDrop failures leave the manual path usable. The generic manual export retains its import questions. Resend or update the iPhone shortcut after changing the receive port.
 
 The selected monochrome brand master and its prompt are retained in `Resources/Brand`. `BrandIcon.swift` draws the small template variant for the existing square menu bar slot. Rebuild `Resources/AppIcon.icns` from the selected master with `./scripts/icon.sh` when changing the artwork.
+
+## Localization
+
+English is the development language. The executable target declares `.process("Resources")` and `defaultLocalization: "en"`; these are localization resource declarations, not dependencies. Load UI text through `L10n.text` and `Bundle.module`. The `en.lproj` and `zh-Hans.lproj` resources contain strings and `.stringsdict` count/plural rules, covering the tray, Settings, shortcut preparation errors and localized default shortcut names. System errors retain the platform's localized descriptions. The generic shortcut resource and Python-generated shortcut-internal prompts remain Chinese.
+
+The app's `Info.plist` declares both supported localizations. `scripts/build.sh` embeds the SwiftPM resource bundle and copies each localized `InfoPlist.strings` into the app's resource directory, so privacy prompts and bundle language negotiation work outside the build tree. Keep new strings and placeholders consistent across both localizations.
+
+Language selection reads only the app's persistent preference domain, not inherited global `AppleLanguages`. English stores `["en"]`, Simplified Chinese stores `["zh-Hans"]`, and Follow System removes the app-local key. This preference is read by Foundation on the next launch; Settings compares it with the launch selection to show the restart action. The preference test uses an isolated suite and never changes user preferences.
 
 ## Build and run
 

@@ -5,7 +5,7 @@ Read `ProjectContext.md` and `docs/PROJECT.md` before changing the project. Thes
 ## Project conventions
 
 - SnapDock is a native AppKit menu bar app using Swift 6 and Swift Package Manager, targeting macOS 14 or later. Keep `studio.alex.snapdock` as the bundle identifier.
-- Keep Swift identifiers in English and user-visible strings in Chinese. Write contributor documentation in English.
+- Keep Swift identifiers in English and localize user-visible strings in English and Simplified Chinese. Write contributor documentation in English.
 - Do not add explanatory code comments, documentation comments or `MARK` sections.
 - Keep the tray focused on images, with receipt-time captions, selection feedback and icon controls. Put configuration and listener status in Settings; do not add filenames, file sizes or configuration fields to the tray.
 - Preserve native collection selection, original-file dragging and Quick Look. Follow the interaction rules in `docs/PROJECT.md` when changing them.

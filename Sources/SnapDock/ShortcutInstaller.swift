@@ -11,13 +11,13 @@ enum ShortcutInstaller {
       .replacingOccurrences(of: "/", with: "-")
       .replacingOccurrences(of: ":", with: "-")
     guard !result.isEmpty else {
-      throw ShortcutInstallationError(reason: "请输入快捷指令名称。")
+      throw ShortcutInstallationError(reason: L10n.text("Enter a shortcut name."))
     }
     guard result.rangeOfCharacter(from: .controlCharacters) == nil else {
-      throw ShortcutInstallationError(reason: "快捷指令名称不能包含换行或控制字符。")
+      throw ShortcutInstallationError(reason: L10n.text("shortcut.name.invalidCharacters"))
     }
     guard result.count <= 60, result.utf8.count <= 240 else {
-      throw ShortcutInstallationError(reason: "快捷指令名称过长，请缩短到 60 个字符以内；复杂表情可能需要更短。")
+      throw ShortcutInstallationError(reason: L10n.text("shortcut.name.tooLong"))
     }
     return result
   }
@@ -31,14 +31,14 @@ enum ShortcutInstaller {
         as? [String: Any],
       var actions = shortcut["WFWorkflowActions"] as? [[String: Any]], actions.count >= 2
     else {
-      throw ShortcutInstallationError(reason: "快捷指令模板无效，请重新构建完整 App。")
+      throw ShortcutInstallationError(reason: L10n.text("shortcut.template.invalid"))
     }
     for (index, value) in [address, key].enumerated() {
       guard
         actions[index]["WFWorkflowActionIdentifier"] as? String == "is.workflow.actions.gettext",
         var parameters = actions[index]["WFWorkflowActionParameters"] as? [String: Any]
       else {
-        throw ShortcutInstallationError(reason: "快捷指令模板缺少连接字段，请重新构建完整 App。")
+        throw ShortcutInstallationError(reason: L10n.text("shortcut.template.missingFields"))
       }
       parameters["WFTextActionText"] = value
       actions[index]["WFWorkflowActionParameters"] = parameters
@@ -76,7 +76,9 @@ enum ShortcutInstaller {
       do {
         try FileManager.default.removeItem(at: directory)
       } catch {
-        throw ShortcutInstallationError(reason: "无法清理快捷指令临时文件：\(error.localizedDescription)")
+        throw ShortcutInstallationError(
+          reason: L10n.text(
+            "Unable to remove temporary shortcut files: %@", error.localizedDescription))
       }
       throw error
     }
@@ -92,7 +94,7 @@ enum ShortcutInstaller {
       FileManager.default.createFile(
         atPath: log.path, contents: nil, attributes: [.posixPermissions: 0o600])
     else {
-      throw ShortcutInstallationError(reason: "无法创建签名临时文件。")
+      throw ShortcutInstallationError(reason: L10n.text("shortcut.signing.fileFailed"))
     }
     let output = try FileHandle(forWritingTo: log)
     defer { try? output.close() }
@@ -112,22 +114,24 @@ enum ShortcutInstaller {
     if process.isRunning {
       process.terminate()
       process.waitUntilExit()
-      throw ShortcutInstallationError(reason: "系统签名超过 60 秒，请检查网络与 Apple 账户后重试，或使用手动设置。")
+      throw ShortcutInstallationError(reason: L10n.text("shortcut.signing.timeout"))
     }
     process.waitUntilExit()
     let diagnostic = String(decoding: try Data(contentsOf: log), as: UTF8.self)
-      .replacingOccurrences(of: key, with: "[已隐藏]")
+      .replacingOccurrences(of: key, with: L10n.text("[redacted]"))
       .trimmingCharacters(in: .whitespacesAndNewlines)
     try FileManager.default.removeItem(at: log)
     guard process.terminationStatus == 0 else {
       throw ShortcutInstallationError(
-        reason: "系统签名失败（退出码 \(process.terminationStatus)）：\(diagnostic.prefix(500))。可继续使用手动设置。")
+        reason: L10n.text(
+          "shortcut.signing.failed", Int(process.terminationStatus), String(diagnostic.prefix(500))
+        ))
     }
     guard
       FileManager.default.fileExists(atPath: signed.path),
       (try Data(contentsOf: signed)).isEmpty == false
     else {
-      throw ShortcutInstallationError(reason: "系统签名未生成快捷指令文件。可继续使用手动设置。")
+      throw ShortcutInstallationError(reason: L10n.text("shortcut.signing.noOutput"))
     }
   }
 }

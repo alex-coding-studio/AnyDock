@@ -83,11 +83,14 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   private func configureControls(in content: NSView) {
     let folder = glassButton(
-      NSButton(), symbol: "folder", title: "打开文件夹", action: #selector(folderClicked))
+      NSButton(), symbol: "folder", title: L10n.text("Open Folder"),
+      action: #selector(folderClicked))
     let settings = glassButton(
-      NSButton(), symbol: "gearshape", title: "设置", action: #selector(settingsClicked))
+      NSButton(), symbol: "gearshape", title: L10n.text("Settings"),
+      action: #selector(settingsClicked))
     let trash = glassButton(
-      trashButton, symbol: "trash", title: "全部移到废纸篓…", action: #selector(trashClicked))
+      trashButton, symbol: "trash", title: L10n.text("Move All to Trash…"),
+      action: #selector(trashClicked))
     trashButton.contentTintColor = .systemRed
     trashSurface = trash
     selectionCount.font = .monospacedDigitSystemFont(
@@ -117,9 +120,11 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     let icon = NSImageView(
       image: NSImage(systemSymbolName: "tray", accessibilityDescription: nil) ?? NSImage())
     icon.contentTintColor = .secondaryLabelColor
-    let title = NSTextField(labelWithString: "还没有收到截图")
+    let title = NSTextField(labelWithString: L10n.text("No screenshots yet"))
     title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-    let detail = NSTextField(wrappingLabelWithString: "在 iPhone 上分享图片，选择「发送到 Mac」")
+    let detail = NSTextField(
+      wrappingLabelWithString: L10n.text(
+        "Share an image on your iPhone and choose your Mac’s shortcut."))
     detail.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
     detail.textColor = .secondaryLabelColor
     detail.alignment = .center
@@ -248,7 +253,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     item.view.setAccessibilityElement(true)
     item.view.setAccessibilityRole(.image)
     item.view.setAccessibilityLabel(
-      "\(image.url == latestReceivedURL ? "新收到的图片" : "收到的图片") \(indexPath.item + 1)，\(timestamp)")
+      L10n.text(
+        image.url == latestReceivedURL ? "New image %d, %@" : "Received image %d, %@",
+        indexPath.item + 1, timestamp))
     return item
   }
 
@@ -300,11 +307,11 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   private func updateControls() {
     let count = selectedImages.count
-    selectionCount.stringValue = "已选 \(count) 张"
+    selectionCount.stringValue = L10n.text("selected_count", count)
     selectionCapsule?.isHidden = count == 0
     trashSurface?.isHidden = images.isEmpty
     trashButton.isEnabled = !isTrashing
-    let title = count > 0 ? "将 \(count) 张移到废纸篓" : "全部移到废纸篓…"
+    let title = count > 0 ? L10n.text("trash_count", count) : L10n.text("Move All to Trash…")
     trashButton.toolTip = title
     trashButton.setAccessibilityLabel(title)
     emptyState?.isHidden = !images.isEmpty
@@ -344,16 +351,18 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private func confirmTrash(count: Int, all: Bool) async -> Bool {
     guard trashButton.window != nil else { return false }
     let title = NSTextField(
-      wrappingLabelWithString: all ? "将全部 \(count) 张截图移到废纸篓？" : "将 \(count) 张截图移到废纸篓？")
+      wrappingLabelWithString: all
+        ? L10n.text("trash_all_confirmation", count)
+        : L10n.text("trash_selection_confirmation", count))
     title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
     title.alignment = .center
     title.preferredMaxLayoutWidth = 244
-    let detail = NSTextField(labelWithString: "可以在废纸篓中恢复。")
+    let detail = NSTextField(labelWithString: L10n.text("You can restore them from the Trash."))
     detail.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
     detail.textColor = .secondaryLabelColor
     detail.alignment = .center
     let confirm = NSButton(
-      title: all ? "全部移到废纸篓" : "将 \(count) 张移到废纸篓",
+      title: all ? L10n.text("Move All to Trash") : L10n.text("trash_count", count),
       target: self, action: #selector(confirmTrashClicked))
     confirm.bezelStyle = .rounded
     confirm.hasDestructiveAction = true
@@ -706,16 +715,19 @@ private final class ImageCollectionView: NSCollectionView {
     let menu = NSMenu()
     let count = selectionIndexPaths.count
     let copy = NSMenuItem(
-      title: count > 1 ? "复制 \(count) 张图片" : "复制图片", action: #selector(copy(_:)), keyEquivalent: "c"
+      title: count > 1 ? L10n.text("copy_count", count) : L10n.text("Copy Image"),
+      action: #selector(copy(_:)), keyEquivalent: "c"
     )
     copy.target = self
     menu.addItem(copy)
-    let reveal = NSMenuItem(title: "在 Finder 中显示", action: #selector(reveal), keyEquivalent: "")
+    let reveal = NSMenuItem(
+      title: L10n.text("Show in Finder"), action: #selector(reveal), keyEquivalent: "")
     reveal.target = self
     menu.addItem(reveal)
     menu.addItem(.separator())
     let trash = NSMenuItem(
-      title: count > 1 ? "将 \(count) 张移到废纸篓" : "移到废纸篓", action: #selector(trash),
+      title: count > 1 ? L10n.text("trash_count", count) : L10n.text("Move to Trash"),
+      action: #selector(trash),
       keyEquivalent: "\u{8}")
     trash.target = self
     menu.addItem(trash)

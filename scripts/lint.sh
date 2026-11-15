@@ -8,3 +8,4 @@ else
 fi
 python3 -m compileall -q scripts Tests/ShortcutTests
 plutil -lint Resources/Info.plist
+plutil -lint Sources/SnapDock/Resources/*.lproj/*.strings Sources/SnapDock/Resources/*.lproj/*.stringsdict
