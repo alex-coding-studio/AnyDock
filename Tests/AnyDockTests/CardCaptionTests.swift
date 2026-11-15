@@ -16,7 +16,7 @@ private func expectFullyVisible(_ field: NSTextField, in card: TrayCardItem) {
 }
 
 @MainActor
-@Test("拍立得卡片的说明行完整显示在卡片内，不与预览区和最新圆点重叠，缩略图到达后也一样")
+@Test("拍立得卡片的说明行完整显示在卡片内，不与预览区和最新圆点重叠，长域名不折行，缩略图到达后也一样")
 func polaroidCaptionsStayFullyVisible() throws {
   let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -25,7 +25,7 @@ func polaroidCaptionsStayFullyVisible() throws {
   try Data(repeating: 0, count: 11_000_000).write(to: file)
   let link = folder.appendingPathComponent("AnyDock-link.webloc")
   try PropertyListSerialization.data(
-    fromPropertyList: ["URL": "https://subdomain.very-long-example-domain-name.example.com/a/b"],
+    fromPropertyList: ["URL": "https://www.very-long-example-domain-name.example.com/a/b"],
     format: .xml, options: 0
   ).write(to: link)
   let text = folder.appendingPathComponent("AnyDock-text.txt")
@@ -54,6 +54,11 @@ func polaroidCaptionsStayFullyVisible() throws {
       let preview = card.previewArea.frame
       let caption = card.caption.convert(card.caption.bounds, to: card.view)
       #expect(caption.maxY <= preview.minY + 1)
+      if let link = card as? LinkCardItem {
+        let oneLine = NSTextField(labelWithString: link.domain.stringValue)
+        oneLine.font = link.domain.font
+        #expect(link.domain.frame.height <= oneLine.intrinsicContentSize.height + 1)
+      }
       if !card.dot.isHidden {
         let dot = card.dot.convert(card.dot.bounds, to: card.view)
         #expect(card.view.bounds.contains(dot))

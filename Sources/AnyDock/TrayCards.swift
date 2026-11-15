@@ -405,7 +405,7 @@ final class TextCardItem: PolaroidCardItem {
 @MainActor
 final class LinkCardItem: PolaroidCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("LinkCard")
-  lazy var domain = label(size: 13, weight: .bold, lines: 2)
+  lazy var domain = label(size: 13, weight: .bold, lines: 1)
   lazy var address = label(size: 11, lines: 0)
 
   override func buildPreview(in area: NSView) {
