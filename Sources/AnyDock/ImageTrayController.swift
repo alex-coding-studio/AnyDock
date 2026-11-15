@@ -362,12 +362,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       case .file: FileCardItem.identifier
       }
     let item = collectionView.makeItem(withIdentifier: identifier, for: indexPath)
-    timeFormatter.dateFormat =
-      Calendar.current.isDateInToday(entry.item.receivedAt) ? "HH:mm" : "M/d"
     let latest = entry.url == latestReceivedURL
     (item as? TrayCardItem)?.configure(
-      entry, singleColumn: singleColumn,
-      time: timeFormatter.string(from: entry.item.receivedAt), latest: latest)
+      entry, singleColumn: singleColumn, time: timeText(entry.item.receivedAt), latest: latest)
     let timestamp = entry.item.receivedAt.formatted(date: .complete, time: .standard)
     item.view.toolTip = timestamp
     item.view.setAccessibilityElement(true)
@@ -476,12 +473,37 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private func updateControls() {
     let count = selectedEntries.count
     let dragging = !draggedURLs.isEmpty
-    dropZone.show(
-      dragging ? L10n.text("Drop here to move to Trash") : L10n.text("selected_count", count),
-      armed: dragging)
+    if dragging {
+      dropZone.show(L10n.text("Drop here to move to Trash"), armed: true)
+    } else if count == 1, let entry = selectedEntries.first {
+      showDetail(of: entry)
+    } else {
+      dropZone.show(L10n.text("selected_count", count), armed: false)
+    }
     dropZoneSurface?.isHidden = !dragging && count == 0
     emptyState?.isHidden = !contents.items.isEmpty
     scroll.isHidden = contents.items.isEmpty
+  }
+
+  private func showDetail(of entry: TrayEntry) {
+    let time = timeText(entry.item.receivedAt)
+    let size = entry.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }
+    let details = [size, time].compactMap { $0 }.reduce("") { L10n.text("meta_separator", $0, $1) }
+    switch entry.kind {
+    case .file: dropZone.show(entry.displayName, suffix: details, armed: false)
+    case .image: dropZone.show(entry.badge, suffix: details, armed: false)
+    case .text:
+      dropZone.show(
+        L10n.text("meta_separator", L10n.text("character_count", entry.characterCount), time),
+        armed: false)
+    case .link:
+      dropZone.show(entry.link?.absoluteString ?? entry.displayName, armed: false)
+    }
+  }
+
+  private func timeText(_ date: Date) -> String {
+    timeFormatter.dateFormat = Calendar.current.isDateInToday(date) ? "HH:mm" : "M/d"
+    return timeFormatter.string(from: date)
   }
 
   @discardableResult

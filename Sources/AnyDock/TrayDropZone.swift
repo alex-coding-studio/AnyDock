@@ -5,6 +5,7 @@ final class TrayDropZone: NSView {
   var canAccept: ((AnyObject?) -> Bool)?
   var performDrop: (() -> Bool)?
   let label = NSTextField(labelWithString: "")
+  let suffix = NSTextField(labelWithString: "")
   private(set) var isArmed = false
   private(set) var isTargeted = false {
     didSet { refresh() }
@@ -13,15 +14,17 @@ final class TrayDropZone: NSView {
   override init(frame: NSRect) {
     super.init(frame: frame)
     wantsLayer = true
-    label.font = .monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
-    label.alignment = .center
-    label.lineBreakMode = .byTruncatingTail
-    label.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(label)
+    label.lineBreakMode = .byTruncatingMiddle
+    label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    suffix.setContentCompressionResistancePriority(.required, for: .horizontal)
+    let row = NSStackView(views: [label, suffix])
+    row.spacing = 0
+    row.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(row)
     NSLayoutConstraint.activate([
-      label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
-      label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
-      label.centerYAnchor.constraint(equalTo: centerYAnchor),
+      row.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
+      row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
+      row.centerYAnchor.constraint(equalTo: centerYAnchor),
     ])
     registerForDraggedTypes([.fileURL, .URL, .string])
   }
@@ -30,17 +33,22 @@ final class TrayDropZone: NSView {
 
   override var wantsUpdateLayer: Bool { true }
 
-  func show(_ text: String, armed: Bool) {
+  func show(_ text: String, suffix detail: String = "", armed: Bool) {
     label.stringValue = text
+    suffix.stringValue = detail
+    suffix.isHidden = detail.isEmpty
     isArmed = armed
     if !armed { isTargeted = false }
     refresh()
   }
 
   private func refresh() {
-    label.textColor = isTargeted ? .white : isArmed ? .systemRed : .labelColor
-    label.font = .monospacedDigitSystemFont(
+    let font = NSFont.monospacedDigitSystemFont(
       ofSize: NSFont.smallSystemFontSize, weight: isTargeted ? .semibold : .medium)
+    for field in [label, suffix] {
+      field.textColor = isTargeted ? .white : isArmed ? .systemRed : .labelColor
+      field.font = font
+    }
     needsDisplay = true
   }
 

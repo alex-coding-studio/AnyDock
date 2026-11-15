@@ -70,6 +70,10 @@ struct TrayEntry {
     var link: URL?
     var size: Int64?
     var contentType = UTType(filenameExtension: item.url.pathExtension)
+    if item.kind == .image || item.kind == .file {
+      size = (try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { $0 }
+        .map(Int64.init)
+    }
     switch item.kind {
     case .image:
       thumbnail = item.thumbnail.flatMap(NSImage.init(data:))
@@ -85,8 +89,6 @@ struct TrayEntry {
         link = URL(string: address)
       }
     case .file:
-      size = (try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { $0 }
-        .map(Int64.init)
       let handle = try? FileHandle(forReadingFrom: item.url)
       let prefix = (try? handle?.read(upToCount: 4096)) ?? Data()
       try? handle?.close()

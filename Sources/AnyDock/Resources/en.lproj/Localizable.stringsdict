@@ -13,9 +13,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>one</key>
-			<string>%d character</string>
+			<string>%d char</string>
 			<key>other</key>
-			<string>%d characters</string>
+			<string>%d chars</string>
 		</dict>
 	</dict>
 	<key>copy_count</key>
