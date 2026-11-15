@@ -42,12 +42,21 @@ jobs:
               --jq 'map(select(.state == "open" and (.draft | not)))[0].html_url // ""')"
             [[ -n "$PR" ]] || { echo "No open PR has $HEAD_SHA as a commit."; exit 0; }
           fi
-          if [[ "$(gh pr view "$PR" --json reviews --jq "[.reviews[]
-              | select(.authorAssociation | IN(\"OWNER\", \"MEMBER\", \"COLLABORATOR\"))
+          REVIEWS="$(gh pr view "$PR" --json reviews)"
+          WRITERS=()
+          for LOGIN in $(jq -r '[.reviews[].author.login] | unique[]' <<< "$REVIEWS"); do
+            PERMISSION="$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$LOGIN/permission" --jq .permission 2>/dev/null || true)"
+            if [[ "$PERMISSION" =~ ^(admin|maintain|write)$ ]]; then
+              WRITERS+=("$LOGIN")
+            fi
+          done
+          if [[ "$(jq --args "[.reviews[]
+              | select(.author.login as \$login | \$ARGS.positional | index(\$login))
               | select(.state | IN(\"APPROVED\", \"CHANGES_REQUESTED\", \"DISMISSED\"))]
               | group_by(.author.login) | map(max_by(.submittedAt))
-              | any(.state == \"APPROVED\" and .commit.oid == \"$HEAD_SHA\") and all(.state != \"CHANGES_REQUESTED\")")" != true ]]; then
-            echo "$HEAD_SHA is not approved by every repository reviewer's latest decision; a later review will retry."
+              | any(.state == \"APPROVED\" and .commit.oid == \"$HEAD_SHA\") and all(.state != \"CHANGES_REQUESTED\")" \
+              ${WRITERS[@]+"${WRITERS[@]}"} <<< "$REVIEWS")" != true ]]; then
+            echo "$HEAD_SHA is not approved by every reviewer with write access; a later review will retry."
             exit 0
           fi
           if [[ "$(gh pr view "$PR" --json headRefOid --jq .headRefOid)" != "$HEAD_SHA" ]]; then
