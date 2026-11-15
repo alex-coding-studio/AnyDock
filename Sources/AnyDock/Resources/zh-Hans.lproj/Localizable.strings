@@ -112,3 +112,4 @@
 "migration.readFailed" = "无法读取旧配置文件。";
 "migration.invalidConfiguration" = "旧配置文件无效。";
 "migration.copyFailed" = "无法将旧配置复制到新位置。";
+"meta_separator" = "%1$@ · %2$@";

@@ -20,7 +20,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private let timeFormatter = DateFormatter()
   private let selectionCount = NSTextField(labelWithString: "")
   private let trashButton = NSButton()
-  let filterBar = NSStackView()
+  private(set) lazy var filterBar = TrayScopeBar(
+    surface: glassSurface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2))
   private var selectionCapsule: NSView?
   private var trashSurface: NSView?
   private var emptyState: NSView?
@@ -43,7 +44,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   var openSettings: (() -> Void)?
   var didFinishDragging: (() -> Void)?
 
-  private static let filterHeight: CGFloat = 24
+  private static let controlInset: CGFloat = 10
+  private static let controlSize: CGFloat = 34
 
   private var singleColumn: Bool { contents.filter == .kind(.text) }
 
@@ -88,51 +90,53 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
     ])
     configureEmptyState(in: content)
+    configureEdgeBlur(in: content)
     configureFilterBar(in: content)
     configureControls(in: content)
     updateControls()
   }
 
   private func configureFilterBar(in content: NSView) {
-    filterBar.orientation = .horizontal
-    filterBar.spacing = Space.s8
+    filterBar.onSelect = { [weak self] filter in self?.select(filter) }
     filterBar.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(filterBar)
     NSLayoutConstraint.activate([
       filterBar.leadingAnchor.constraint(
-        equalTo: content.leadingAnchor, constant: MasonryCollectionLayout.margin),
+        equalTo: content.leadingAnchor, constant: TrayMetrics.margin),
       filterBar.trailingAnchor.constraint(
-        lessThanOrEqualTo: content.trailingAnchor, constant: -MasonryCollectionLayout.margin),
-      filterBar.topAnchor.constraint(
-        equalTo: content.topAnchor, constant: MasonryCollectionLayout.margin),
-      filterBar.heightAnchor.constraint(equalToConstant: Self.filterHeight),
+        lessThanOrEqualTo: content.trailingAnchor, constant: -TrayMetrics.margin),
+      filterBar.topAnchor.constraint(equalTo: content.topAnchor, constant: TrayMetrics.margin),
     ])
   }
 
+  private func configureEdgeBlur(in content: NSView) {
+    let topHeight = TrayMetrics.margin + TrayMetrics.scopeBarHeight + Space.s16
+    let bottomHeight = Self.controlInset + Self.controlSize + Space.s16
+    for (fromTop, height) in [(true, topHeight), (false, bottomHeight)] {
+      let blur = EdgeBlurView(fromTop: fromTop, fade: Space.s16)
+      blur.translatesAutoresizingMaskIntoConstraints = false
+      content.addSubview(blur)
+      NSLayoutConstraint.activate([
+        blur.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+        blur.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+        blur.heightAnchor.constraint(equalToConstant: height),
+        fromTop
+          ? blur.topAnchor.constraint(equalTo: content.topAnchor)
+          : blur.bottomAnchor.constraint(equalTo: content.bottomAnchor),
+      ])
+    }
+  }
+
   private func updateFilterBar() {
-    for view in filterBar.arrangedSubviews {
-      filterBar.removeArrangedSubview(view)
-      view.removeFromSuperview()
-    }
     filterBar.isHidden = contents.items.isEmpty
-    for (index, filter) in contents.availableFilters.enumerated() {
-      let count = filter == .all ? contents.items.count : kindCount(filter)
-      let selected = filter == contents.filter
-      let button = NSButton(
-        title: "\(filterTitle(filter)) \(count)", target: self, action: #selector(filterClicked))
-      button.tag = index
-      button.isBordered = false
-      button.setButtonType(.toggle)
-      button.state = selected ? .on : .off
-      button.font = .systemFont(ofSize: 11, weight: selected ? .semibold : .regular)
-      button.contentTintColor = selected ? .controlAccentColor : .secondaryLabelColor
-      button.setAccessibilityLabel(L10n.text("filter_accessibility", filterTitle(filter), count))
-      let padded = NSStackView(views: [button])
-      padded.edgeInsets = NSEdgeInsets(top: 0, left: Space.s8, bottom: 0, right: Space.s8)
-      let surface = glassSurface(padded, cornerRadius: Self.filterHeight / 2)
-      surface.heightAnchor.constraint(equalToConstant: Self.filterHeight).isActive = true
-      filterBar.addArrangedSubview(surface)
-    }
+    filterBar.update(
+      contents.availableFilters.map { filter in
+        let count = kindCount(filter)
+        return TrayScopeBar.Segment(
+          title: "\(filterTitle(filter)) \(count)",
+          accessibilityLabel: L10n.text("filter_accessibility", filterTitle(filter), count),
+          filter: filter)
+      }, selected: contents.filter)
   }
 
   private func kindCount(_ filter: TrayFilter) -> Int {
@@ -148,12 +152,6 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     case .kind(.link): L10n.text("Links")
     case .kind(.file): L10n.text("Files")
     }
-  }
-
-  @objc private func filterClicked(_ sender: NSButton) {
-    let filters = contents.availableFilters
-    guard filters.indices.contains(sender.tag) else { return }
-    select(filters[sender.tag])
   }
 
   func select(_ filter: TrayFilter) {
@@ -179,7 +177,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     let countContent = NSStackView(views: [selectionCount])
     countContent.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
     let capsule = glassSurface(countContent, cornerRadius: 17)
-    capsule.heightAnchor.constraint(equalToConstant: 34).isActive = true
+    capsule.heightAnchor.constraint(equalToConstant: Self.controlSize).isActive = true
     selectionCapsule = capsule
     let right = NSStackView(views: [capsule, trash, settings])
     right.spacing = 8
@@ -189,9 +187,10 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       content.addSubview(element)
     }
     NSLayoutConstraint.activate([
-      folder.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
-      folder.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -10),
-      right.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -10),
+      folder.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: Self.controlInset),
+      folder.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -Self.controlInset),
+      right.trailingAnchor.constraint(
+        equalTo: content.trailingAnchor, constant: -Self.controlInset),
       right.centerYAnchor.constraint(equalTo: folder.centerYAnchor),
       right.leadingAnchor.constraint(greaterThanOrEqualTo: folder.trailingAnchor, constant: 8),
     ])
@@ -239,8 +238,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     button.setAccessibilityLabel(title)
     let surface = glassSurface(button, cornerRadius: 17)
     NSLayoutConstraint.activate([
-      surface.widthAnchor.constraint(equalToConstant: 34),
-      surface.heightAnchor.constraint(equalToConstant: 34),
+      surface.widthAnchor.constraint(equalToConstant: Self.controlSize),
+      surface.heightAnchor.constraint(equalToConstant: Self.controlSize),
     ])
     return surface
   }
@@ -299,7 +298,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       return entry
     }
     layout.columnCount = singleColumn ? 1 : 3
-    layout.topInset = MasonryCollectionLayout.margin + Self.filterHeight + Space.s16
+    layout.topInset = TrayMetrics.margin + TrayMetrics.scopeBarHeight + Space.s16
     layout.invalidateLayout()
     collection.reloadData()
     collection.selectionIndexPaths = Set(
@@ -309,7 +308,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     updateFilterBar()
     updateControls()
     for entry in entries where entry.kind == .file && !entry.item.isPlainText {
-      requestThumbnail(for: entry.url)
+      requestThumbnail(for: entry)
     }
   }
 
@@ -321,19 +320,23 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       guard let size = entry.thumbnail?.size, size.width > 0, size.height > 0 else { return 1 }
       return size.height / size.width
     case .text:
-      guard singleColumn else { return 1 }
-      return 92 / max(layout.availableWidth, 1)
-    case .link: return 0.8
-    case .file: return 1.25
+      guard singleColumn else { return 1.15 }
+      return 112 / max(layout.availableWidth, 1)
+    case .link: return 1
+    case .file: return 1.4
     }
   }
 
-  private func requestThumbnail(for url: URL) {
+  private func requestThumbnail(for entry: TrayEntry) {
+    let url = entry.url
     guard !requestedThumbnails.contains(url) else { return }
     requestedThumbnails.insert(url)
     let request = QLThumbnailGenerator.Request(
       fileAt: url, size: CGSize(width: 240, height: 240),
       scale: NSScreen.main?.backingScaleFactor ?? 2, representationTypes: .thumbnail)
+    if url.pathExtension.isEmpty, let type = entry.contentType {
+      request.contentType = type
+    }
     QLThumbnailGenerator.shared.generateBestRepresentation(for: request) {
       [weak self] representation, _ in
       guard let image = representation?.cgImage else { return }
@@ -380,15 +383,14 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       case .file: FileCardItem.identifier
       }
     let item = collectionView.makeItem(withIdentifier: identifier, for: indexPath)
-    let card = item as? TrayCardItem
-    card?.configure(entry, singleColumn: singleColumn)
     timeFormatter.dateFormat =
       Calendar.current.isDateInToday(entry.item.receivedAt) ? "HH:mm" : "M/d"
-    item.textField?.stringValue = timeFormatter.string(from: entry.item.receivedAt)
+    let latest = entry.url == latestReceivedURL
+    (item as? TrayCardItem)?.configure(
+      entry, singleColumn: singleColumn,
+      time: timeFormatter.string(from: entry.item.receivedAt), latest: latest)
     let timestamp = entry.item.receivedAt.formatted(date: .complete, time: .standard)
     item.view.toolTip = timestamp
-    let latest = entry.url == latestReceivedURL
-    card?.isLatestReceipt = latest
     item.view.setAccessibilityElement(true)
     item.view.setAccessibilityRole(entry.kind == .image ? .image : .group)
     item.view.setAccessibilityLabel(

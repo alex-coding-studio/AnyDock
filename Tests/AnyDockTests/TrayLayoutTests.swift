@@ -39,16 +39,16 @@ private func settle(_ tray: ImageTrayController) {
 }
 
 @MainActor
-private func cards(_ tray: ImageTrayController) -> [(TextCardItem, NSRect)] {
+private func cards(_ tray: ImageTrayController) -> [(TrayCardItem, NSRect)] {
   tray.collection.visibleItems().compactMap { item in
-    guard let card = item as? TextCardItem else { return nil }
+    guard let card = item as? TrayCardItem else { return nil }
     return (card, card.view.convert(card.view.bounds, to: tray.view))
   }
 }
 
 @MainActor
-@Test("卡片留在托盘左右边距之内，胶囊栏与卡片左对齐且不遮挡第一排，文本和字数在卡片内")
-func textCardsStayInsideTrayMargins() throws {
+@Test("筛选栏与卡片左对齐且不遮挡第一排，卡片在内容区内，扩展名标签在卡片左上角")
+func cardsStayInsideTrayMarginsWithBadgesAtTopLeft() throws {
   let long = String(repeating: "随手坞把手机上的文字发到 Mac。", count: 20)
   for filter in [TrayFilter.all, .kind(.text)] {
     let (tray, window) = try makeTray(texts: [long, "短文本", long])
@@ -58,26 +58,49 @@ func textCardsStayInsideTrayMargins() throws {
     let bounds = tray.view.bounds
     let bar = tray.filterBar.convert(tray.filterBar.bounds, to: tray.view)
     let visible = cards(tray)
-    #expect(!visible.isEmpty)
+    #expect(visible.count == (filter == .all ? 4 : 3))
     let leftmost = visible.map(\.1.minX).min() ?? 0
     #expect(abs(bar.minX - leftmost) < 1)
     #expect(abs((bounds.maxY - bar.maxY) - bar.minX) < 1)
+    #expect(bar.maxX <= bounds.maxX - bar.minX + 1)
     for (card, frame) in visible {
       #expect(frame.minX >= bar.minX - 1)
-      #expect(abs((bounds.maxX - frame.maxX) - bar.minX) < 1 || filter == .all)
       #expect(frame.maxX <= bounds.maxX - bar.minX + 1)
       #expect(frame.maxY <= bar.minY - 1)
-      let body = card.body.frame
-      #expect(body.minX >= 0 && body.maxX <= card.view.bounds.maxX)
-      #expect(abs(body.minX - (card.view.bounds.maxX - body.maxX)) < 1)
-      let capsule = try #require(card.card.timeCapsule).frame
-      #expect(abs(capsule.minX - capsule.minY) < 1)
       if filter == .kind(.text) {
-        #expect(!card.count.isHidden && !card.count.stringValue.isEmpty)
-        #expect(card.count.frame.maxX <= card.view.bounds.maxX)
-        #expect(card.count.frame.minX >= capsule.maxX)
+        #expect(abs((bounds.maxX - frame.maxX) - bar.minX) < 1)
+      }
+      let badge = card.badge.convert(card.badge.bounds, to: card.view)
+      let cardBounds = card.view.bounds
+      #expect(badge.width > 0 && badge.height > 0)
+      #expect(abs(badge.minX - (cardBounds.maxY - badge.maxY)) < 1)
+      #expect(badge.minX < cardBounds.midX && badge.maxY > cardBounds.midY)
+      guard let polaroid = card as? PolaroidCardItem else { continue }
+      let meta = polaroid.meta.convert(polaroid.meta.bounds, to: card.view)
+      let preview = polaroid.previewArea.frame
+      #expect(cardBounds.contains(meta.insetBy(dx: 1, dy: 1)))
+      #expect(meta.maxY <= preview.minY + 1)
+      #expect(abs(preview.minX - (cardBounds.maxX - preview.maxX)) < 1)
+      if let text = card as? TextCardItem {
+        #expect(preview.contains(text.body.frame.offsetBy(dx: preview.minX, dy: preview.minY)))
+        #expect(polaroid.meta.stringValue.rangeOfCharacter(from: .decimalDigits) != nil)
       }
     }
     withExtendedLifetime(window) {}
   }
+}
+
+@MainActor
+@Test("选中胶囊跟随当前筛选移动到对应分段")
+func scopeIndicatorFollowsSelection() async throws {
+  let (tray, window) = try makeTray(texts: ["一", "二"])
+  settle(tray)
+  #expect(tray.filterBar.selectedButtonFrame == tray.filterBar.indicatorFrame)
+  tray.select(.kind(.link))
+  settle(tray)
+  try await Task.sleep(for: .milliseconds(400))
+  let expected = try #require(tray.filterBar.selectedButtonFrame)
+  #expect(abs(tray.filterBar.indicatorFrame.minX - expected.minX) < 1)
+  #expect(abs(tray.filterBar.indicatorFrame.width - expected.width) < 1)
+  withExtendedLifetime(window) {}
 }
