@@ -16,7 +16,7 @@ private func expectFullyVisible(_ field: NSTextField, in card: TrayCardItem) {
 }
 
 @MainActor
-@Test("拍立得卡片的说明区每一行都完整显示在卡片内，不与预览区重叠，缩略图到达后也一样")
+@Test("拍立得卡片的说明行完整显示在卡片内，不与预览区和最新圆点重叠，缩略图到达后也一样")
 func polaroidCaptionsStayFullyVisible() throws {
   let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -40,7 +40,8 @@ func polaroidCaptionsStayFullyVisible() throws {
     contentRect: NSRect(x: 0, y: 0, width: 450, height: 520), styleMask: .borderless,
     backing: .buffered, defer: true)
   window.contentViewController = tray
-  tray.replaceItems(items)
+  tray.replaceItems(Array(items.dropFirst()))
+  tray.append(items[0])
   for thumbnail in [nil, NSImage(size: NSSize(width: 480, height: 620))] {
     tray.view.layoutSubtreeIfNeeded()
     tray.collection.layoutSubtreeIfNeeded()
@@ -50,14 +51,13 @@ func polaroidCaptionsStayFullyVisible() throws {
       if let thumbnail, let fileCard = card as? FileCardItem { fileCard.showThumbnail(thumbnail) }
       card.view.layoutSubtreeIfNeeded()
       expectFullyVisible(card.caption, in: card)
-      expectFullyVisible(card.meta, in: card)
       let preview = card.previewArea.frame
-      let meta = card.meta.convert(card.meta.bounds, to: card.view)
-      #expect(meta.maxY <= preview.minY + 1)
-      if !card.caption.isHidden {
-        let caption = card.caption.convert(card.caption.bounds, to: card.view)
-        #expect(caption.maxY <= preview.minY + 1)
-        #expect(meta.maxY <= caption.minY + 1)
+      let caption = card.caption.convert(card.caption.bounds, to: card.view)
+      #expect(caption.maxY <= preview.minY + 1)
+      if !card.dot.isHidden {
+        let dot = card.dot.convert(card.dot.bounds, to: card.view)
+        #expect(card.view.bounds.contains(dot))
+        #expect(dot.maxX <= caption.minX + 1)
       }
     }
   }

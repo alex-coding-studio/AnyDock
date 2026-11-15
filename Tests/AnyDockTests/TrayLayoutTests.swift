@@ -76,10 +76,10 @@ func cardsStayInsideTrayMarginsWithBadgesAtTopLeft() throws {
       #expect(abs(badge.minX - (cardBounds.maxY - badge.maxY)) < 1)
       #expect(badge.minX < cardBounds.midX && badge.maxY > cardBounds.midY)
       guard let polaroid = card as? PolaroidCardItem else { continue }
-      let meta = polaroid.meta.convert(polaroid.meta.bounds, to: card.view)
+      let caption = polaroid.caption.convert(polaroid.caption.bounds, to: card.view)
       let preview = polaroid.previewArea.frame
-      #expect(cardBounds.contains(meta.insetBy(dx: 1, dy: 1)))
-      #expect(meta.maxY <= preview.minY + 1)
+      #expect(cardBounds.contains(caption.insetBy(dx: 1, dy: 1)))
+      #expect(caption.maxY <= preview.minY + 1)
       #expect(abs(preview.minX - (cardBounds.maxX - preview.maxX)) < 1)
       if let link = card as? LinkCardItem {
         let domain = link.domain.convert(link.domain.bounds, to: card.view)
@@ -89,7 +89,7 @@ func cardsStayInsideTrayMarginsWithBadgesAtTopLeft() throws {
       }
       if let text = card as? TextCardItem {
         #expect(preview.contains(text.body.frame.offsetBy(dx: preview.minX, dy: preview.minY)))
-        #expect(polaroid.meta.stringValue.rangeOfCharacter(from: .decimalDigits) != nil)
+        #expect(polaroid.caption.stringValue.rangeOfCharacter(from: .decimalDigits) != nil)
       }
     }
     withExtendedLifetime(window) {}
