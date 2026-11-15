@@ -184,10 +184,12 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       zone.leadingAnchor.constraint(greaterThanOrEqualTo: folder.trailingAnchor, constant: 8),
       zone.trailingAnchor.constraint(lessThanOrEqualTo: settings.leadingAnchor, constant: -8),
     ])
-    configureClipboardBar(in: content, above: folder)
+    configureClipboardBar(in: content, between: folder, and: settings)
   }
 
-  private func configureClipboardBar(in content: NSView, above controls: NSView) {
+  private func configureClipboardBar(
+    in content: NSView, between folder: NSView, and settings: NSView
+  ) {
     clipboardBar.onClear = { [weak self] in self?.clearClips?() }
     clipboardBar.onCopy = { [weak self] clip in self?.copyClip(clip) }
     clipboardBar.onExpandedChange = { [weak self] _ in self?.updateClipboardSurface() }
@@ -195,11 +197,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     surface.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(surface)
     NSLayoutConstraint.activate([
-      surface.leadingAnchor.constraint(
-        equalTo: content.leadingAnchor, constant: TrayMetrics.margin),
-      surface.trailingAnchor.constraint(
-        equalTo: content.trailingAnchor, constant: -TrayMetrics.margin),
-      surface.bottomAnchor.constraint(equalTo: controls.topAnchor, constant: -Space.s8),
+      surface.leadingAnchor.constraint(equalTo: folder.leadingAnchor),
+      surface.trailingAnchor.constraint(equalTo: settings.trailingAnchor),
+      surface.bottomAnchor.constraint(equalTo: folder.topAnchor, constant: -Space.s8),
     ])
     clipboardSurface = surface
     updateClipboardSurface()

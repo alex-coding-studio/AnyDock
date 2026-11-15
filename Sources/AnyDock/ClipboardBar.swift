@@ -61,11 +61,11 @@ final class ClipboardBar: NSView {
       header.topAnchor.constraint(equalTo: topAnchor, constant: Space.s8),
       header.heightAnchor.constraint(equalToConstant: 24),
       header.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
-      header.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s8),
+      header.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
       cellRow.topAnchor.constraint(equalTo: header.bottomAnchor, constant: Space.s8),
       cellRow.heightAnchor.constraint(equalToConstant: 52),
-      cellRow.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s8),
-      cellRow.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s8),
+      cellRow.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
+      cellRow.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
     ])
     refresh()
   }
@@ -88,7 +88,7 @@ final class ClipboardBar: NSView {
         context.duration = 0.15
         context.allowsImplicitAnimation = true
         height?.animator().constant = target
-        superview?.layoutSubtreeIfNeeded()
+        window?.contentView?.layoutSubtreeIfNeeded()
       }
     } else {
       height?.constant = target
