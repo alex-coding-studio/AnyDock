@@ -70,6 +70,10 @@ struct TrayEntry {
     var link: URL?
     var size: Int64?
     var contentType = UTType(filenameExtension: item.url.pathExtension)
+    if item.kind == .image || item.kind == .file {
+      size = (try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { $0 }
+        .map(Int64.init)
+    }
     switch item.kind {
     case .image:
       thumbnail = item.thumbnail.flatMap(NSImage.init(data:))
@@ -85,8 +89,6 @@ struct TrayEntry {
         link = URL(string: address)
       }
     case .file:
-      size = (try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { $0 }
-        .map(Int64.init)
       let handle = try? FileHandle(forReadingFrom: item.url)
       let prefix = (try? handle?.read(upToCount: 4096)) ?? Data()
       try? handle?.close()
@@ -324,7 +326,6 @@ final class ImageCardItem: TrayCardItem {
 class PolaroidCardItem: TrayCardItem {
   let previewArea = PreviewArea()
   let caption = NSTextField(labelWithString: "")
-  let meta = NSTextField(labelWithString: "")
 
   override func buildContent(in container: NSView) {
     previewArea.wantsLayer = true
@@ -333,16 +334,9 @@ class PolaroidCardItem: TrayCardItem {
     caption.font = .systemFont(ofSize: 11, weight: .medium)
     caption.lineBreakMode = .byTruncatingMiddle
     caption.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-    meta.font = .monospacedDigitSystemFont(ofSize: 10, weight: .regular)
-    meta.textColor = .secondaryLabelColor
-    meta.lineBreakMode = .byTruncatingTail
-    meta.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-    let metaRow = NSStackView(views: [dot, meta])
-    metaRow.spacing = Space.s4
-    let strip = NSStackView(views: [caption, metaRow])
-    strip.orientation = .vertical
-    strip.alignment = .leading
-    strip.spacing = 0
+    caption.setContentCompressionResistancePriority(.required, for: .vertical)
+    let strip = NSStackView(views: [dot, caption])
+    strip.spacing = Space.s4
     pin(previewArea, in: container, inset: TrayMetrics.framePadding)
     pin(strip, in: container, inset: TrayMetrics.framePadding)
     previewArea.addSubview(badge)
@@ -385,6 +379,13 @@ class PolaroidCardItem: TrayCardItem {
     super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
     card.polaroid = true
   }
+
+  func showTime(_ time: String) {
+    caption.font = .monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+    caption.textColor = .secondaryLabelColor
+    caption.lineBreakMode = .byTruncatingTail
+    caption.stringValue = time
+  }
 }
 
 @MainActor
@@ -398,32 +399,29 @@ final class TextCardItem: PolaroidCardItem {
 
   override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
     super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
-    caption.isHidden = true
     body.stringValue = entry.text ?? ""
-    meta.stringValue = L10n.text(
-      "meta_separator", L10n.text("character_count", entry.characterCount), time)
+    showTime(time)
   }
 }
 
 @MainActor
 final class LinkCardItem: PolaroidCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("LinkCard")
-  lazy var domain = label(size: 13, weight: .bold, lines: 2)
+  lazy var domain = label(size: 13, weight: .bold, lines: 1)
   lazy var address = label(size: 11, lines: 0)
 
   override func buildPreview(in area: NSView) {
     address.textColor = .secondaryLabelColor
-    domain.setContentCompressionResistancePriority(.required, for: .vertical)
+    domain.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
     fill(domain, in: area, top: Space.s24)
     fill(address, in: area, below: domain)
   }
 
   override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
     super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
-    caption.isHidden = true
     domain.stringValue = entry.link?.host(percentEncoded: false) ?? entry.displayName
     address.stringValue = entry.link?.absoluteString ?? ""
-    meta.stringValue = time
+    showTime(time)
   }
 }
 
@@ -435,6 +433,8 @@ final class FileCardItem: PolaroidCardItem {
 
   override func buildPreview(in area: NSView) {
     preview.imageScaling = .scaleProportionallyUpOrDown
+    preview.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    preview.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
     preview.translatesAutoresizingMaskIntoConstraints = false
     area.addSubview(preview, positioned: .below, relativeTo: badge)
     NSLayoutConstraint.activate([
@@ -455,10 +455,10 @@ final class FileCardItem: PolaroidCardItem {
     lines.isHidden = !plainText
     preview.image = plainText ? nil : entry.thumbnail
     lines.stringValue = plainText ? entry.text ?? "" : ""
-    caption.isHidden = false
+    caption.font = .systemFont(ofSize: 11, weight: .medium)
+    caption.textColor = .labelColor
+    caption.lineBreakMode = .byTruncatingMiddle
     caption.stringValue = entry.displayName
-    let size = entry.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }
-    meta.stringValue = size.map { L10n.text("meta_separator", $0, time) } ?? time
   }
 
   func showThumbnail(_ image: NSImage) {

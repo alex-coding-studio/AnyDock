@@ -78,3 +78,18 @@ func doubleClickingFilterSelectsOnlyThatKind() throws {
   #expect(tray.collection.selectionIndexPaths.count == items.count)
   _ = window
 }
+
+@Test("连续两次快速双击时第 3、4 下只切换一次，键盘触发不切换")
+func rapidDoubleClicksToggleOncePerPair() {
+  let toggles = (1...4).map { count in
+    TrayScopeBar.togglesSelection(
+      NSEvent.mouseEvent(
+        with: .leftMouseUp, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: 0,
+        context: nil, eventNumber: 0, clickCount: count, pressure: 0))
+  }
+  #expect(toggles == [false, true, false, true])
+  let key = NSEvent.keyEvent(
+    with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: 0,
+    context: nil, characters: " ", charactersIgnoringModifiers: " ", isARepeat: false, keyCode: 49)
+  #expect(!TrayScopeBar.togglesSelection(key))
+}

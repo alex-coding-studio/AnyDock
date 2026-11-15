@@ -362,12 +362,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       case .file: FileCardItem.identifier
       }
     let item = collectionView.makeItem(withIdentifier: identifier, for: indexPath)
-    timeFormatter.dateFormat =
-      Calendar.current.isDateInToday(entry.item.receivedAt) ? "HH:mm" : "M/d"
     let latest = entry.url == latestReceivedURL
     (item as? TrayCardItem)?.configure(
-      entry, singleColumn: singleColumn,
-      time: timeFormatter.string(from: entry.item.receivedAt), latest: latest)
+      entry, singleColumn: singleColumn, time: timeText(entry.item.receivedAt), latest: latest)
     let timestamp = entry.item.receivedAt.formatted(date: .complete, time: .standard)
     item.view.toolTip = timestamp
     item.view.setAccessibilityElement(true)
@@ -476,12 +473,34 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private func updateControls() {
     let count = selectedEntries.count
     let dragging = !draggedURLs.isEmpty
-    dropZone.show(
-      dragging ? L10n.text("Drop here to move to Trash") : L10n.text("selected_count", count),
-      armed: dragging)
-    dropZoneSurface?.isHidden = !dragging && count == 0
+    if dragging {
+      dropZone.show(L10n.text("Drop here to move to Trash"), armed: true)
+    } else if count == 1, let entry = selectedEntries.first {
+      let segments = detailSegments(of: entry).filter { !$0.isEmpty }
+      let rest = segments.dropFirst().reduce("") { L10n.text("meta_separator", $0, $1) }
+      dropZone.show(segments.first ?? "", suffix: rest, armed: false)
+    } else {
+      dropZone.show(count > 1 ? L10n.text("selected_count", count) : "", armed: false)
+    }
+    dropZoneSurface?.isHidden = !dragging && dropZone.label.stringValue.isEmpty
     emptyState?.isHidden = !contents.items.isEmpty
     scroll.isHidden = contents.items.isEmpty
+  }
+
+  private func detailSegments(of entry: TrayEntry) -> [String] {
+    let time = timeText(entry.item.receivedAt)
+    let size = entry.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }
+    switch entry.kind {
+    case .file: return [entry.displayName, size ?? "", time]
+    case .image: return [entry.badge, size ?? "", time]
+    case .text: return [L10n.text("character_count", entry.characterCount), time]
+    case .link: return [entry.link?.absoluteString ?? entry.displayName]
+    }
+  }
+
+  private func timeText(_ date: Date) -> String {
+    timeFormatter.dateFormat = Calendar.current.isDateInToday(date) ? "HH:mm" : "M/d"
+    return timeFormatter.string(from: date)
   }
 
   @discardableResult
