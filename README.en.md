@@ -1,55 +1,34 @@
 [简体中文](README.md) | English
 
-# AnyDock · 随手坞
+# AnyDock
 
-AnyDock is a local-network relay from your phone to your Mac, not a Dock replacement.
+Send images from your iPhone to your Mac over the local network, then drag them from the menu bar into any chat.
 
-## Features
-
-- Send to your Mac from the Share Sheet in one tap.
-- Drag from the menu bar tray straight into a chat.
-- No shared Apple ID needed; several phones can send.
-- Stays on your local network, never the cloud.
-
-## Requirements
-
-- macOS 14 or later; building from source needs Xcode 26 or later.
-- An iPhone with Shortcuts, on the same trusted local network as the Mac.
+- One tap from the iPhone Share Sheet
+- Drag straight from the menu bar tray into chats
+- No shared Apple ID needed; any number of phones can send
+- Local network only, no cloud
 
 ## Install
+
+Requires macOS 14+ and Xcode 26+.
 
 ```sh
 ./scripts/run.sh
 ```
 
-AnyDock lives in the menu bar. Open Settings with the gear button in the tray. Images are saved to `~/Downloads/SnapDock` by default.
+## Connect your iPhone
 
-## Set up your iPhone
-
-1. Open Settings → Connection, choose **Send to iPhone…** and AirDrop it to your own iPhone.
-2. Tap **Add Shortcut** on the iPhone.
-3. Choose the shortcut when sharing an image.
-
-Add it once on each phone. If AirDrop is unavailable, export the shortcut from Connection → Manual Setup and enter the address and key when importing it.
+In Settings → Connection, choose "Send to iPhone…", AirDrop it to your phone and add the shortcut. Then pick it from any app's Share Sheet.
 
 ## Security
 
-- Use AnyDock only on a trusted local network. Transfers are unencrypted; do not expose the receive port to the Internet.
-- The shortcut contains your connection key. Send it only to your own phones.
+Use only on a trusted local network: traffic is unencrypted, so never expose the port to the Internet. The shortcut contains your connection key; send it only to your own devices.
 
 ## Development
 
 ```sh
-./scripts/lint.sh
-./scripts/test.sh
+./scripts/lint.sh && ./scripts/test.sh
 ```
 
-See [AGENTS.md](AGENTS.md), [ProjectContext.md](ProjectContext.md) and [docs/PROJECT.md](docs/PROJECT.md) for engineering details.
-
-## Contributing
-
-This is a personally maintained project and is not accepting external issues or pull requests at this time; you are welcome to fork and modify it under the MIT license.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+Personally maintained; external issues and pull requests are not accepted. Forks welcome. MIT License, see [LICENSE](LICENSE).
