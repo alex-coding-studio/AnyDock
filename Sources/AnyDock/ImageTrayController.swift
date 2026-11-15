@@ -44,8 +44,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   override func loadView() {
     let content = NSView(frame: NSRect(x: 0, y: 0, width: 450, height: 520))
-    view = glassSurface(content, cornerRadius: 16)
-    view.frame = NSRect(x: 0, y: 0, width: 450, height: 520)
+    view = content
     layout.aspectRatio = { [weak self] path in self?.aspectRatio(at: path.item) ?? 1 }
     collection.collectionViewLayout = layout
     collection.frame = content.bounds
