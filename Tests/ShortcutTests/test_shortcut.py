@@ -4,6 +4,7 @@ import plistlib
 import unittest
 import subprocess
 import tempfile
+from decimal import Decimal, ROUND_FLOOR
 
 path = pathlib.Path(__file__).resolve().parents[2] / "scripts/make_shortcut.py"
 spec = importlib.util.spec_from_file_location("make_shortcut", path)
@@ -27,7 +28,9 @@ class ShortcutTests(unittest.TestCase):
             subprocess.run([str(executable), str(template)], check=True, capture_output=True)
 
     def test_personalized_shortcut_has_no_import_questions_and_preserves_upload_references(self):
-        shortcut = module.make_shortcut("http://test-mac.local:9876/upload", "fixture-secret", questions=False)
+        shortcut = module.make_shortcut("http://test-mac.local:9876/upload", "fixture-secret",
+                                        name="fixture-validation", questions=False)
+        self.assertEqual(shortcut["WFWorkflowName"], "fixture-validation")
         actions = shortcut["WFWorkflowActions"]
         self.assertEqual(shortcut["WFWorkflowImportQuestions"], [])
         self.assertEqual([action["WFWorkflowActionParameters"]["WFTextActionText"] for action in actions[:2]],
@@ -39,6 +42,59 @@ class ShortcutTests(unittest.TestCase):
         self.assertEqual(upload["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"][0]
                          ["WFValue"]["Value"]["attachmentsByRange"]["{0, 1}"]["OutputUUID"],
                          actions[1]["WFWorkflowActionParameters"]["UUID"])
+
+    def test_every_value_condition_has_text_input_and_a_comparison_value(self):
+        actions = module.make_shortcut("http://Mac.local:8765/upload", "test-key")["WFWorkflowActions"]
+        by_uuid = {a["WFWorkflowActionParameters"]["UUID"]: a for a in actions}
+        checked = 0
+        for action in actions:
+            p = action["WFWorkflowActionParameters"]
+            if action["WFWorkflowActionIdentifier"] != "is.workflow.actions.conditional" or p.get("WFControlFlowMode") != 0:
+                continue
+            if p["WFCondition"] in {100, 101}:
+                continue
+            checked += 1
+            value = p.get("WFConditionalActionString")
+            self.assertTrue(value, "A text comparison must have a value")
+            if isinstance(value, dict):
+                content = value["Value"]
+                self.assertTrue(content["string"])
+                self.assertTrue(content.get("attachmentsByRange"))
+            reference = p["WFInput"]["Variable"]["Value"]
+            source = by_uuid[reference["OutputUUID"]]
+            self.assertEqual(source["WFWorkflowActionIdentifier"], "is.workflow.actions.gettext")
+        self.assertGreater(checked, 0)
+
+    def test_size_precheck_accepts_limit_and_rejects_one_byte_over(self):
+        actions = module.make_shortcut("http://Mac.local:8765/upload", "test-key")["WFWorkflowActions"]
+        by_uuid = {a["WFWorkflowActionParameters"]["UUID"]: a for a in actions}
+        guard = next(a["WFWorkflowActionParameters"] for a in actions
+                     if a["WFWorkflowActionIdentifier"] == "is.workflow.actions.conditional"
+                     and a["WFWorkflowActionParameters"].get("WFConditionalActionString") == "0")
+
+        def evaluate(reference, size):
+            action = by_uuid[reference["OutputUUID"]]
+            p = action["WFWorkflowActionParameters"]
+            name = action["WFWorkflowActionIdentifier"].removeprefix("is.workflow.actions.")
+            if name == "properties.files":
+                return Decimal(size)
+            if name == "gettext":
+                token = p["WFTextActionText"]["Value"]["attachmentsByRange"]["{0, 1}"]
+                return str(evaluate(token, size))
+            value = evaluate(p["WFInput"]["Value"], size)
+            if name == "math":
+                operand = Decimal(p["WFMathOperand"])
+                operations = {"+": lambda a, b: a + b, "÷": lambda a, b: a / b}
+                return operations[p["WFMathOperation"]](value, operand)
+            self.assertEqual(name, "round")
+            self.assertEqual(p["WFRoundTo"], "Ones Place")
+            self.assertEqual(p["WFRoundMode"], "Always Round Down")
+            return value.to_integral_value(rounding=ROUND_FLOOR)
+
+        reference = guard["WFInput"]["Variable"]["Value"]
+        for size, accepted in [(0, True), (49_999_999, True), (50_000_000, True),
+                               (50_000_001, False), (200_000_000, False)]:
+            self.assertEqual(evaluate(reference, size) == guard["WFConditionalActionString"], accepted)
 
     def test_mixed_items_use_clipboard_fallback_and_continue_after_recoverable_failures(self):
         shortcut = plistlib.loads(plistlib.dumps(module.make_shortcut("http://Mac.local:8765/upload", "test-key")))
@@ -72,19 +128,20 @@ class ShortcutTests(unittest.TestCase):
         fields = upload["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]
         headers = {f["WFKey"]["Value"]["string"]: f["WFValue"] for f in fields}
         self.assertEqual(headers["X-AnyDock-Filename"]["Value"]["attachmentsByRange"]["{0, 1}"]["VariableName"], "Filename")
-        guards = [p for n, p in zip(names, parameters) if n == "conditional" and p.get("WFCondition") == 2]
+        guards = [p for n, p in zip(names, parameters)
+                  if n == "conditional" and p.get("WFConditionalActionString") == "0"]
         self.assertEqual(len(guards), 1)
         guard = guards[0]
         guard_else = next(i for i, p in enumerate(parameters) if p.get("GroupingIdentifier") == guard["GroupingIdentifier"]
                           and p.get("WFControlFlowMode") == 1)
         guard_end = next(i for i, p in enumerate(parameters) if p.get("GroupingIdentifier") == guard["GroupingIdentifier"]
                          and p.get("WFControlFlowMode") == 2)
-        self.assertLess(guard_else, upload_index)
-        self.assertLess(upload_index, guard_end)
+        self.assertLess(upload_index, guard_else)
+        self.assertLess(guard_else, guard_end)
         self.assertLess(guard_end, repeats[1][0])
-        checked_codes = {p["WFNumberValue"] for n, p in zip(names, parameters)
-                         if n == "conditional" and p.get("WFCondition") == 4 and "WFNumberValue" in p}
-        self.assertEqual(checked_codes, {401, 413, 415})
+        checked_codes = {p.get("WFConditionalActionString") for n, p in zip(names, parameters)
+                         if n == "conditional" and isinstance(p.get("WFConditionalActionString"), str)}
+        self.assertTrue({"401", "413", "415"} <= checked_codes)
         notifications = [i for i, n in enumerate(names) if n == "notification"]
         self.assertEqual(len(notifications), 1)
         self.assertGreater(notifications[0], repeats[1][0])

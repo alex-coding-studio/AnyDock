@@ -47,6 +47,8 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
         return action("gettext", WFTextActionText=value)
 
     def condition(value, operator, **parameters):
+        if operator not in {100, 101}:
+            value = action("gettext", WFTextActionText=text(reference=value))
         group = str(uuid.uuid4()).upper()
         action("conditional", WFInput={"Type": "Variable", "Variable": attachment(value)},
                WFCondition=operator, GroupingIdentifier=group, WFControlFlowMode=0, **parameters)
@@ -81,8 +83,8 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     action("getvariable", WFVariable=attachment({"Type": "ExtensionInput"}))
     source = end(source_group)
     zero = action("number", WFNumberActionNumber=0)
-    for name in ["Success", "Failure", "Oversize", "Unauthorized", "Unsupported", "Other"]:
-        assign(name, zero)
+    for counter_name in ["Success", "Failure", "Oversize", "Unauthorized", "Unsupported", "Other"]:
+        assign(counter_name, zero)
     text_sample = literal("AnyDock")
     text_type = action("getitemtype", WFInput=attachment(text_sample))
     rich_sample = action("getrichtextfrommarkdown", WFInput=attachment(text_sample))
@@ -115,10 +117,9 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     size = action("properties.files", WFInput=attachment(variable("Body")),
                   WFContentItemPropertyName="File Size")
     numeric_size = action("math", WFInput=attachment(size), WFMathOperation="+", WFMathOperand=0)
-    size_group = condition(numeric_size, 2, WFNumberValue=50_000_000)
-    increment("Failure")
-    increment("Oversize")
-    otherwise(size_group)
+    ratio = action("math", WFInput=attachment(numeric_size), WFMathOperation="÷", WFMathOperand=50_000_001)
+    oversize = action("round", WFInput=attachment(ratio), WFRoundTo="Ones Place", WFRoundMode="Always Round Down")
+    size_group = condition(oversize, 4, WFConditionalActionString="0")
     response = action(
         "downloadurl", WFURL=text(reference=destination), WFHTTPMethod="POST",
         WFHTTPBodyType="File", WFFormValues=dictionary([]),
@@ -138,7 +139,7 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     error = action("getvalueforkey", WFDictionaryKey="error", WFInput=attachment(response))
     error_groups = []
     for code, counter in [(413, "Oversize"), (401, "Unauthorized"), (415, "Unsupported")]:
-        group = condition(error, 4, WFNumberValue=code)
+        group = condition(error, 4, WFConditionalActionString=str(code))
         error_groups.append(group)
         increment(counter)
         otherwise(group)
@@ -146,6 +147,9 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     for group in reversed(error_groups):
         end(group)
     end(success_group)
+    otherwise(size_group)
+    increment("Failure")
+    increment("Oversize")
     end(size_group)
     action("repeat.each", GroupingIdentifier=repeat_group, WFControlFlowMode=2)
     action("notification", WFNotificationActionTitle="随手坞", WFNotificationActionBody=message([
