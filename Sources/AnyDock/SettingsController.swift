@@ -119,7 +119,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     icon.heightAnchor.constraint(equalToConstant: 40).isActive = true
     let title = NSTextField(labelWithString: L10n.text("AnyDock"))
     title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-    let identity = NSStackView(views: [title, footnote(L10n.text("An iPhone screenshot inbox"))])
+    let identity = NSStackView(views: [title, footnote(L10n.text("Your phone-to-Mac drop zone"))])
     identity.orientation = .vertical
     identity.alignment = .leading
     identity.spacing = 3

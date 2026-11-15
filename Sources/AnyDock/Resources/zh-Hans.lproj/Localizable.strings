@@ -2,10 +2,10 @@
 "shortcut.airdrop.unsupported" = "此 Mac 无法使用 AirDrop。请使用下方的手动设置。";
 "shortcut.airdrop.unavailable" = "AirDrop 当前不可用，请检查 Wi-Fi 与蓝牙，或使用手动设置。";
 "Allow AnyDock in System Settings → Login Items." = "请在系统设置的「登录项」中允许随手坞。";
-"An iPhone screenshot inbox" = "iPhone 截图收件箱";
+"Your phone-to-Mac drop zone" = "从手机到 Mac 的随手中转";
 "Appearance" = "外观";
 "Apply" = "应用";
-"settings.columns.note" = "立即生效。列越多，一屏看到的截图越多。";
+"settings.columns.note" = "立即生效。列越多，一屏看到的图片越多。";
 "Change…" = "更改…";
 "settings.folder.note" = "更换位置不会移动或删除已收到的原图。";
 "shortcut.airdrop.choosePhone" = "请选择自己的 iPhone，接收后点「添加快捷指令」。";
@@ -37,7 +37,7 @@
 "Move to Trash" = "移到废纸篓";
 "Network" = "网络";
 "New image %d, %@" = "新收到的图片 %d，%@";
-"No screenshots yet" = "还没有收到截图";
+"Nothing received yet" = "还没有收到内容";
 "One-step Setup" = "一步设置";
 "Open Folder" = "打开文件夹";
 "Personalization" = "个性化";
@@ -55,9 +55,9 @@
 "Send to iPhone…" = "发送到 iPhone…";
 "settings.shortcut.note" = "通过 AirDrop 发送，在 iPhone 上点「添加快捷指令」即可使用。快捷指令含连接密钥；系统签名会将副本交给 Apple 验证，请仅发送给自己的 iPhone。";
 "Settings" = "设置";
-"Share an image on your iPhone and choose your Mac’s shortcut." = "在 iPhone 上分享图片，选择这台 Mac 的快捷指令。";
+"Share content on your iPhone and choose your Mac’s shortcut." = "在 iPhone 上分享内容，选择这台 Mac 的快捷指令。";
 "Shortcut name" = "快捷指令名称";
-"shortcut.airdrop.sent" = "快捷指令已发送；请在 iPhone 上添加后分享图片试用。";
+"shortcut.airdrop.sent" = "快捷指令已发送；请在 iPhone 上添加后分享内容试用。";
 "Show in Finder" = "在 Finder 中显示";
 "shortcut.signing.noOutput" = "系统签名未生成快捷指令文件。可继续使用手动设置。";
 "shortcut.signing.failed" = "系统签名失败（退出码 %d）：%@。可继续使用手动设置。";

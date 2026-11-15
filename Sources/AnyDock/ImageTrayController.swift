@@ -120,11 +120,11 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     let icon = NSImageView(
       image: NSImage(systemSymbolName: "tray", accessibilityDescription: nil) ?? NSImage())
     icon.contentTintColor = .secondaryLabelColor
-    let title = NSTextField(labelWithString: L10n.text("No screenshots yet"))
+    let title = NSTextField(labelWithString: L10n.text("Nothing received yet"))
     title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
     let detail = NSTextField(
       wrappingLabelWithString: L10n.text(
-        "Share an image on your iPhone and choose your Mac’s shortcut."))
+        "Share content on your iPhone and choose your Mac’s shortcut."))
     detail.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
     detail.textColor = .secondaryLabelColor
     detail.alignment = .center

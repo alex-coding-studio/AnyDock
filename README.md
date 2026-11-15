@@ -1,6 +1,6 @@
 # AnyDock · 随手坞
 
-AnyDock (随手坞) is a local-network relay from your phone to your Mac. Share images from your iPhone, then browse, select and drag the original files from the menu bar into a chat. The app supports English and Simplified Chinese, follows the system language by default, and offers an app-specific language override.
+AnyDock (随手坞) is a local-network relay from your phone to your Mac. Use its image tray to browse, select and drag original images from the menu bar into a chat. The app supports English and Simplified Chinese, follows the system language by default, and offers an app-specific language override.
 
 ## Features
 

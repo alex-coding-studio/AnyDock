@@ -55,7 +55,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>将全部 %d 张截图移到废纸篓？</string>
+			<string>将全部 %d 张图片移到废纸篓？</string>
 		</dict>
 	</dict>
 	<key>trash_selection_confirmation</key>
@@ -69,7 +69,7 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>将 %d 张截图移到废纸篓？</string>
+			<string>将 %d 张图片移到废纸篓？</string>
 		</dict>
 	</dict>
 </dict>

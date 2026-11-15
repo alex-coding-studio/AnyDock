@@ -2,10 +2,10 @@
 "shortcut.airdrop.unsupported" = "AirDrop is not available on this Mac. Use manual setup below.";
 "shortcut.airdrop.unavailable" = "AirDrop is unavailable. Check Wi-Fi and Bluetooth, or use manual setup.";
 "Allow AnyDock in System Settings → Login Items." = "Allow AnyDock in System Settings → Login Items.";
-"An iPhone screenshot inbox" = "An iPhone screenshot inbox";
+"Your phone-to-Mac drop zone" = "Your phone-to-Mac drop zone";
 "Appearance" = "Appearance";
 "Apply" = "Apply";
-"settings.columns.note" = "Changes apply immediately. More columns show more screenshots at once.";
+"settings.columns.note" = "Changes apply immediately. More columns show more images at once.";
 "Change…" = "Change…";
 "settings.folder.note" = "Changing folders does not move or delete received originals.";
 "shortcut.airdrop.choosePhone" = "Choose your own iPhone, then tap Add Shortcut after receiving the file.";
@@ -37,7 +37,7 @@
 "Move to Trash" = "Move to Trash";
 "Network" = "Network";
 "New image %d, %@" = "New image %d, %@";
-"No screenshots yet" = "No screenshots yet";
+"Nothing received yet" = "Nothing received yet";
 "One-step Setup" = "One-step Setup";
 "Open Folder" = "Open Folder";
 "Personalization" = "Personalization";
@@ -55,9 +55,9 @@
 "Send to iPhone…" = "Send to iPhone…";
 "settings.shortcut.note" = "Send via AirDrop, then tap Add Shortcut on your iPhone. The shortcut contains your connection key; system signing sends a copy to Apple for validation. Send it only to your own iPhone.";
 "Settings" = "Settings";
-"Share an image on your iPhone and choose your Mac’s shortcut." = "Share an image on your iPhone and choose your Mac’s shortcut.";
+"Share content on your iPhone and choose your Mac’s shortcut." = "Share content on your iPhone and choose your Mac’s shortcut.";
 "Shortcut name" = "Shortcut name";
-"shortcut.airdrop.sent" = "Shortcut sent. Add it on your iPhone, then share an image to try it.";
+"shortcut.airdrop.sent" = "Shortcut sent. Add it on your iPhone, then share content to try it.";
 "Show in Finder" = "Show in Finder";
 "shortcut.signing.noOutput" = "Signing did not produce a shortcut file. Manual setup is still available.";
 "shortcut.signing.failed" = "Signing failed (exit %d): %@. Manual setup is still available.";
