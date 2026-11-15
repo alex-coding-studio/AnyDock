@@ -35,13 +35,3 @@ func arrivalOutsideFilterSwitchesToAll() {
   #expect(contents.filter == .all)
   #expect(contents.items.first?.url.lastPathComponent == "d")
 }
-
-@Test("没有选中时只删除当前筛选里的内容，有选中时只删除选中项")
-func trashTargetsFollowFilterOrSelection() {
-  var contents = TrayContents()
-  contents.replace([item("a", .image), item("b", .file), item("c", .file)])
-  contents.select(.kind(.file))
-  #expect(contents.trashTargets(selected: []).map(\.lastPathComponent) == ["b", "c"])
-  let selected = URL(fileURLWithPath: "/tmp/b")
-  #expect(contents.trashTargets(selected: [selected]) == [selected])
-}

@@ -40,8 +40,4 @@ public struct TrayContents: Sendable {
     items = Array(([item] + items.filter { $0.url != item.url }).prefix(limit))
     if !filter.includes(item.kind) { filter = .all }
   }
-
-  public func trashTargets(selected: [URL]) -> [URL] {
-    selected.isEmpty ? visibleItems.map(\.url) : selected
-  }
 }

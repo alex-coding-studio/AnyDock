@@ -30,8 +30,7 @@
 "Listening port" = "监听端口";
 "Listening · %d" = "监听中 · %d";
 "Manual Setup" = "手动设置";
-"Move All to Trash" = "全部移到废纸篓";
-"Move All to Trash…" = "全部移到废纸篓…";
+"Drop here to move to Trash" = "拖到这里放入废纸篓";
 "Move to Trash" = "移到废纸篓";
 "Network" = "网络";
 "Nothing received yet" = "还没有收到内容";
@@ -83,7 +82,6 @@
 "settings.port.note" = "端口范围为 1024–65535。更改端口后，请重新发送 iPhone 快捷指令。";
 "settings.manual.note" = "仅在可信局域网使用，HTTP 传输不加密。更改端口后请重新发送快捷指令。手动导入通用版时，需填写接收地址和连接密钥。";
 "shortcut.name.normalized" = "将使用「%@」；首尾空白已移除，/ 和 : 会替换为 -。";
-"You can restore them from the Trash." = "可以在废纸篓中恢复。";
 "configuration.recovery" = "配置文件保持原样。请检查 Application Support/AnyDock 中的配置后重新启动。";
 "[redacted]" = "[已隐藏]";
 "English" = "English";
@@ -103,10 +101,6 @@
 "filter_accessibility" = "%1$@：%2$d";
 "New %@: %@, %@" = "新%1$@：%2$@，%3$@";
 "%@: %@, %@" = "%1$@：%2$@，%3$@";
-"Move All Images to Trash…" = "将全部图片移到废纸篓…";
-"Move All Text to Trash…" = "将全部文本移到废纸篓…";
-"Move All Links to Trash…" = "将全部链接移到废纸篓…";
-"Move All Files to Trash…" = "将全部文件移到废纸篓…";
 "migration.failed" = "旧配置迁移失败，iPhone 快捷指令暂时不可用。%@ 请重启随手坞重试。";
 "migration.supportUnavailable" = "无法访问 Application Support。";
 "migration.readFailed" = "无法读取旧配置文件。";

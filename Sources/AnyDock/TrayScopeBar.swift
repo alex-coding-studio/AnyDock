@@ -11,6 +11,7 @@ final class TrayScopeBar: NSView {
   }
 
   var onSelect: ((TrayFilter) -> Void)?
+  var onSelectAll: ((TrayFilter) -> Void)?
   private(set) var segments: [Segment] = []
   private(set) var selected: TrayFilter = .all
   private let scroll = NSScrollView()
@@ -176,7 +177,14 @@ final class TrayScopeBar: NSView {
 
   @objc private func tapped(_ sender: NSButton) {
     guard segments.indices.contains(sender.tag) else { return }
-    onSelect?(segments[sender.tag].filter)
+    let filter = segments[sender.tag].filter
+    if let event = NSApp.currentEvent,
+      event.type == .leftMouseUp || event.type == .leftMouseDown, event.clickCount >= 2
+    {
+      onSelectAll?(filter)
+    } else {
+      onSelect?(filter)
+    }
   }
 }
 

@@ -12,18 +12,16 @@ enum TrayPreferences {
 
 @MainActor
 final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
-  NSCollectionViewDelegate, NSPopoverDelegate, @MainActor QLPreviewPanelDelegate
+  NSCollectionViewDelegate, @MainActor QLPreviewPanelDelegate
 {
   let collection = ImageCollectionView()
   private let layout = MasonryCollectionLayout()
   private let scroll = NSScrollView()
   private let timeFormatter = DateFormatter()
-  private let selectionCount = NSTextField(labelWithString: "")
-  private let trashButton = NSButton()
+  let dropZone = TrayDropZone()
   private(set) lazy var filterBar = TrayScopeBar(
     surface: glassSurface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2))
-  private var selectionCapsule: NSView?
-  private var trashSurface: NSView?
+  private var dropZoneSurface: NSView?
   private var emptyState: NSView?
   private var contents = TrayContents()
   private var entries: [TrayEntry] = []
@@ -32,10 +30,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private var latestReceivedURL: URL?
   private var previewSource: ImagePreviewSource?
   private var isTrashing = false
-  private var trashConfirmation: NSPopover?
-  private var trashConfirmationResult: CheckedContinuation<Bool, Never>?
-  private var trashConfirmationKeyMonitor: Any?
-  private var trashConfirmed = false
+  private var draggedURLs: [URL] = []
+  private var droppedOnTrash = false
   var holdsPresentation: Bool { previewSource != nil || isTrashing }
   var presentationHeld: ((Bool) -> Void)?
   var loadItems: (() async throws -> [ReceivedItem])?
@@ -48,8 +44,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   override func loadView() {
     let content = NSView(frame: NSRect(x: 0, y: 0, width: 450, height: 520))
-    view = glassSurface(content, cornerRadius: 16)
-    view.frame = NSRect(x: 0, y: 0, width: 450, height: 520)
+    view = content
     layout.aspectRatio = { [weak self] path in self?.aspectRatio(at: path.item) ?? 1 }
     collection.collectionViewLayout = layout
     collection.frame = content.bounds
@@ -65,11 +60,14 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     collection.dataSource = self
     collection.delegate = self
     collection.setDraggingSourceOperationMask(.copy, forLocal: false)
-    collection.setDraggingSourceOperationMask(.copy, forLocal: true)
+    collection.setDraggingSourceOperationMask([.copy, .delete], forLocal: true)
     collection.copyImages = { [weak self] in self?.copySelection() }
     collection.revealImages = { [weak self] in self?.revealSelection() }
     collection.previewImages = { [weak self] in self?.previewSelection() }
-    collection.deleteImages = { [weak self] in self?.trashItems(allowAll: false) }
+    collection.deleteImages = { [weak self] in
+      guard let self else { return }
+      trash(selectedEntries.map(\.url))
+    }
     collection.selectionChanged = { [weak self] in self?.updateControls() }
     scroll.documentView = collection
     scroll.hasVerticalScroller = true
@@ -94,6 +92,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   private func configureFilterBar(in content: NSView) {
     filterBar.onSelect = { [weak self] filter in self?.select(filter) }
+    filterBar.onSelectAll = { [weak self] filter in self?.toggleSelectAll(in: filter) }
     filterBar.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(filterBar)
     NSLayoutConstraint.activate([
@@ -138,6 +137,13 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     scrollToLatestImage()
   }
 
+  func toggleSelectAll(in filter: TrayFilter) {
+    if contents.filter != filter { select(filter) }
+    let all = Set(entries.indices.map { IndexPath(item: $0, section: 0) })
+    collection.selectionIndexPaths = collection.selectionIndexPaths == all ? [] : all
+    updateControls()
+  }
+
   private func configureControls(in content: NSView) {
     let folder = glassButton(
       NSButton(), symbol: "folder", title: L10n.text("Open Folder"),
@@ -145,31 +151,27 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     let settings = glassButton(
       NSButton(), symbol: "gearshape", title: L10n.text("Settings"),
       action: #selector(settingsClicked))
-    let trash = glassButton(
-      trashButton, symbol: "trash", title: L10n.text("Move All to Trash…"),
-      action: #selector(trashClicked))
-    trashButton.contentTintColor = .systemRed
-    trashSurface = trash
-    selectionCount.font = .monospacedDigitSystemFont(
-      ofSize: NSFont.smallSystemFontSize, weight: .medium)
-    let countContent = NSStackView(views: [selectionCount])
-    countContent.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
-    let capsule = glassSurface(countContent, cornerRadius: 17)
-    capsule.heightAnchor.constraint(equalToConstant: 34).isActive = true
-    selectionCapsule = capsule
-    let right = NSStackView(views: [capsule, trash, settings])
-    right.spacing = 8
-    right.alignment = .centerY
-    for element in [folder, right] {
+    dropZone.canAccept = { [weak self] source in
+      guard let self else { return false }
+      return source === collection && !draggedURLs.isEmpty && !isTrashing
+    }
+    dropZone.performDrop = { [weak self] in self?.trashDraggedItems() != nil }
+    let zone = glassSurface(dropZone, cornerRadius: 17)
+    zone.heightAnchor.constraint(equalToConstant: 34).isActive = true
+    dropZoneSurface = zone
+    for element in [folder, zone, settings] {
       element.translatesAutoresizingMaskIntoConstraints = false
       content.addSubview(element)
     }
     NSLayoutConstraint.activate([
       folder.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
       folder.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -10),
-      right.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -10),
-      right.centerYAnchor.constraint(equalTo: folder.centerYAnchor),
-      right.leadingAnchor.constraint(greaterThanOrEqualTo: folder.trailingAnchor, constant: 8),
+      settings.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -10),
+      settings.centerYAnchor.constraint(equalTo: folder.centerYAnchor),
+      zone.centerXAnchor.constraint(equalTo: content.centerXAnchor),
+      zone.centerYAnchor.constraint(equalTo: folder.centerYAnchor),
+      zone.leadingAnchor.constraint(greaterThanOrEqualTo: folder.trailingAnchor, constant: 8),
+      zone.trailingAnchor.constraint(lessThanOrEqualTo: settings.leadingAnchor, constant: -8),
     ])
   }
 
@@ -426,6 +428,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     willBeginAt screenPoint: NSPoint, forItemsAt indexPaths: Set<IndexPath>
   ) {
     session.draggingFormation = .pile
+    beginDrag(indexPaths)
     DispatchQueue.main.async { [weak self] in
       for indexPath in indexPaths {
         self?.collection.item(at: indexPath)?.view.isHidden = false
@@ -437,7 +440,31 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     _ collectionView: NSCollectionView, draggingSession session: NSDraggingSession,
     endedAt screenPoint: NSPoint, dragOperation operation: NSDragOperation
   ) {
-    if !operation.isEmpty { didFinishDragging?() }
+    endDrag(operation: operation)
+  }
+
+  func beginDrag(_ indexPaths: Set<IndexPath>) {
+    draggedURLs = indexPaths.sorted { $0.item < $1.item }.compactMap {
+      entries.indices.contains($0.item) ? entries[$0.item].url : nil
+    }
+    droppedOnTrash = false
+    updateControls()
+  }
+
+  func endDrag(operation: NSDragOperation) {
+    let trashed = droppedOnTrash
+    draggedURLs = []
+    droppedOnTrash = false
+    updateControls()
+    if !trashed, !operation.isEmpty { didFinishDragging?() }
+  }
+
+  @discardableResult
+  func trashDraggedItems() -> Task<Void, Never>? {
+    guard !draggedURLs.isEmpty, !isTrashing else { return nil }
+    droppedOnTrash = true
+    collection.selectionIndexPaths = []
+    return trash(draggedURLs)
   }
 
   private var selectedEntries: [TrayEntry] {
@@ -448,37 +475,22 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   private func updateControls() {
     let count = selectedEntries.count
-    selectionCount.stringValue = L10n.text("selected_count", count)
-    selectionCapsule?.isHidden = count == 0
-    trashSurface?.isHidden = entries.isEmpty
-    trashButton.isEnabled = !isTrashing
-    let title = count > 0 ? L10n.text("trash_count", count) : trashAllTitle
-    trashButton.toolTip = title
-    trashButton.setAccessibilityLabel(title)
+    let dragging = !draggedURLs.isEmpty
+    dropZone.show(
+      dragging ? L10n.text("Drop here to move to Trash") : L10n.text("selected_count", count),
+      armed: dragging)
+    dropZoneSurface?.isHidden = !dragging && count == 0
     emptyState?.isHidden = !contents.items.isEmpty
     scroll.isHidden = contents.items.isEmpty
   }
 
-  private var trashAllTitle: String {
-    switch contents.filter {
-    case .all: L10n.text("Move All to Trash…")
-    case .kind(.image): L10n.text("Move All Images to Trash…")
-    case .kind(.text): L10n.text("Move All Text to Trash…")
-    case .kind(.link): L10n.text("Move All Links to Trash…")
-    case .kind(.file): L10n.text("Move All Files to Trash…")
-    }
-  }
-
-  private func trashItems(allowAll: Bool) {
-    guard !isTrashing, let loadItems, let recycleItems else { return }
-    let selected = selectedEntries.map(\.url)
-    guard allowAll || !selected.isEmpty else { return }
-    let targets = contents.trashTargets(selected: selected)
-    let filter = contents.filter
+  @discardableResult
+  private func trash(_ targets: [URL]) -> Task<Void, Never>? {
+    guard !isTrashing, !targets.isEmpty, let loadItems, let recycleItems else { return nil }
     isTrashing = true
     presentationHeld?(holdsPresentation)
     updateControls()
-    Task { [weak self] in
+    return Task { [weak self] in
       guard let self else { return }
       defer {
         isTrashing = false
@@ -489,104 +501,12 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         let allowed = Set(try await loadItems().map(\.url))
         let urls = targets.filter { allowed.contains($0) }
         guard !urls.isEmpty else { return }
-        if allowAll,
-          !(await confirmTrash(count: urls.count, filter: selected.isEmpty ? filter : nil))
-        {
-          return
-        }
         closePreview()
         try await recycleItems(urls)
       } catch {
         presentError(error)
       }
     }
-  }
-
-  private func confirmationText(count: Int, filter: TrayFilter?) -> String {
-    switch filter {
-    case nil: L10n.text("trash_selection_confirmation", count)
-    case .all: L10n.text("trash_all_confirmation", count)
-    case .kind(.image): L10n.text("trash_images_confirmation", count)
-    case .kind(.text): L10n.text("trash_texts_confirmation", count)
-    case .kind(.link): L10n.text("trash_links_confirmation", count)
-    case .kind(.file): L10n.text("trash_files_confirmation", count)
-    }
-  }
-
-  private func confirmTrash(count: Int, filter: TrayFilter?) async -> Bool {
-    guard trashButton.window != nil else { return false }
-    let title = NSTextField(wrappingLabelWithString: confirmationText(count: count, filter: filter))
-    title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-    title.alignment = .center
-    title.preferredMaxLayoutWidth = 244
-    let detail = NSTextField(labelWithString: L10n.text("You can restore them from the Trash."))
-    detail.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-    detail.textColor = .secondaryLabelColor
-    detail.alignment = .center
-    let confirm = NSButton(
-      title: filter == .all ? L10n.text("Move All to Trash") : L10n.text("trash_count", count),
-      target: self, action: #selector(confirmTrashClicked))
-    confirm.bezelStyle = .rounded
-    confirm.hasDestructiveAction = true
-    confirm.bezelColor = .systemRed
-    let content = NSView()
-    content.translatesAutoresizingMaskIntoConstraints = false
-    let stack = NSStackView(views: [title, detail, confirm])
-    stack.orientation = .vertical
-    stack.alignment = .centerX
-    stack.spacing = 8
-    stack.translatesAutoresizingMaskIntoConstraints = false
-    content.addSubview(stack)
-    NSLayoutConstraint.activate([
-      content.widthAnchor.constraint(equalToConstant: 280),
-      stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 18),
-      stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -18),
-      stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 18),
-      stack.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -18),
-      title.widthAnchor.constraint(equalTo: stack.widthAnchor),
-      detail.widthAnchor.constraint(equalTo: stack.widthAnchor),
-    ])
-    let controller = NSViewController()
-    controller.view = content
-    let popover = NSPopover()
-    popover.behavior = .transient
-    popover.delegate = self
-    popover.contentViewController = controller
-    popover.contentSize = content.fittingSize
-    trashConfirmation = popover
-    trashConfirmed = false
-    trashConfirmationKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-      [weak popover] event in
-      guard event.keyCode == 53 else { return event }
-      MainActor.assumeIsolated { popover?.performClose(nil) }
-      return nil
-    }
-    return await withCheckedContinuation { continuation in
-      trashConfirmationResult = continuation
-      popover.show(relativeTo: trashButton.bounds, of: trashButton, preferredEdge: .minY)
-      if !popover.isShown { finishTrashConfirmation() }
-    }
-  }
-
-  @objc private func confirmTrashClicked() {
-    trashConfirmed = true
-    trashConfirmation?.performClose(nil)
-  }
-
-  func popoverDidClose(_ notification: Notification) {
-    guard notification.object as? NSPopover === trashConfirmation else { return }
-    finishTrashConfirmation()
-  }
-
-  private func finishTrashConfirmation() {
-    if let monitor = trashConfirmationKeyMonitor { NSEvent.removeMonitor(monitor) }
-    trashConfirmationKeyMonitor = nil
-    let continuation = trashConfirmationResult
-    let confirmed = trashConfirmed
-    trashConfirmationResult = nil
-    trashConfirmation = nil
-    trashConfirmed = false
-    DispatchQueue.main.async { continuation?.resume(returning: confirmed) }
   }
 
   func copyToPasteboard(_ item: ReceivedItem) {
@@ -708,7 +628,6 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   @objc private func folderClicked() { openFolder?() }
   @objc private func settingsClicked() { openSettings?() }
-  @objc private func trashClicked() { trashItems(allowAll: true) }
 }
 
 private final class ImagePreviewSource: NSObject, QLPreviewPanelDataSource {
