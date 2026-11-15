@@ -15,7 +15,7 @@ final class TrayDropZone: NSView {
     super.init(frame: frame)
     wantsLayer = true
     label.lineBreakMode = .byTruncatingMiddle
-    label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    label.setContentCompressionResistancePriority(.dragThatCannotResizeWindow, for: .horizontal)
     suffix.setContentCompressionResistancePriority(.required, for: .horizontal)
     let row = NSStackView(views: [label, suffix])
     row.spacing = 0

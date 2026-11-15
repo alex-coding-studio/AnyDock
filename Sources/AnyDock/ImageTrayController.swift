@@ -476,28 +476,25 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     if dragging {
       dropZone.show(L10n.text("Drop here to move to Trash"), armed: true)
     } else if count == 1, let entry = selectedEntries.first {
-      showDetail(of: entry)
+      let segments = detailSegments(of: entry).filter { !$0.isEmpty }
+      let rest = segments.dropFirst().reduce("") { L10n.text("meta_separator", $0, $1) }
+      dropZone.show(segments.first ?? "", suffix: rest, armed: false)
     } else {
-      dropZone.show(L10n.text("selected_count", count), armed: false)
+      dropZone.show(count > 1 ? L10n.text("selected_count", count) : "", armed: false)
     }
-    dropZoneSurface?.isHidden = !dragging && count == 0
+    dropZoneSurface?.isHidden = !dragging && dropZone.label.stringValue.isEmpty
     emptyState?.isHidden = !contents.items.isEmpty
     scroll.isHidden = contents.items.isEmpty
   }
 
-  private func showDetail(of entry: TrayEntry) {
+  private func detailSegments(of entry: TrayEntry) -> [String] {
     let time = timeText(entry.item.receivedAt)
     let size = entry.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }
-    let details = [size, time].compactMap { $0 }.reduce("") { L10n.text("meta_separator", $0, $1) }
     switch entry.kind {
-    case .file: dropZone.show(entry.displayName, suffix: details, armed: false)
-    case .image: dropZone.show(entry.badge, suffix: details, armed: false)
-    case .text:
-      dropZone.show(
-        L10n.text("meta_separator", L10n.text("character_count", entry.characterCount), time),
-        armed: false)
-    case .link:
-      dropZone.show(entry.link?.absoluteString ?? entry.displayName, armed: false)
+    case .file: return [entry.displayName, size ?? "", time]
+    case .image: return [entry.badge, size ?? "", time]
+    case .text: return [L10n.text("character_count", entry.characterCount), time]
+    case .link: return [entry.link?.absoluteString ?? entry.displayName]
     }
   }
 
