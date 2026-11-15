@@ -244,6 +244,7 @@ class TrayCardItem: NSCollectionViewItem {
 
   func label(size: CGFloat, weight: NSFont.Weight = .regular, lines: Int) -> NSTextField {
     let field = NSTextField(wrappingLabelWithString: "")
+    field.isSelectable = false
     field.font = .systemFont(ofSize: size, weight: weight)
     field.maximumNumberOfLines = lines
     field.lineBreakMode = lines == 1 ? .byTruncatingMiddle : .byWordWrapping
