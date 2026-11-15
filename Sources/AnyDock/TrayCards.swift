@@ -1,5 +1,6 @@
 import AnyDockCore
 import AppKit
+import UniformTypeIdentifiers
 
 struct TrayEntry {
   let item: ReceivedItem
@@ -8,13 +9,14 @@ struct TrayEntry {
   let characterCount: Int
   let link: URL?
   let size: Int64?
+  let contentType: UTType?
 
   var url: URL { item.url }
+  var kind: ReceivedKind { item.kind }
 
   var fullText: String {
     (try? String(contentsOf: item.url, encoding: .utf8)) ?? text ?? ""
   }
-  var kind: ReceivedKind { item.kind }
 
   var displayName: String {
     let name = url.lastPathComponent
@@ -24,8 +26,31 @@ struct TrayEntry {
   }
 
   var badge: String {
-    let suffix = url.pathExtension.uppercased()
-    return suffix.isEmpty ? L10n.text("File") : suffix
+    switch kind {
+    case .text: return "TEXT"
+    case .link: return "URL"
+    case .image, .file:
+      let suffix =
+        url.pathExtension.isEmpty
+        ? contentType?.preferredFilenameExtension ?? "" : url.pathExtension
+      return suffix.isEmpty ? L10n.text("File").uppercased() : suffix.uppercased()
+    }
+  }
+
+  var badgeStyle: BadgeView.Style {
+    switch kind {
+    case .image: .media
+    case .text: .solid(.systemGray)
+    case .link: .solid(.systemBlue)
+    case .file:
+      if contentType?.conforms(to: .pdf) == true {
+        .solid(.systemRed)
+      } else if item.isPlainText {
+        .solid(NSColor(white: 0.3, alpha: 1))
+      } else {
+        .neutral
+      }
+    }
   }
 
   var summary: String {
@@ -44,6 +69,7 @@ struct TrayEntry {
     var characterCount = 0
     var link: URL?
     var size: Int64?
+    var contentType = UTType(filenameExtension: item.url.pathExtension)
     switch item.kind {
     case .image:
       thumbnail = item.thumbnail.flatMap(NSImage.init(data:))
@@ -61,10 +87,16 @@ struct TrayEntry {
     case .file:
       size = (try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { $0 }
         .map(Int64.init)
-      thumbnail = NSWorkspace.shared.icon(forFile: item.url.path)
-      if item.isPlainText, let handle = try? FileHandle(forReadingFrom: item.url) {
-        let prefix = (try? handle.read(upToCount: 4096)) ?? Data()
-        try? handle.close()
+      let handle = try? FileHandle(forReadingFrom: item.url)
+      let prefix = (try? handle?.read(upToCount: 4096)) ?? Data()
+      try? handle?.close()
+      if item.url.pathExtension.isEmpty, prefix.starts(with: Data("%PDF-".utf8)) {
+        contentType = .pdf
+      }
+      thumbnail =
+        contentType.map { NSWorkspace.shared.icon(for: $0) }
+        ?? NSWorkspace.shared.icon(forFile: item.url.path)
+      if item.isPlainText {
         text = String(decoding: prefix, as: UTF8.self)
       }
     }
@@ -73,57 +105,131 @@ struct TrayEntry {
     self.characterCount = characterCount
     self.link = link
     self.size = size
+    self.contentType = contentType
+  }
+}
+
+@MainActor
+final class BadgeView: NSView {
+  enum Style {
+    case solid(NSColor)
+    case neutral
+    case media
+  }
+
+  private let label = NSTextField(labelWithString: "")
+  private var style = Style.neutral
+
+  override init(frame: NSRect) {
+    super.init(frame: frame)
+    wantsLayer = true
+    label.font = .systemFont(ofSize: NSFont.smallSystemFontSize - 2, weight: .semibold)
+    label.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(label)
+    NSLayoutConstraint.activate([
+      label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s4),
+      label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s4),
+      label.centerYAnchor.constraint(equalTo: centerYAnchor),
+      heightAnchor.constraint(equalToConstant: TrayMetrics.badgeHeight),
+    ])
+  }
+
+  required init?(coder: NSCoder) { nil }
+
+  func show(_ text: String, style: Style) {
+    label.stringValue = text
+    self.style = style
+    updateColors()
+  }
+
+  override func layout() {
+    super.layout()
+    layer?.cornerRadius = bounds.height / 2
+  }
+
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    updateColors()
+  }
+
+  private func updateColors() {
+    effectiveAppearance.performAsCurrentDrawingAppearance {
+      switch style {
+      case .solid(let color):
+        layer?.backgroundColor = color.cgColor
+        label.textColor = .white
+      case .neutral:
+        layer?.backgroundColor = NSColor.quaternaryLabelColor.cgColor
+        label.textColor = .secondaryLabelColor
+      case .media:
+        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.6).cgColor
+        label.textColor = .white
+      }
+    }
+  }
+}
+
+@MainActor
+final class LatestDot: NSView {
+  override init(frame: NSRect) {
+    super.init(frame: frame)
+    wantsLayer = true
+    translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      widthAnchor.constraint(equalToConstant: TrayMetrics.dot),
+      heightAnchor.constraint(equalToConstant: TrayMetrics.dot),
+    ])
+    layer?.cornerRadius = TrayMetrics.dot / 2
+    updateColors()
+  }
+
+  required init?(coder: NSCoder) { nil }
+
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    updateColors()
+  }
+
+  private func updateColors() {
+    effectiveAppearance.performAsCurrentDrawingAppearance {
+      layer?.backgroundColor = NSColor.controlAccentColor.cgColor
+    }
   }
 }
 
 @MainActor
 class TrayCardItem: NSCollectionViewItem {
-  var isLatestReceipt = false { didSet { updateSelection() } }
   let card = ThumbnailView()
-  private let time = NSTextField(labelWithString: "")
+  let badge = BadgeView()
+  let dot = LatestDot()
 
   override func loadView() {
-    time.font = .monospacedDigitSystemFont(ofSize: 9, weight: .medium)
-    time.textColor = .white
-    time.translatesAutoresizingMaskIntoConstraints = false
-    time.setContentCompressionResistancePriority(.required, for: .vertical)
-    time.setContentHuggingPriority(.required, for: .vertical)
-    let capsule = NSView()
-    capsule.wantsLayer = true
-    capsule.layer?.cornerRadius = 7
-    capsule.translatesAutoresizingMaskIntoConstraints = false
-    capsule.addSubview(time)
     let check = NSImageView(
       image: NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
         ?? NSImage())
     check.symbolConfiguration = NSImage.SymbolConfiguration(
       paletteColors: [.white, .controlAccentColor])
     check.translatesAutoresizingMaskIntoConstraints = false
+    badge.translatesAutoresizingMaskIntoConstraints = false
     buildContent(in: card)
-    card.addSubview(capsule)
     card.addSubview(check)
     NSLayoutConstraint.activate([
-      capsule.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 4),
-      capsule.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -4),
-      time.leadingAnchor.constraint(equalTo: capsule.leadingAnchor, constant: 3),
-      time.trailingAnchor.constraint(equalTo: capsule.trailingAnchor, constant: -3),
-      time.topAnchor.constraint(equalTo: capsule.topAnchor, constant: 1),
-      time.bottomAnchor.constraint(equalTo: capsule.bottomAnchor, constant: -1),
-      check.topAnchor.constraint(equalTo: card.topAnchor, constant: 4),
-      check.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -4),
+      check.topAnchor.constraint(equalTo: card.topAnchor, constant: Space.s4),
+      check.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Space.s4),
       check.widthAnchor.constraint(equalToConstant: 16),
       check.heightAnchor.constraint(equalToConstant: 16),
     ])
-    card.timeCapsule = capsule
     card.checkmark = check
     view = card
-    textField = time
     updateSelection()
   }
 
   func buildContent(in container: NSView) {}
 
-  func configure(_ entry: TrayEntry, singleColumn: Bool) {}
+  func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
+    badge.show(entry.badge, style: entry.badgeStyle)
+    dot.isHidden = !latest
+  }
 
   func pin(_ subview: NSView, in container: NSView, inset: CGFloat) {
     subview.translatesAutoresizingMaskIntoConstraints = false
@@ -165,7 +271,6 @@ class TrayCardItem: NSCollectionViewItem {
     guard isViewLoaded else { return }
     card.selected =
       highlightState == .forSelection || (isSelected && highlightState != .forDeselection)
-    card.latestReceipt = isLatestReceipt
   }
 }
 
@@ -173,137 +278,206 @@ class TrayCardItem: NSCollectionViewItem {
 final class ImageCardItem: TrayCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("ImageCard")
   private let preview = TopAlignedImageView()
+  private let time = NSTextField(labelWithString: "")
 
   override func buildContent(in container: NSView) {
     preview.wantsLayer = true
-    preview.layer?.cornerRadius = 6
+    preview.layer?.cornerRadius = TrayMetrics.cornerRadius
     preview.layer?.masksToBounds = true
     pin(preview, in: container, inset: 0)
+    time.font = .monospacedDigitSystemFont(ofSize: 9, weight: .medium)
+    time.textColor = .white
+    let row = NSStackView(views: [dot, time])
+    row.spacing = Space.s4
+    row.edgeInsets = NSEdgeInsets(top: 0, left: Space.s4, bottom: 0, right: Space.s4)
+    let capsule = BadgeView()
+    capsule.show("", style: .media)
+    capsule.translatesAutoresizingMaskIntoConstraints = false
+    row.translatesAutoresizingMaskIntoConstraints = false
+    capsule.addSubview(row)
+    container.addSubview(capsule)
+    container.addSubview(badge)
     NSLayoutConstraint.activate([
       preview.topAnchor.constraint(equalTo: container.topAnchor),
       preview.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+      row.leadingAnchor.constraint(equalTo: capsule.leadingAnchor),
+      row.trailingAnchor.constraint(equalTo: capsule.trailingAnchor),
+      row.centerYAnchor.constraint(equalTo: capsule.centerYAnchor),
+      capsule.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Space.s4),
+      capsule.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s4),
+      badge.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Space.s4),
+      badge.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s4),
     ])
     imageView = preview
+    textField = time
   }
 
-  override func configure(_ entry: TrayEntry, singleColumn: Bool) {
-    card.filled = false
+  override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
+    super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
+    card.polaroid = false
     preview.image = entry.thumbnail
+    self.time.stringValue = time
   }
 }
 
 @MainActor
-final class TextCardItem: TrayCardItem {
+class PolaroidCardItem: TrayCardItem {
+  let previewArea = PreviewArea()
+  let caption = NSTextField(labelWithString: "")
+  let meta = NSTextField(labelWithString: "")
+
+  override func buildContent(in container: NSView) {
+    previewArea.wantsLayer = true
+    previewArea.layer?.cornerRadius = TrayMetrics.innerCornerRadius
+    previewArea.layer?.masksToBounds = true
+    caption.font = .systemFont(ofSize: 11, weight: .medium)
+    caption.lineBreakMode = .byTruncatingMiddle
+    caption.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    meta.font = .monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+    meta.textColor = .secondaryLabelColor
+    meta.lineBreakMode = .byTruncatingTail
+    meta.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    let metaRow = NSStackView(views: [dot, meta])
+    metaRow.spacing = Space.s4
+    let strip = NSStackView(views: [caption, metaRow])
+    strip.orientation = .vertical
+    strip.alignment = .leading
+    strip.spacing = 0
+    pin(previewArea, in: container, inset: TrayMetrics.framePadding)
+    pin(strip, in: container, inset: TrayMetrics.framePadding)
+    previewArea.addSubview(badge)
+    buildPreview(in: previewArea)
+    NSLayoutConstraint.activate([
+      previewArea.topAnchor.constraint(
+        equalTo: container.topAnchor, constant: TrayMetrics.framePadding),
+      previewArea.bottomAnchor.constraint(equalTo: strip.topAnchor, constant: -Space.s4),
+      strip.bottomAnchor.constraint(
+        equalTo: container.bottomAnchor, constant: -TrayMetrics.framePadding),
+      badge.leadingAnchor.constraint(equalTo: previewArea.leadingAnchor, constant: Space.s4),
+      badge.topAnchor.constraint(equalTo: previewArea.topAnchor, constant: Space.s4),
+    ])
+  }
+
+  func buildPreview(in area: NSView) {}
+
+  func fill(_ subview: NSView, in area: NSView, top: CGFloat) {
+    fill(subview, in: area, topAnchor: area.topAnchor, offset: top)
+  }
+
+  func fill(_ subview: NSView, in area: NSView, below anchor: NSView) {
+    fill(subview, in: area, topAnchor: anchor.bottomAnchor, offset: Space.s4)
+  }
+
+  private func fill(
+    _ subview: NSView, in area: NSView, topAnchor: NSLayoutYAxisAnchor, offset: CGFloat
+  ) {
+    subview.translatesAutoresizingMaskIntoConstraints = false
+    area.addSubview(subview, positioned: .below, relativeTo: badge)
+    NSLayoutConstraint.activate([
+      subview.leadingAnchor.constraint(equalTo: area.leadingAnchor, constant: Space.s8),
+      subview.trailingAnchor.constraint(equalTo: area.trailingAnchor, constant: -Space.s8),
+      subview.topAnchor.constraint(equalTo: topAnchor, constant: offset),
+      subview.bottomAnchor.constraint(lessThanOrEqualTo: area.bottomAnchor, constant: -Space.s8),
+    ])
+  }
+
+  override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
+    super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
+    card.polaroid = true
+  }
+}
+
+@MainActor
+final class TextCardItem: PolaroidCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("TextCard")
   lazy var body = label(size: 12, lines: 0)
-  lazy var count = label(size: 10, lines: 1)
 
-  override func buildContent(in container: NSView) {
-    pin(body, in: container, inset: Space.s8)
-    count.textColor = .secondaryLabelColor
-    count.alignment = .right
-    count.translatesAutoresizingMaskIntoConstraints = false
-    container.addSubview(count)
-    NSLayoutConstraint.activate([
-      body.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s8),
-      body.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s24),
-      count.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -Space.s8),
-      count.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s4),
-      count.leadingAnchor.constraint(greaterThanOrEqualTo: container.centerXAnchor),
-    ])
+  override func buildPreview(in area: NSView) {
+    fill(body, in: area, top: Space.s24)
   }
 
-  override func configure(_ entry: TrayEntry, singleColumn: Bool) {
-    card.filled = true
+  override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
+    super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
+    caption.isHidden = true
     body.stringValue = entry.text ?? ""
-    count.stringValue = L10n.text("character_count", entry.characterCount)
-    count.isHidden = !singleColumn
+    meta.stringValue = L10n.text(
+      "meta_separator", L10n.text("character_count", entry.characterCount), time)
   }
 }
 
 @MainActor
-final class LinkCardItem: TrayCardItem {
+final class LinkCardItem: PolaroidCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("LinkCard")
-  private lazy var domain = label(size: 10, weight: .semibold, lines: 1)
-  private lazy var headline = label(size: 12, weight: .medium, lines: 0)
+  lazy var domain = label(size: 13, weight: .bold, lines: 2)
+  lazy var address = label(size: 11, lines: 0)
 
-  override func buildContent(in container: NSView) {
-    domain.textColor = .controlAccentColor
-    for field in [domain, headline] { pin(field, in: container, inset: Space.s8) }
-    NSLayoutConstraint.activate([
-      domain.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s8),
-      headline.topAnchor.constraint(equalTo: domain.bottomAnchor, constant: Space.s4),
-      headline.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s24),
-    ])
+  override func buildPreview(in area: NSView) {
+    address.textColor = .secondaryLabelColor
+    domain.setContentCompressionResistancePriority(.required, for: .vertical)
+    fill(domain, in: area, top: Space.s24)
+    fill(address, in: area, below: domain)
   }
 
-  override func configure(_ entry: TrayEntry, singleColumn: Bool) {
-    card.filled = true
-    let link = entry.link
-    domain.stringValue = link?.host(percentEncoded: false) ?? ""
-    headline.stringValue = link?.absoluteString ?? entry.displayName
+  override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
+    super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
+    caption.isHidden = true
+    domain.stringValue = entry.link?.host(percentEncoded: false) ?? entry.displayName
+    address.stringValue = entry.link?.absoluteString ?? ""
+    meta.stringValue = time
   }
 }
 
 @MainActor
-final class FileCardItem: TrayCardItem {
+final class FileCardItem: PolaroidCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("FileCard")
-  private let preview = NSImageView()
-  private lazy var lines = label(size: 10, lines: 0)
-  private lazy var name = label(size: 11, weight: .medium, lines: 1)
-  private lazy var size = label(size: 10, lines: 1)
-  private let badge = NSTextField(labelWithString: "")
-  private let badgeCapsule = NSView()
+  let preview = NSImageView()
+  private lazy var lines = label(size: 9, lines: 0)
 
-  override func buildContent(in container: NSView) {
+  override func buildPreview(in area: NSView) {
     preview.imageScaling = .scaleProportionallyUpOrDown
+    preview.translatesAutoresizingMaskIntoConstraints = false
+    area.addSubview(preview, positioned: .below, relativeTo: badge)
+    NSLayoutConstraint.activate([
+      preview.leadingAnchor.constraint(equalTo: area.leadingAnchor),
+      preview.trailingAnchor.constraint(equalTo: area.trailingAnchor),
+      preview.topAnchor.constraint(equalTo: area.topAnchor),
+      preview.bottomAnchor.constraint(equalTo: area.bottomAnchor),
+    ])
     lines.font = .monospacedSystemFont(ofSize: 9, weight: .regular)
     lines.textColor = .secondaryLabelColor
-    size.textColor = .secondaryLabelColor
-    for view in [preview, lines, name, size] { pin(view, in: container, inset: Space.s8) }
-    badge.font = .systemFont(ofSize: 8, weight: .bold)
-    badge.textColor = .white
-    badge.translatesAutoresizingMaskIntoConstraints = false
-    badgeCapsule.wantsLayer = true
-    badgeCapsule.layer?.cornerRadius = 4
-    badgeCapsule.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.6).cgColor
-    badgeCapsule.translatesAutoresizingMaskIntoConstraints = false
-    badgeCapsule.addSubview(badge)
-    container.addSubview(badgeCapsule)
-    NSLayoutConstraint.activate([
-      preview.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s8),
-      preview.bottomAnchor.constraint(equalTo: name.topAnchor, constant: -Space.s8),
-      lines.topAnchor.constraint(equalTo: preview.topAnchor),
-      lines.bottomAnchor.constraint(equalTo: preview.bottomAnchor),
-      name.bottomAnchor.constraint(equalTo: size.topAnchor, constant: -Space.s4),
-      size.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s24),
-      badgeCapsule.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Space.s4),
-      badgeCapsule.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s4),
-      badge.leadingAnchor.constraint(equalTo: badgeCapsule.leadingAnchor, constant: Space.s4),
-      badge.trailingAnchor.constraint(equalTo: badgeCapsule.trailingAnchor, constant: -Space.s4),
-      badge.topAnchor.constraint(equalTo: badgeCapsule.topAnchor, constant: 1),
-      badge.bottomAnchor.constraint(equalTo: badgeCapsule.bottomAnchor, constant: -1),
-    ])
+    fill(lines, in: area, top: Space.s24)
   }
 
-  override func configure(_ entry: TrayEntry, singleColumn: Bool) {
-    card.filled = true
+  override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
+    super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
     let plainText = entry.item.isPlainText
     preview.isHidden = plainText
     lines.isHidden = !plainText
     preview.image = plainText ? nil : entry.thumbnail
     lines.stringValue = plainText ? entry.text ?? "" : ""
-    name.stringValue = entry.displayName
-    size.stringValue =
-      entry.size.map {
-        ByteCountFormatter.string(fromByteCount: $0, countStyle: .file)
-      } ?? ""
-    badge.stringValue = entry.badge
+    caption.isHidden = false
+    caption.stringValue = entry.displayName
+    let size = entry.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) }
+    meta.stringValue = size.map { L10n.text("meta_separator", $0, time) } ?? time
   }
 
   func showThumbnail(_ image: NSImage) {
     guard !preview.isHidden else { return }
     preview.image = image
+  }
+}
+
+@MainActor
+final class PreviewArea: NSView {
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    needsDisplay = true
+  }
+
+  override var wantsUpdateLayer: Bool { true }
+
+  override func updateLayer() {
+    layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
   }
 }
 
@@ -324,7 +498,6 @@ final class TopAlignedImageView: NSImageView {
 
 @MainActor
 final class ThumbnailView: NSView {
-  var timeCapsule: NSView?
   var checkmark: NSImageView?
   var selected = false {
     didSet {
@@ -332,13 +505,12 @@ final class ThumbnailView: NSView {
       updateColors()
     }
   }
-  var latestReceipt = false { didSet { updateColors() } }
-  var filled = false { didSet { updateColors() } }
+  var polaroid = false { didSet { updateColors() } }
 
   override init(frame: NSRect) {
     super.init(frame: frame)
     wantsLayer = true
-    layer?.cornerRadius = 6
+    layer?.cornerRadius = TrayMetrics.cornerRadius
     updateColors()
   }
 
@@ -351,16 +523,17 @@ final class ThumbnailView: NSView {
 
   private func updateColors() {
     effectiveAppearance.performAsCurrentDrawingAppearance {
-      layer?.backgroundColor = filled ? NSColor.quaternaryLabelColor.cgColor : nil
-      layer?.borderWidth = selected ? 2 : (latestReceipt ? 1 : 0)
-      layer?.borderColor = NSColor.controlAccentColor.withAlphaComponent(selected ? 1 : 0.6).cgColor
-      layer?.shadowColor = NSColor.controlAccentColor.cgColor
-      layer?.shadowOpacity = latestReceipt ? 0.45 : 0
-      layer?.shadowRadius = 5
-      layer?.shadowOffset = .zero
-      timeCapsule?.layer?.backgroundColor =
-        (latestReceipt
-        ? NSColor.controlAccentColor : NSColor.black.withAlphaComponent(0.6)).cgColor
+      let dark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+      layer?.backgroundColor =
+        polaroid
+        ? (dark ? NSColor(white: 0.24, alpha: 1) : NSColor(white: 0.985, alpha: 1)).cgColor : nil
+      layer?.borderWidth = selected ? 2 : (polaroid ? 0.5 : 0)
+      layer?.borderColor =
+        (selected ? NSColor.controlAccentColor : NSColor.separatorColor).cgColor
+      layer?.shadowColor = NSColor.black.cgColor
+      layer?.shadowOpacity = polaroid ? (dark ? 0.35 : 0.14) : 0
+      layer?.shadowRadius = Space.s4
+      layer?.shadowOffset = CGSize(width: 0, height: -1)
       checkmark?.isHidden = !selected
     }
   }

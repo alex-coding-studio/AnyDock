@@ -28,7 +28,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private let generalStatus = NSTextField(wrappingLabelWithString: "")
   private let connectionStatus = NSTextField(wrappingLabelWithString: "")
   private let pending = NSTextField(labelWithString: "")
-  private let statusIcon = NSImageView()
+  let statusIcon = NSImageView(
+    image: NSImage(
+      systemSymbolName: "circle.fill", accessibilityDescription: L10n.text("Starting"))
+      ?? NSImage())
   private let login = NSSwitch()
   private let autoCopy = NSSwitch()
   private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
@@ -45,16 +48,27 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     window.toolbarStyle = .preference
     window.center()
     super.init(window: window)
+    statusIcon.contentTintColor = .tertiaryLabelColor
     if let savedName = UserDefaults.standard.string(forKey: shortcutNamePreference) {
       shortcutName.stringValue = savedName
-    } else if let computerName = Host.current().localizedName?
+    } else if let computerName = LocalHost.computerName()?
       .trimmingCharacters(in: .whitespacesAndNewlines), !computerName.isEmpty
     {
       shortcutName.stringValue = L10n.text("Send to %@", computerName)
     } else {
       shortcutName.stringValue = L10n.text("Send to Mac")
     }
+  }
+
+  override func showWindow(_ sender: Any?) {
+    prepareInterface()
+    super.showWindow(sender)
+  }
+
+  func prepareInterface() {
+    guard window?.contentViewController == nil else { return }
     buildInterface()
+    window?.center()
   }
 
   required init?(coder: NSCoder) { nil }
@@ -204,9 +218,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     port.widthAnchor.constraint(equalToConstant: 76).isActive = true
     port.delegate = self
     port.setAccessibilityLabel(L10n.text("Listening port"))
-    statusIcon.image = NSImage(
-      systemSymbolName: "circle.fill", accessibilityDescription: L10n.text("Starting"))
-    statusIcon.contentTintColor = .tertiaryLabelColor
     statusIcon.widthAnchor.constraint(equalToConstant: 9).isActive = true
     statusIcon.heightAnchor.constraint(equalToConstant: 9).isActive = true
     let statusRow = row([statusIcon, receiverStatus, NSView()])
@@ -374,8 +385,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   }
 
   private func refreshAddress() {
-    let hostname = ProcessInfo.processInfo.hostName
-    address.stringValue = "http://\(hostname):\(configuration.port)/upload"
+    address.stringValue = LocalHost.receiveAddress(port: configuration.port)
   }
 
   private func refreshFolder() {

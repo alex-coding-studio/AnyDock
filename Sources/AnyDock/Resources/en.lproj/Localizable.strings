@@ -112,3 +112,4 @@
 "migration.readFailed" = "The old configuration could not be read.";
 "migration.invalidConfiguration" = "The old configuration is invalid.";
 "migration.copyFailed" = "The old configuration could not be copied to the new location.";
+"meta_separator" = "%1$@ · %2$@";
