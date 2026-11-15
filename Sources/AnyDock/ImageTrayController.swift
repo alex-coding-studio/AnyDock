@@ -92,7 +92,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   private func configureFilterBar(in content: NSView) {
     filterBar.onSelect = { [weak self] filter in self?.select(filter) }
-    filterBar.onSelectAll = { [weak self] filter in self?.selectAll(in: filter) }
+    filterBar.onSelectAll = { [weak self] filter in self?.toggleSelectAll(in: filter) }
     filterBar.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(filterBar)
     NSLayoutConstraint.activate([
@@ -137,9 +137,10 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     scrollToLatestImage()
   }
 
-  func selectAll(in filter: TrayFilter) {
+  func toggleSelectAll(in filter: TrayFilter) {
     if contents.filter != filter { select(filter) }
-    collection.selectionIndexPaths = Set(entries.indices.map { IndexPath(item: $0, section: 0) })
+    let all = Set(entries.indices.map { IndexPath(item: $0, section: 0) })
+    collection.selectionIndexPaths = collection.selectionIndexPaths == all ? [] : all
     updateControls()
   }
 

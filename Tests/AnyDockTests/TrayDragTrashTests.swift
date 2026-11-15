@@ -64,14 +64,17 @@ func droppingOutsideRecyclesNothing() throws {
 }
 
 @MainActor
-@Test("双击某类筛选只选中该类的全部卡片")
+@Test("双击某类筛选只选中该类的全部卡片，已全选时再双击清空选择")
 func doubleClickingFilterSelectsOnlyThatKind() throws {
   let (tray, items, window) = try makeTray()
   defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
-  tray.selectAll(in: .kind(.text))
+  tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
+  tray.toggleSelectAll(in: .kind(.text))
   #expect(tray.collection.selectionIndexPaths.count == items.filter { $0.kind == .text }.count)
   #expect(tray.filterBar.selected == .kind(.text))
-  tray.selectAll(in: .all)
+  tray.toggleSelectAll(in: .kind(.text))
+  #expect(tray.collection.selectionIndexPaths.isEmpty)
+  tray.toggleSelectAll(in: .all)
   #expect(tray.collection.selectionIndexPaths.count == items.count)
   _ = window
 }
