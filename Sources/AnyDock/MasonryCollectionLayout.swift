@@ -1,5 +1,5 @@
+import AnyDockCore
 import AppKit
-import SnapDockCore
 
 final class MasonryCollectionLayout: NSCollectionViewLayout {
   private static let margin: CGFloat = 24

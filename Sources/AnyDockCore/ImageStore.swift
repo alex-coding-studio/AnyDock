@@ -16,7 +16,7 @@ public actor ImageStore {
     let (thumbnail, fileExtension) = try Self.inspect(data)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     let filename =
-      "SnapDock-\(Int(Date().timeIntervalSince1970 * 1000))-\(UUID().uuidString).\(fileExtension)"
+      "AnyDock-\(Int(Date().timeIntervalSince1970 * 1000))-\(UUID().uuidString).\(fileExtension)"
     let url = directory.appendingPathComponent(filename)
     try data.write(to: url, options: .withoutOverwriting)
     try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
@@ -31,7 +31,9 @@ public actor ImageStore {
     let candidates = try FileManager.default.contentsOfDirectory(
       at: directory, includingPropertiesForKeys: Array(keys), options: .skipsHiddenFiles
     )
-    .filter { $0.lastPathComponent.hasPrefix("SnapDock-") }
+    .filter {
+      $0.lastPathComponent.hasPrefix("AnyDock-") || $0.lastPathComponent.hasPrefix("SnapDock-")
+    }
     .compactMap { url -> (URL, Date)? in
       guard let values = try? url.resourceValues(forKeys: keys), values.isRegularFile == true,
         values.isSymbolicLink != true, let size = values.fileSize,

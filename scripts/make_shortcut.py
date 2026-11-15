@@ -60,7 +60,7 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     action("exit")
     action("conditional", GroupingIdentifier=error_group, WFControlFlowMode=2)
     action("repeat.each", GroupingIdentifier=repeat_group, WFControlFlowMode=2)
-    action("notification", WFNotificationActionTitle="SnapDock", WFNotificationActionBody="图片已发送到 Mac", WFNotificationActionSound=False)
+    action("notification", WFNotificationActionTitle="随手坞", WFNotificationActionBody="图片已发送到 Mac", WFNotificationActionSound=False)
     return {
         "WFWorkflowName": name,
         "WFWorkflowClientVersion": "2700",
@@ -75,8 +75,8 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
         "WFWorkflowImportQuestions": [
             {"Category": "Parameter", "ActionIndex": index, "ParameterKey": "WFTextActionText", "Text": prompt, "DefaultValue": default}
             for index, prompt, default in [
-                (0, "粘贴 SnapDock 设置中的接收地址", url),
-                (1, "粘贴 SnapDock 设置中的连接密钥", key),
+                (0, "粘贴随手坞设置中的接收地址", url),
+                (1, "粘贴随手坞设置中的连接密钥", key),
             ]
         ] if questions else [],
         "WFWorkflowActions": actions,
@@ -84,7 +84,7 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate the unsigned SnapDock Share Sheet shortcut.")
+    parser = argparse.ArgumentParser(description="Generate the unsigned AnyDock Share Sheet shortcut.")
     parser.add_argument("--output", type=pathlib.Path, required=True)
     parser.add_argument("--url", default="http://Mac.local:8765/upload")
     parser.add_argument("--key", default="PASTE_CONNECTION_KEY")

@@ -13,7 +13,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>已选 %d 张</string>
+			<string>%d images selected</string>
+			<key>one</key>
+			<string>%d image selected</string>
 		</dict>
 	</dict>
 	<key>trash_count</key>
@@ -27,7 +29,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>将 %d 张移到废纸篓</string>
+			<string>Move %d Images to Trash</string>
+			<key>one</key>
+			<string>Move %d Image to Trash</string>
 		</dict>
 	</dict>
 	<key>copy_count</key>
@@ -41,7 +45,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>复制 %d 张图片</string>
+			<string>Copy %d Images</string>
+			<key>one</key>
+			<string>Copy %d Image</string>
 		</dict>
 	</dict>
 	<key>trash_all_confirmation</key>
@@ -55,7 +61,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>将全部 %d 张截图移到废纸篓？</string>
+			<string>Move all %d images to the Trash?</string>
+			<key>one</key>
+			<string>Move all %d image to the Trash?</string>
 		</dict>
 	</dict>
 	<key>trash_selection_confirmation</key>
@@ -69,7 +77,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>d</string>
 			<key>other</key>
-			<string>将 %d 张截图移到废纸篓？</string>
+			<string>Move %d images to the Trash?</string>
+			<key>one</key>
+			<string>Move %d image to the Trash?</string>
 		</dict>
 	</dict>
 </dict>

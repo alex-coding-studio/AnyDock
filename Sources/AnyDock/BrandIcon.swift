@@ -3,7 +3,7 @@ import AppKit
 @MainActor
 enum BrandIcon {
   static var artwork: NSImage? {
-    Bundle.main.url(forResource: "SnapDockIcon", withExtension: "png", subdirectory: "Brand")
+    Bundle.main.url(forResource: "AnyDockIcon", withExtension: "png", subdirectory: "Brand")
       .flatMap { NSImage(contentsOf: $0) }
   }
 
