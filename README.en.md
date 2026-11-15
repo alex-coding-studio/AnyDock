@@ -1,8 +1,16 @@
 [简体中文](README.md) | English
 
-# AnyDock
+<p align="center"><img src="Resources/Brand/AnyDockIcon.png" alt="AnyDock" width="128"></p>
 
-From iPhone to Mac, in one easy hand-over.
+<h1 align="center">AnyDock</h1>
+
+<p align="center">From iPhone to Mac, in one easy hand-over.</p>
+
+<p align="center">
+  <a href="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml"><img src="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/alex-coding-studio/AnyDock/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <a href="https://github.com/alex-coding-studio/AnyDock"><img src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey" alt="Platform: macOS 14+"></a>
+</p>
 
 - One tap from the iPhone Share Sheet
 - Drag straight from the menu bar tray into chats
