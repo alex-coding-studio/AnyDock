@@ -178,7 +178,9 @@ final class TrayScopeBar: NSView {
   @objc private func tapped(_ sender: NSButton) {
     guard segments.indices.contains(sender.tag) else { return }
     let filter = segments[sender.tag].filter
-    if (NSApp.currentEvent?.clickCount ?? 0) >= 2 {
+    if let event = NSApp.currentEvent,
+      event.type == .leftMouseUp || event.type == .leftMouseDown, event.clickCount >= 2
+    {
       onSelectAll?(filter)
     } else {
       onSelect?(filter)

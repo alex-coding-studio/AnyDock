@@ -30,6 +30,7 @@ private func makeTray() throws -> (ImageTrayController, [ReceivedItem], NSWindow
 @Test("拖到删除区只回收被拖动的项目，并清空选择")
 func droppingOnTrashRecyclesOnlyDraggedItems() async throws {
   let (tray, items, window) = try makeTray()
+  defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
   var recycled: [URL] = []
   tray.recycleItems = { recycled = $0 }
   var finished = false
@@ -48,7 +49,8 @@ func droppingOnTrashRecyclesOnlyDraggedItems() async throws {
 @MainActor
 @Test("拖到托盘外不回收任何项目，并照常结束拖动")
 func droppingOutsideRecyclesNothing() throws {
-  let (tray, _, window) = try makeTray()
+  let (tray, items, window) = try makeTray()
+  defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
   var recycled: [URL]?
   tray.recycleItems = { recycled = $0 }
   var finished = false
@@ -65,6 +67,7 @@ func droppingOutsideRecyclesNothing() throws {
 @Test("双击某类筛选只选中该类的全部卡片")
 func doubleClickingFilterSelectsOnlyThatKind() throws {
   let (tray, items, window) = try makeTray()
+  defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
   tray.selectAll(in: .kind(.text))
   #expect(tray.collection.selectionIndexPaths.count == items.filter { $0.kind == .text }.count)
   #expect(tray.filterBar.selected == .kind(.text))
