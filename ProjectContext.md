@@ -27,7 +27,7 @@ See `docs/PROJECT.md` for the complete current UI and engineering rules.
 - `Sources/SnapDockCore`: upload protocol, image validation/storage and pure masonry geometry.
 - `Sources/SnapDock`: app lifecycle, tray layout and interactions, Settings and personalized shortcut preparation.
 - `Resources/Info.plist`: application metadata.
-- `Resources/Shortcuts`: unsigned personalization template and signed generic manual shortcut.
+- `Resources/Shortcuts`: signed generic manual shortcut; `build.sh` also generates the unsigned personalization template here.
 - `scripts`: build, run, lint, test, icon and shortcut generation entry points.
 - `Tests`: protocol, storage, masonry placement and shortcut checks.
 - `docs/PROJECT.md`: engineering operations, UI rules and debugging commands.
@@ -39,9 +39,9 @@ Run from the project root. No package installation is required; development scri
 - `./scripts/lint.sh`: check formatting, script syntax and bundle metadata.
 - `./scripts/test.sh`: run Swift and shortcut checks.
 - `./scripts/build.sh`: create and ad-hoc sign `dist/SnapDock.app`. It regenerates the unsigned `Resources/Shortcuts/Template.shortcut`, which is ignored by Git.
+- `./scripts/run.sh`: build and open the menu bar app when launching is requested.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint, test and build on the `macos-26` runner with its newest installed Xcode. `scripts/shortcut.sh` signs the generic shortcut with `shortcuts sign`, which needs a signed-in Mac; run it locally and commit the signed `Resources/Shortcuts/发送到 Mac.shortcut`. CI never signs.
-- `./scripts/run.sh`: build and open the menu bar app when launching is requested.
 
 ## Trust and contribution boundaries
 

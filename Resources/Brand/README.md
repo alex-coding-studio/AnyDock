@@ -1,7 +1,7 @@
 # SnapDock Brand Asset
 
-Selected by the user on 2026-11-13: a monochrome photo card threaded onto a diagonal dashed cord between two endpoints, fitted inside a square composition.
+The mark is a monochrome photo card threaded onto a diagonal dashed cord between two endpoints, fitted inside a square composition.
 
-`SnapDockIcon.png` is the unmodified generated master, created with the built-in imagegen tool. No third-party reference artwork was supplied. `Prompt.txt` preserves the final generation prompt. The menu bar uses a purpose-drawn native monochrome version of the same motif for legibility at small sizes and automatic system appearance adaptation.
+`SnapDockIcon.png` is the unmodified master, generated with OpenAI's gpt-image model through ChatGPT; its embedded C2PA metadata records this. No third-party reference artwork was used. `Prompt.txt` keeps the final generation prompt. The menu bar uses a hand-drawn native monochrome version of the same motif so it stays legible at small sizes and follows the system appearance.
 
-The master and these provenance records are retained for the project's future open-source presentation. No repository publication or software-license selection is implied.
+These assets are distributed with the project under the repository's MIT license.
