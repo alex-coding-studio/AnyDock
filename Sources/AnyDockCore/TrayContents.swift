@@ -27,8 +27,12 @@ public struct TrayContents: Sendable {
     [.all] + ReceivedKind.allCases.filter { count(of: $0) > 0 }.map { .kind($0) }
   }
 
+  public var showsFilters: Bool {
+    availableFilters.count > 2
+  }
+
   public mutating func select(_ next: TrayFilter) {
-    filter = availableFilters.contains(next) ? next : .all
+    filter = showsFilters && availableFilters.contains(next) ? next : .all
   }
 
   public mutating func replace(_ next: [ReceivedItem]) {

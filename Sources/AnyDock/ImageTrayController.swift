@@ -97,8 +97,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     NSLayoutConstraint.activate([
       filterBar.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
       filterBar.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -10),
-      filterBar.topAnchor.constraint(equalTo: content.topAnchor, constant: 2),
-      filterBar.heightAnchor.constraint(equalToConstant: 20),
+      filterBar.topAnchor.constraint(equalTo: content.topAnchor, constant: 10),
+      filterBar.heightAnchor.constraint(equalToConstant: 24),
     ])
   }
 
@@ -107,7 +107,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       filterBar.removeArrangedSubview(view)
       view.removeFromSuperview()
     }
-    filterBar.isHidden = contents.items.isEmpty
+    filterBar.isHidden = !contents.showsFilters
     for (index, filter) in contents.availableFilters.enumerated() {
       let count = filter == .all ? contents.items.count : kindCount(filter)
       let selected = filter == contents.filter
@@ -122,8 +122,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       button.setAccessibilityLabel(L10n.text("filter_accessibility", filterTitle(filter), count))
       let padded = NSStackView(views: [button])
       padded.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
-      let surface = glassSurface(padded, cornerRadius: 10)
-      surface.heightAnchor.constraint(equalToConstant: 20).isActive = true
+      let surface = glassSurface(padded, cornerRadius: 12)
+      surface.heightAnchor.constraint(equalToConstant: 24).isActive = true
       filterBar.addArrangedSubview(surface)
     }
   }
@@ -288,6 +288,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       return entry
     }
     layout.columnCount = singleColumn ? 1 : 3
+    layout.topInset = contents.showsFilters ? 44 : 24
     layout.invalidateLayout()
     collection.reloadData()
     collection.selectionIndexPaths = Set(

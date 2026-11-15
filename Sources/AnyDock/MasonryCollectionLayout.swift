@@ -14,6 +14,14 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
     }
   }
 
+  var topInset: CGFloat = 24 {
+    didSet {
+      if topInset != oldValue {
+        invalidateLayout()
+      }
+    }
+  }
+
   var aspectRatio: (IndexPath) -> CGFloat = { _ in 1 }
 
   private var attributes: [NSCollectionViewLayoutAttributes] = []
@@ -48,11 +56,11 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
     attributes = zip(indexPaths, placement.frames).map { indexPath, frame in
       let item = NSCollectionViewLayoutAttributes(forItemWith: indexPath)
       item.frame = collectionView.backingAlignedRect(
-        frame.offsetBy(dx: Self.margin, dy: Self.margin), options: .alignAllEdgesNearest)
+        frame.offsetBy(dx: Self.margin, dy: topInset), options: .alignAllEdgesNearest)
       return item
     }
     preparedWidth = width
-    contentSize = CGSize(width: width, height: Self.margin + placement.height + Self.bottomInset)
+    contentSize = CGSize(width: width, height: topInset + placement.height + Self.bottomInset)
   }
 
   override var collectionViewContentSize: NSSize {

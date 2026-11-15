@@ -9,7 +9,7 @@ private func item(_ name: String, _ kind: ReceivedKind) -> ReceivedItem {
     isPlainText: false)
 }
 
-@Test("筛选只显示有内容的类型并给出数量，类型被清空后回到全部")
+@Test("筛选只显示有内容的类型并给出数量；只剩一种类型时不显示筛选并回到全部")
 func filtersHideEmptyKindsAndCountItems() {
   var contents = TrayContents()
   contents.replace([item("a", .image), item("b", .text), item("c", .text)])
@@ -20,6 +20,9 @@ func filtersHideEmptyKindsAndCountItems() {
   contents.select(.kind(.text))
   #expect(contents.visibleItems.map(\.url.lastPathComponent) == ["b", "c"])
   contents.replace([item("a", .image)])
+  #expect(contents.filter == .all)
+  #expect(!contents.showsFilters)
+  contents.select(.kind(.image))
   #expect(contents.filter == .all)
 }
 
