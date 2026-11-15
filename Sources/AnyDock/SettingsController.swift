@@ -12,6 +12,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private let languageNotice = NSTextField(
     wrappingLabelWithString: L10n.text("Restart AnyDock to apply the language change."))
   private let restart = NSButton(title: L10n.text("Restart Now"), target: nil, action: nil)
+  private lazy var restartRow = row([NSView(), restart])
   private var isApplying = false
   private var isSending = false
   private let shortcutNamePreference = "personalizedShortcutName"
@@ -147,6 +148,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     tabs.addTabViewItem(generalTab())
     tabs.addTabViewItem(connectionTab())
     tabs.addTabViewItem(receivingTab())
+    tabs.addTabViewItem(aboutTab())
     tabs.selectedTabViewItemIndex = 0
     window?.contentViewController = tabs
   }
@@ -173,7 +175,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     restart.target = self
     restart.action = #selector(restartApplication)
     restart.bezelStyle = .rounded
-    restart.isHidden = true
+    restartRow.isHidden = true
     login.state = SMAppService.mainApp.status == .enabled ? .on : .off
     login.target = self
     login.action = #selector(toggleLogin)
@@ -187,48 +189,89 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     clipboardHistory.action = #selector(toggleClipboardHistory)
     clipboardHistory.setAccessibilityLabel(L10n.text("Keep last 4 clipboard texts"))
     configureMessage(generalStatus)
-    let icon = NSImageView(image: BrandIcon.artwork ?? BrandIcon.menuBar())
-    icon.imageScaling = .scaleProportionallyUpOrDown
-    icon.widthAnchor.constraint(equalToConstant: 40).isActive = true
-    icon.heightAnchor.constraint(equalToConstant: 40).isActive = true
-    let title = NSTextField(labelWithString: L10n.text("AnyDock"))
-    title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-    let identity = NSStackView(views: [title, footnote(L10n.text("Your phone-to-Mac drop zone"))])
-    identity.orientation = .vertical
-    identity.alignment = .leading
-    identity.spacing = 3
-    let quit = NSButton(
-      title: L10n.text(
-        "Quit AnyDock"), target: NSApp, action: #selector(NSApplication.terminate(_:)))
-    quit.bezelStyle = .rounded
-    let card = row([icon, identity, NSView(), quit])
-    card.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
     return tab(
       L10n.text("General"), symbol: "gearshape",
       views: [
-        section(
-          L10n.text("Tray"),
-          rows: [formRow(L10n.text("Copy new items automatically"), value: autoCopy)],
-          note: L10n.text("settings.autoCopy.note")),
-        section(
-          L10n.text("Keyboard"),
-          rows: [formRow(L10n.text("Wake shortcut"), value: row([hotKeyRecorder, clearHotKey]))],
-          note: L10n.text("settings.hotkey.note")),
-        hotKeyStatus,
-        section(
-          L10n.text("Clipboard"),
-          rows: [formRow(L10n.text("Keep last 4 clipboard texts"), value: clipboardHistory)],
-          note: L10n.text("settings.clipboardHistory.note")),
+        section(L10n.text("Startup"), rows: [formRow(L10n.text("Launch at login"), value: login)]),
+        generalStatus,
         section(
           L10n.text("Personalization"),
           rows: [
             formRow(L10n.text("Appearance"), value: appearance),
             formRow(L10n.text("Language"), value: language),
           ]),
-        languageNotice, row([NSView(), restart]),
-        section(L10n.text("Startup"), rows: [formRow(L10n.text("Launch at login"), value: login)]),
-        generalStatus, group(rows: [card]),
+        languageNotice, restartRow,
+        section(
+          L10n.text("Tray"),
+          rows: [
+            formRow(L10n.text("Copy new items automatically"), value: autoCopy),
+            formRow(L10n.text("Keep last 4 clipboard texts"), value: clipboardHistory),
+          ],
+          note: L10n.text("settings.clipboardHistory.note")),
+        section(
+          L10n.text("Keyboard"),
+          rows: [formRow(L10n.text("Wake shortcut"), value: row([hotKeyRecorder, clearHotKey]))]),
+        hotKeyStatus,
       ])
+  }
+
+  static func versionText(bundle: Bundle) -> String? {
+    guard
+      let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+      let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+    else { return nil }
+    return L10n.text("Version %@ (%@)", version, build)
+  }
+
+  private func aboutTab() -> NSTabViewItem {
+    let icon = NSImageView(image: BrandIcon.artwork ?? BrandIcon.menuBar())
+    icon.imageScaling = .scaleProportionallyUpOrDown
+    icon.widthAnchor.constraint(equalToConstant: 96).isActive = true
+    icon.heightAnchor.constraint(equalToConstant: 96).isActive = true
+    let name = NSTextField(labelWithString: L10n.text("AnyDock"))
+    name.font = .systemFont(ofSize: NSFont.systemFontSize + 7, weight: .semibold)
+    let version = footnote(Self.versionText(bundle: .main) ?? "")
+    version.isHidden = version.stringValue.isEmpty
+    version.isSelectable = true
+    let tagline = NSTextField(labelWithString: L10n.text("about.tagline"))
+    let links = row([
+      button(L10n.text("GitHub Project"), #selector(openRepository)),
+      button(L10n.text("Author @Cunqi"), #selector(openAuthor)),
+    ])
+    let copyright = footnote(L10n.text("about.copyright"))
+    let quit = NSButton(
+      title: L10n.text("Quit AnyDock"), target: NSApp,
+      action: #selector(NSApplication.terminate(_:)))
+    quit.bezelStyle = .rounded
+    let identity = NSStackView(views: [icon, name, version, tagline, links, copyright])
+    identity.orientation = .vertical
+    identity.alignment = .centerX
+    identity.spacing = 8
+    identity.setCustomSpacing(12, after: icon)
+    identity.setCustomSpacing(16, after: tagline)
+    identity.setCustomSpacing(16, after: links)
+    let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))
+    for view in [identity, quit] {
+      view.translatesAutoresizingMaskIntoConstraints = false
+      content.addSubview(view)
+    }
+    NSLayoutConstraint.activate([
+      identity.centerXAnchor.constraint(equalTo: content.centerXAnchor),
+      identity.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: -24),
+      identity.leadingAnchor.constraint(greaterThanOrEqualTo: content.leadingAnchor, constant: 24),
+      quit.centerXAnchor.constraint(equalTo: content.centerXAnchor),
+      quit.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -24),
+      quit.topAnchor.constraint(greaterThanOrEqualTo: identity.bottomAnchor, constant: 24),
+    ])
+    return tabItem(L10n.text("About"), symbol: "info.circle", content: content)
+  }
+
+  @objc private func openRepository() {
+    NSWorkspace.shared.open(URL(string: "https://github.com/alex-coding-studio/AnyDock")!)
+  }
+
+  @objc private func openAuthor() {
+    NSWorkspace.shared.open(URL(string: "https://github.com/Cunqi")!)
   }
 
   private func connectionTab() -> NSTabViewItem {
@@ -323,9 +366,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
   private func tab(_ title: String, symbol: String, views: [NSView], bottomBar: NSView? = nil)
     -> NSTabViewItem
   {
-    let controller = NSViewController()
-    controller.title = title
-    controller.preferredContentSize = NSSize(width: 600, height: 600)
     let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))
     let stack = NSStackView(views: views)
     stack.orientation = .vertical
@@ -362,6 +402,13 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         lessThanOrEqualTo: content.bottomAnchor, constant: -24)
       bottom.isActive = true
     }
+    return tabItem(title, symbol: symbol, content: content)
+  }
+
+  private func tabItem(_ title: String, symbol: String, content: NSView) -> NSTabViewItem {
+    let controller = NSViewController()
+    controller.title = title
+    controller.preferredContentSize = NSSize(width: 600, height: 600)
     controller.view = content
     let item = NSTabViewItem(viewController: controller)
     item.label = title
@@ -561,7 +608,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     let selected = AppLanguage.allCases[index]
     selected.save()
     languageNotice.isHidden = selected == launchLanguage
-    restart.isHidden = selected == launchLanguage
+    restartRow.isHidden = selected == launchLanguage
   }
 
   @objc private func restartApplication() {

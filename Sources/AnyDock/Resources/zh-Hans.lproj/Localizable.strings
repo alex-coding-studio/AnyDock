@@ -2,7 +2,6 @@
 "shortcut.airdrop.unsupported" = "此 Mac 无法使用 AirDrop。请使用下方的手动设置。";
 "shortcut.airdrop.unavailable" = "AirDrop 当前不可用，请检查 Wi-Fi 与蓝牙，或使用手动设置。";
 "Allow AnyDock in System Settings → Login Items." = "请在系统设置的「登录项」中允许随手坞。";
-"Your phone-to-Mac drop zone" = "从手机到 Mac 的随手中转";
 "Appearance" = "外观";
 "Apply" = "应用";
 "Change…" = "更改…";
@@ -48,7 +47,7 @@
 "Send to %@" = "发送到 %@";
 "Send to Mac" = "发送到 Mac";
 "Send to iPhone…" = "发送到 iPhone…";
-"settings.shortcut.note" = "通过 AirDrop 发送，在 iPhone 上点「添加快捷指令」即可使用。快捷指令含连接密钥；系统签名会将副本交给 Apple 验证，请仅发送给自己的 iPhone。";
+"settings.shortcut.note" = "快捷指令含连接密钥，系统签名会将副本交给 Apple 验证，请仅发送给自己的 iPhone。";
 "Settings" = "设置";
 "Share content on your iPhone and choose your Mac’s shortcut." = "在 iPhone 上分享内容，选择这台 Mac 的快捷指令。";
 "Shortcut name" = "快捷指令名称";
@@ -79,8 +78,8 @@
 "Unable to restart AnyDock: %@" = "无法重启随手坞：%@";
 "Unable to send the shortcut: %@" = "无法发送快捷指令：%@";
 "Unapplied changes" = "有未应用的更改";
-"settings.port.note" = "端口范围为 1024–65535。更改端口后，请重新发送 iPhone 快捷指令。";
-"settings.manual.note" = "仅在可信局域网使用，HTTP 传输不加密。更改端口后请重新发送快捷指令。手动导入通用版时，需填写接收地址和连接密钥。";
+"settings.port.note" = "更改端口后，请重新发送 iPhone 快捷指令。";
+"settings.manual.note" = "仅在可信局域网使用，HTTP 传输不加密。手动导入通用版时，需填写接收地址和连接密钥。";
 "shortcut.name.normalized" = "将使用「%@」；首尾空白已移除，/ 和 : 会替换为 -。";
 "configuration.recovery" = "配置文件保持原样。请检查 Application Support/AnyDock 中的配置后重新启动。";
 "[redacted]" = "[已隐藏]";
@@ -97,7 +96,6 @@
 "Link" = "链接";
 "File" = "文件";
 "Copy new items automatically" = "收到后自动复制";
-"settings.autoCopy.note" = "图片复制为图像，文本和链接复制为纯文字，文件复制为文件本身。";
 "filter_accessibility" = "%1$@：%2$d";
 "New %@: %@, %@" = "新%1$@：%2$@，%3$@";
 "%@: %@, %@" = "%1$@：%2$@，%3$@";
@@ -108,7 +106,7 @@
 "migration.copyFailed" = "无法将旧配置复制到新位置。";
 "meta_separator" = "%1$@ · %2$@";
 "Clipboard" = "剪贴板";
-"settings.clipboardHistory.note" = "只保留纯文本，仅存在内存中，退出随手坞即清空；密码管理器的内容会被跳过。";
+"settings.clipboardHistory.note" = "仅存在内存中，退出即清空。";
 "Keep last 4 clipboard texts" = "保留最近 4 条剪贴板文本";
 "Clear" = "清空";
 "clipboard_expanded_title" = "剪贴板 · 双击复制";
@@ -121,6 +119,11 @@
 "Type shortcut…" = "请按下快捷键…";
 "hotkey.clear" = "清除";
 "hotkey.clear.accessibility" = "清除唤醒快捷键";
-"settings.hotkey.note" = "在任何 App 中按下即可打开或关闭托盘。录制时按 Esc 取消。";
 "hotkey.modifierRequired" = "快捷键需要包含 ⌘、⌥ 或 ⌃，只按 ⇧ 不够。";
 "hotkey.unavailable" = "%@ 已被 macOS 或其他 App 占用，请换一个快捷键。";
+"about.tagline" = "从 iPhone 到 Mac，随手一递。";
+"About" = "关于";
+"Version %@ (%@)" = "版本 %@ (%@)";
+"GitHub Project" = "GitHub 项目";
+"Author @Cunqi" = "作者 @Cunqi";
+"about.copyright" = "© 2026 Cunqi · MIT License";
