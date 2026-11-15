@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let popover = NSPopover()
   private let tray = ImageTrayController()
   private let store = ImageStore()
+  private let clipboard = ClipboardMonitor()
   private var server: HTTPServer?
   private var configurationStore: ConfigurationStore?
   private var configuration: ReceiverConfiguration?
@@ -59,6 +60,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
     tray.loadItems = { [weak self] in try await self?.currentItems() ?? [] }
     tray.recycleItems = { [weak self] urls in try await self?.recycleItems(urls) }
+    tray.clearClips = { [weak self] in self?.clipboard.clear() }
+    tray.clipboardWillChange = { [weak self] in self?.clipboard.poll() }
+    tray.clipsCopied = { [weak self] in self?.clipboard.ignoreCurrentContents() }
+    clipboard.onChange = { [weak self] clips in self?.tray.replaceClips(clips) }
+    clipboard.setEnabled(TrayPreferences.keepsClipboardHistory)
     do {
       let storage = try? ConfigurationStore()
       configurationStore = storage
@@ -72,6 +78,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       configuration = current
       let preferences = SettingsController(configuration: current)
       preferences.apply = { [weak self] next in try await self?.apply(next) }
+      preferences.clipboardHistoryChanged = { [weak self] enabled in
+        self?.clipboard.setEnabled(enabled)
+      }
       settings = preferences
       server = HTTPServer(store: store)
       Task {
@@ -233,7 +242,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   func popoverDidClose(_ notification: Notification) {
     guard notification.object as? NSPopover === popover else { return }
-    tray.clearSelection()
+    tray.trayDidClose()
   }
 
   private func openFolder() {

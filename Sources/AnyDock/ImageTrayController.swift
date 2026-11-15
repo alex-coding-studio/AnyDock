@@ -8,6 +8,11 @@ enum TrayPreferences {
     get { UserDefaults.standard.bool(forKey: "copyNewItems") }
     set { UserDefaults.standard.set(newValue, forKey: "copyNewItems") }
   }
+
+  static var keepsClipboardHistory: Bool {
+    get { UserDefaults.standard.object(forKey: "keepClipboardHistory") as? Bool ?? true }
+    set { UserDefaults.standard.set(newValue, forKey: "keepClipboardHistory") }
+  }
 }
 
 @MainActor
@@ -19,6 +24,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private let scroll = NSScrollView()
   private let timeFormatter = DateFormatter()
   let dropZone = TrayDropZone()
+  let clipboardBar = ClipboardBar()
+  private(set) var clipboardSurface: NSView?
   private(set) lazy var filterBar = TrayScopeBar(
     surface: glassSurface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2))
   private var dropZoneSurface: NSView?
@@ -39,6 +46,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   var openFolder: (() -> Void)?
   var openSettings: (() -> Void)?
   var didFinishDragging: (() -> Void)?
+  var clearClips: (() -> Void)?
+  var clipboardWillChange: (() -> Void)?
+  var clipsCopied: (() -> Void)?
 
   private var singleColumn: Bool { contents.filter == .kind(.text) }
 
@@ -69,6 +79,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       trash(selectedEntries.map(\.url))
     }
     collection.selectionChanged = { [weak self] in self?.updateControls() }
+    collection.escapePressed = { [weak self] in self?.collapseClipboard() ?? false }
     scroll.documentView = collection
     scroll.hasVerticalScroller = true
     scroll.scrollerStyle = .overlay
@@ -173,6 +184,65 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       zone.leadingAnchor.constraint(greaterThanOrEqualTo: folder.trailingAnchor, constant: 8),
       zone.trailingAnchor.constraint(lessThanOrEqualTo: settings.leadingAnchor, constant: -8),
     ])
+    configureClipboardBar(in: content, above: folder)
+  }
+
+  private func configureClipboardBar(in content: NSView, above controls: NSView) {
+    clipboardBar.onClear = { [weak self] in self?.clearClips?() }
+    clipboardBar.onCopy = { [weak self] clip in self?.copyClip(clip) }
+    clipboardBar.onExpandedChange = { [weak self] _ in self?.updateClipboardSurface() }
+    let surface = glassSurface(clipboardBar, cornerRadius: ClipboardBar.collapsedHeight / 2)
+    surface.translatesAutoresizingMaskIntoConstraints = false
+    content.addSubview(surface)
+    NSLayoutConstraint.activate([
+      surface.leadingAnchor.constraint(
+        equalTo: content.leadingAnchor, constant: TrayMetrics.margin),
+      surface.trailingAnchor.constraint(
+        equalTo: content.trailingAnchor, constant: -TrayMetrics.margin),
+      surface.bottomAnchor.constraint(equalTo: controls.topAnchor, constant: -Space.s8),
+    ])
+    clipboardSurface = surface
+    updateClipboardSurface()
+  }
+
+  private func updateClipboardSurface() {
+    guard let surface = clipboardSurface else { return }
+    let visible = !clipboardBar.clips.isEmpty
+    surface.isHidden = !visible
+    let radius = clipboardBar.isExpanded ? Space.s16 : ClipboardBar.collapsedHeight / 2
+    if #available(macOS 26, *), let glass = surface as? NSGlassEffectView {
+      glass.cornerRadius = radius
+    } else {
+      surface.layer?.cornerRadius = radius
+    }
+    let height =
+      clipboardBar.isExpanded ? ClipboardBar.expandedHeight : ClipboardBar.collapsedHeight
+    layout.extraBottomInset = visible ? height + Space.s8 : 0
+  }
+
+  func replaceClips(_ clips: [ClipboardClip]) {
+    loadViewIfNeeded()
+    clipboardBar.update(clips)
+    updateClipboardSurface()
+  }
+
+  @discardableResult
+  func collapseClipboard() -> Bool {
+    guard clipboardBar.isExpanded else { return false }
+    clipboardBar.setExpanded(false)
+    return true
+  }
+
+  func trayDidClose() {
+    clearSelection()
+    clipboardBar.setExpanded(false, animated: false)
+  }
+
+  private func copyClip(_ clip: ClipboardClip) {
+    clipboardWillChange?()
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(clip.text, forType: .string)
+    clipsCopied?()
   }
 
   private func configureEmptyState(in content: NSView) {
@@ -530,6 +600,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   func copyToPasteboard(_ item: ReceivedItem) {
     let entry = cache[item.url] ?? TrayEntry(item: item)
+    clipboardWillChange?()
     NSPasteboard.general.clearContents()
     NSPasteboard.general.writeObjects([pasteboardItem(for: entry)])
   }
@@ -556,6 +627,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   private func copySelection() {
     let selected = selectedEntries
     guard !selected.isEmpty else { return }
+    clipboardWillChange?()
     NSPasteboard.general.clearContents()
     NSPasteboard.general.writeObjects(selected.map(pasteboardItem(for:)))
   }
@@ -681,6 +753,7 @@ final class ImageCollectionView: NSCollectionView {
   var previewImages: (() -> Void)?
   var deleteImages: (() -> Void)?
   var selectionChanged: (() -> Void)?
+  var escapePressed: (() -> Bool)?
   private(set) var dragStartedOnImage = false
 
   override func setFrameSize(_ newSize: NSSize) {
@@ -730,6 +803,8 @@ final class ImageCollectionView: NSCollectionView {
       deleteImages?()
     } else if event.charactersIgnoringModifiers == " " {
       previewImages?()
+    } else if event.keyCode == 53, escapePressed?() == true {
+      return
     } else if event.keyCode == 53, !selectionIndexPaths.isEmpty {
       deselectAll(nil)
       selectionChanged?()

@@ -34,9 +34,11 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
       ?? NSImage())
   private let login = NSSwitch()
   private let autoCopy = NSSwitch()
+  private let clipboardHistory = NSSwitch()
   private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
   private let send = NSButton(title: L10n.text("Send to iPhone…"), target: nil, action: nil)
   var apply: ((ReceiverConfiguration) async throws -> Void)?
+  var clipboardHistoryChanged: ((Bool) -> Void)?
 
   init(configuration: ReceiverConfiguration) {
     self.configuration = configuration
@@ -124,6 +126,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     autoCopy.target = self
     autoCopy.action = #selector(toggleAutoCopy)
     autoCopy.setAccessibilityLabel(L10n.text("Copy new items automatically"))
+    clipboardHistory.state = TrayPreferences.keepsClipboardHistory ? .on : .off
+    clipboardHistory.target = self
+    clipboardHistory.action = #selector(toggleClipboardHistory)
+    clipboardHistory.setAccessibilityLabel(L10n.text("Keep last 4 clipboard texts"))
     configureMessage(generalStatus)
     let icon = NSImageView(image: BrandIcon.artwork ?? BrandIcon.menuBar())
     icon.imageScaling = .scaleProportionallyUpOrDown
@@ -148,6 +154,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
           L10n.text("Tray"),
           rows: [formRow(L10n.text("Copy new items automatically"), value: autoCopy)],
           note: L10n.text("settings.autoCopy.note")),
+        section(
+          L10n.text("Clipboard"),
+          rows: [formRow(L10n.text("Keep last 4 clipboard texts"), value: clipboardHistory)],
+          note: L10n.text("settings.clipboardHistory.note")),
         section(
           L10n.text("Personalization"),
           rows: [
@@ -554,11 +564,17 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     TrayPreferences.copiesNewItems = autoCopy.state == .on
   }
 
+  @objc private func toggleClipboardHistory() {
+    TrayPreferences.keepsClipboardHistory = clipboardHistory.state == .on
+    clipboardHistoryChanged?(clipboardHistory.state == .on)
+  }
+
   @objc private func copyConnectionAddress() { copy(address.stringValue) }
-  @objc private func copyToken() { copy(configuration.token) }
-  private func copy(_ value: String) {
+  @objc private func copyToken() { copy(configuration.token, concealed: true) }
+  private func copy(_ value: String, concealed: Bool = false) {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(value, forType: .string)
+    if concealed { NSPasteboard.general.setString("", forType: ClipboardMonitor.concealedType) }
   }
 
   private func showConnectionMessage(_ text: String, isError: Bool = true) {

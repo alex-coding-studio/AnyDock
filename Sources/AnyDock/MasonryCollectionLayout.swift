@@ -22,6 +22,14 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
     }
   }
 
+  var extraBottomInset: CGFloat = 0 {
+    didSet {
+      if extraBottomInset != oldValue {
+        invalidateLayout()
+      }
+    }
+  }
+
   var aspectRatio: (IndexPath) -> CGFloat = { _ in 1 }
 
   private var attributes: [NSCollectionViewLayoutAttributes] = []
@@ -62,7 +70,9 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
         frame.offsetBy(dx: Self.margin, dy: topInset), options: .alignAllEdgesNearest)
       return item
     }
-    contentSize = CGSize(width: width, height: topInset + placement.height + Self.bottomInset)
+    contentSize = CGSize(
+      width: width,
+      height: topInset + placement.height + Self.bottomInset + extraBottomInset)
   }
 
   var availableWidth: CGFloat {
