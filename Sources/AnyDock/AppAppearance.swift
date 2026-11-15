@@ -17,4 +17,10 @@ enum AppAppearance: String, CaseIterable {
     case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
     }
   }
+
+  static func follow(_ popover: NSPopover) -> NSKeyValueObservation {
+    NSApp.observe(\.effectiveAppearance, options: [.initial]) { [weak popover] _, _ in
+      MainActor.assumeIsolated { popover?.appearance = NSApp.effectiveAppearance }
+    }
+  }
 }

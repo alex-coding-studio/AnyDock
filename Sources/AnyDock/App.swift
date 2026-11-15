@@ -20,6 +20,7 @@ enum AnyDockApp {
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var statusItem: NSStatusItem?
   private let popover = NSPopover()
+  private var popoverAppearance: NSKeyValueObservation?
   private let tray = ImageTrayController()
   private let store = ImageStore()
   private let clipboard = ClipboardMonitor()
@@ -52,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     popover.behavior = .transient
     popover.delegate = self
     popover.contentViewController = tray
+    popoverAppearance = AppAppearance.follow(popover)
     popover.contentSize = NSSize(width: 480, height: 640)
     tray.openSettings = { [weak self] in self?.showSettings() }
     tray.openFolder = { [weak self] in self?.openFolder() }
