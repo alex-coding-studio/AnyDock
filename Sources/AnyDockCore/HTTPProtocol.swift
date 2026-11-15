@@ -79,7 +79,7 @@ public struct UploadRequest: Sendable {
 }
 
 public struct HTTPRequestDecoder: Sendable {
-  public static let maximumBodySize = 50 * 1024 * 1024
+  public static let maximumBodySize = 50_000_000
   private static let maximumHeaderSize = 16 * 1024
   private let token: String
   private var buffer = Data()

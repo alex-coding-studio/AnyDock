@@ -122,7 +122,7 @@ func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     #expect(partialResponse.hasPrefix("HTTP/1.1 400"))
     let oversizedResponse = try await Task.detached {
       let header =
-        "POST /upload HTTP/1.1\r\nContent-Length: 52428801\r\n"
+        "POST /upload HTTP/1.1\r\nContent-Length: 50000001\r\n"
         + "X-SnapDock-Key: test-key\r\n\r\n"
       return try sendRawRequest(port: port, data: Data(header.utf8))
     }.value

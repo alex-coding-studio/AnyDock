@@ -115,7 +115,7 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     size = action("properties.files", WFInput=attachment(variable("Body")),
                   WFContentItemPropertyName="File Size")
     numeric_size = action("math", WFInput=attachment(size), WFMathOperation="+", WFMathOperand=0)
-    size_group = condition(numeric_size, 2, WFNumberValue=50 * 1024 * 1024)
+    size_group = condition(numeric_size, 2, WFNumberValue=50_000_000)
     increment("Failure")
     increment("Oversize")
     otherwise(size_group)

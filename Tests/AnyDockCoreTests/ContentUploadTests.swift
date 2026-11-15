@@ -37,7 +37,7 @@ func decodesContentAndRejectsUnsafeInputs() throws {
   }
   var decoder = HTTPRequestDecoder(token: "test-key")
   let header =
-    "POST /upload HTTP/1.1\r\nX-SnapDock-Key: test-key\r\nContent-Length: 52428801\r\n\r\n"
+    "POST /upload HTTP/1.1\r\nX-SnapDock-Key: test-key\r\nContent-Length: 50000001\r\n\r\n"
   #expect(throws: HTTPFailure.self) { try decoder.append(Data(header.utf8)) }
   var partial = HTTPRequestDecoder(token: "test-key")
   let incomplete =
