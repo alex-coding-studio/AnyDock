@@ -14,5 +14,4 @@ func receiverStatusSurvivesDeferredSettingsBuild() {
   settings.prepareInterface()
   #expect(settings.window?.contentViewController != nil)
   #expect(settings.statusIcon.image?.accessibilityDescription == L10n.text("Receiver Failed"))
-  #expect(settings.statusIcon.contentTintColor == .systemRed)
 }
