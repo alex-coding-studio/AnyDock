@@ -2,7 +2,7 @@
 
 # AnyDock
 
-Send images from your iPhone to your Mac over the local network, then drag them from the menu bar into any chat.
+From iPhone to Mac, in one easy hand-over.
 
 - One tap from the iPhone Share Sheet
 - Drag straight from the menu bar tray into chats
