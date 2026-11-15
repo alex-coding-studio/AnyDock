@@ -274,7 +274,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       cache[item.url] = entry
       return entry
     }
-    layout.columnCount = singleColumn ? 1 : 3
+    layout.columnCount = singleColumn ? 1 : 4
     layout.topInset = TrayMetrics.margin + TrayMetrics.scopeBarHeight + Space.s16
     layout.invalidateLayout()
     collection.reloadData()
