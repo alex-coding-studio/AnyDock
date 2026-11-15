@@ -14,13 +14,13 @@ enum TrayPreferences {
 final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   NSCollectionViewDelegate, NSPopoverDelegate, @MainActor QLPreviewPanelDelegate
 {
-  private let collection = ImageCollectionView()
+  let collection = ImageCollectionView()
   private let layout = MasonryCollectionLayout()
   private let scroll = NSScrollView()
   private let timeFormatter = DateFormatter()
   private let selectionCount = NSTextField(labelWithString: "")
   private let trashButton = NSButton()
-  private let filterBar = NSStackView()
+  let filterBar = NSStackView()
   private var selectionCapsule: NSView?
   private var trashSurface: NSView?
   private var emptyState: NSView?
@@ -42,6 +42,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   var openFolder: (() -> Void)?
   var openSettings: (() -> Void)?
   var didFinishDragging: (() -> Void)?
+
+  private static let filterHeight: CGFloat = 24
 
   private var singleColumn: Bool { contents.filter == .kind(.text) }
 
@@ -75,6 +77,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     scroll.scrollerStyle = .overlay
     scroll.drawsBackground = false
     scroll.autohidesScrollers = true
+    scroll.automaticallyAdjustsContentInsets = false
+    scroll.contentInsets = NSEdgeInsetsZero
     scroll.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(scroll)
     NSLayoutConstraint.activate([
@@ -91,14 +95,17 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
   private func configureFilterBar(in content: NSView) {
     filterBar.orientation = .horizontal
-    filterBar.spacing = 6
+    filterBar.spacing = Space.s8
     filterBar.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(filterBar)
     NSLayoutConstraint.activate([
-      filterBar.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
-      filterBar.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -10),
-      filterBar.topAnchor.constraint(equalTo: content.topAnchor, constant: 10),
-      filterBar.heightAnchor.constraint(equalToConstant: 24),
+      filterBar.leadingAnchor.constraint(
+        equalTo: content.leadingAnchor, constant: MasonryCollectionLayout.margin),
+      filterBar.trailingAnchor.constraint(
+        lessThanOrEqualTo: content.trailingAnchor, constant: -MasonryCollectionLayout.margin),
+      filterBar.topAnchor.constraint(
+        equalTo: content.topAnchor, constant: MasonryCollectionLayout.margin),
+      filterBar.heightAnchor.constraint(equalToConstant: Self.filterHeight),
     ])
   }
 
@@ -107,7 +114,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       filterBar.removeArrangedSubview(view)
       view.removeFromSuperview()
     }
-    filterBar.isHidden = !contents.showsFilters
+    filterBar.isHidden = contents.items.isEmpty
     for (index, filter) in contents.availableFilters.enumerated() {
       let count = filter == .all ? contents.items.count : kindCount(filter)
       let selected = filter == contents.filter
@@ -121,9 +128,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       button.contentTintColor = selected ? .controlAccentColor : .secondaryLabelColor
       button.setAccessibilityLabel(L10n.text("filter_accessibility", filterTitle(filter), count))
       let padded = NSStackView(views: [button])
-      padded.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
-      let surface = glassSurface(padded, cornerRadius: 12)
-      surface.heightAnchor.constraint(equalToConstant: 24).isActive = true
+      padded.edgeInsets = NSEdgeInsets(top: 0, left: Space.s8, bottom: 0, right: Space.s8)
+      let surface = glassSurface(padded, cornerRadius: Self.filterHeight / 2)
+      surface.heightAnchor.constraint(equalToConstant: Self.filterHeight).isActive = true
       filterBar.addArrangedSubview(surface)
     }
   }
@@ -146,7 +153,11 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   @objc private func filterClicked(_ sender: NSButton) {
     let filters = contents.availableFilters
     guard filters.indices.contains(sender.tag) else { return }
-    contents.select(filters[sender.tag])
+    select(filters[sender.tag])
+  }
+
+  func select(_ filter: TrayFilter) {
+    contents.select(filter)
     reloadEntries()
     scrollToLatestImage()
   }
@@ -288,7 +299,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       return entry
     }
     layout.columnCount = singleColumn ? 1 : 3
-    layout.topInset = contents.showsFilters ? 44 : 24
+    layout.topInset = MasonryCollectionLayout.margin + Self.filterHeight + Space.s16
     layout.invalidateLayout()
     collection.reloadData()
     collection.selectionIndexPaths = Set(
@@ -311,7 +322,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       return size.height / size.width
     case .text:
       guard singleColumn else { return 1 }
-      return 92 / max(collection.bounds.width - 48, 1)
+      return 92 / max(layout.availableWidth, 1)
     case .link: return 0.8
     case .file: return 1.25
     }
@@ -747,7 +758,7 @@ private final class ImageClipboardProvider: NSObject, NSPasteboardItemDataProvid
 }
 
 @MainActor
-private final class ImageCollectionView: NSCollectionView {
+final class ImageCollectionView: NSCollectionView {
   var copyImages: (() -> Void)?
   var revealImages: (() -> Void)?
   var previewImages: (() -> Void)?

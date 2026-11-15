@@ -195,21 +195,21 @@ final class ImageCardItem: TrayCardItem {
 @MainActor
 final class TextCardItem: TrayCardItem {
   static let identifier = NSUserInterfaceItemIdentifier("TextCard")
-  private lazy var body = label(size: 12, lines: 0)
-  private lazy var count = label(size: 10, lines: 1)
+  lazy var body = label(size: 12, lines: 0)
+  lazy var count = label(size: 10, lines: 1)
 
   override func buildContent(in container: NSView) {
-    pin(body, in: container, inset: 8)
+    pin(body, in: container, inset: Space.s8)
     count.textColor = .secondaryLabelColor
     count.alignment = .right
     count.translatesAutoresizingMaskIntoConstraints = false
     container.addSubview(count)
     NSLayoutConstraint.activate([
-      body.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
-      body.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -24),
-      count.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -8),
-      count.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -5),
-      count.leadingAnchor.constraint(greaterThanOrEqualTo: container.leadingAnchor, constant: 60),
+      body.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s8),
+      body.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s24),
+      count.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -Space.s8),
+      count.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s4),
+      count.leadingAnchor.constraint(greaterThanOrEqualTo: container.centerXAnchor),
     ])
   }
 
@@ -229,11 +229,11 @@ final class LinkCardItem: TrayCardItem {
 
   override func buildContent(in container: NSView) {
     domain.textColor = .controlAccentColor
-    for field in [domain, headline] { pin(field, in: container, inset: 8) }
+    for field in [domain, headline] { pin(field, in: container, inset: Space.s8) }
     NSLayoutConstraint.activate([
-      domain.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
-      headline.topAnchor.constraint(equalTo: domain.bottomAnchor, constant: 4),
-      headline.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -24),
+      domain.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s8),
+      headline.topAnchor.constraint(equalTo: domain.bottomAnchor, constant: Space.s4),
+      headline.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s24),
     ])
   }
 
@@ -260,7 +260,7 @@ final class FileCardItem: TrayCardItem {
     lines.font = .monospacedSystemFont(ofSize: 9, weight: .regular)
     lines.textColor = .secondaryLabelColor
     size.textColor = .secondaryLabelColor
-    for view in [preview, lines, name, size] { pin(view, in: container, inset: 8) }
+    for view in [preview, lines, name, size] { pin(view, in: container, inset: Space.s8) }
     badge.font = .systemFont(ofSize: 8, weight: .bold)
     badge.textColor = .white
     badge.translatesAutoresizingMaskIntoConstraints = false
@@ -271,16 +271,16 @@ final class FileCardItem: TrayCardItem {
     badgeCapsule.addSubview(badge)
     container.addSubview(badgeCapsule)
     NSLayoutConstraint.activate([
-      preview.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
-      preview.bottomAnchor.constraint(equalTo: name.topAnchor, constant: -6),
+      preview.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s8),
+      preview.bottomAnchor.constraint(equalTo: name.topAnchor, constant: -Space.s8),
       lines.topAnchor.constraint(equalTo: preview.topAnchor),
       lines.bottomAnchor.constraint(equalTo: preview.bottomAnchor),
-      name.bottomAnchor.constraint(equalTo: size.topAnchor, constant: -1),
-      size.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -24),
-      badgeCapsule.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 4),
-      badgeCapsule.topAnchor.constraint(equalTo: container.topAnchor, constant: 4),
-      badge.leadingAnchor.constraint(equalTo: badgeCapsule.leadingAnchor, constant: 4),
-      badge.trailingAnchor.constraint(equalTo: badgeCapsule.trailingAnchor, constant: -4),
+      name.bottomAnchor.constraint(equalTo: size.topAnchor, constant: -Space.s4),
+      size.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s24),
+      badgeCapsule.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Space.s4),
+      badgeCapsule.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s4),
+      badge.leadingAnchor.constraint(equalTo: badgeCapsule.leadingAnchor, constant: Space.s4),
+      badge.trailingAnchor.constraint(equalTo: badgeCapsule.trailingAnchor, constant: -Space.s4),
       badge.topAnchor.constraint(equalTo: badgeCapsule.topAnchor, constant: 1),
       badge.bottomAnchor.constraint(equalTo: badgeCapsule.bottomAnchor, constant: -1),
     ])

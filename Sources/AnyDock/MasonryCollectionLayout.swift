@@ -2,8 +2,8 @@ import AnyDockCore
 import AppKit
 
 final class MasonryCollectionLayout: NSCollectionViewLayout {
-  private static let margin: CGFloat = 24
-  private static let spacing: CGFloat = 10
+  static let margin = Space.s24
+  private static let spacing = Space.s12
   private static let bottomInset: CGFloat = 64
 
   var columnCount = 3 {
@@ -44,7 +44,10 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
       contentSize = .zero
       return
     }
-    let width = collectionView.bounds.width
+    let width =
+      collectionView.enclosingScrollView?.contentView.bounds.width
+      ?? collectionView.bounds.width
+    preparedWidth = width
     let count = collectionView.numberOfSections > 0 ? collectionView.numberOfItems(inSection: 0) : 0
     let indexPaths = (0..<count).map { IndexPath(item: $0, section: 0) }
     let placement = MasonryLayout.frames(
@@ -59,8 +62,11 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
         frame.offsetBy(dx: Self.margin, dy: topInset), options: .alignAllEdgesNearest)
       return item
     }
-    preparedWidth = width
     contentSize = CGSize(width: width, height: topInset + placement.height + Self.bottomInset)
+  }
+
+  var availableWidth: CGFloat {
+    max(preparedWidth - Self.margin * 2, 0)
   }
 
   override var collectionViewContentSize: NSSize {
