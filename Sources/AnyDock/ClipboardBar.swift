@@ -169,6 +169,11 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
   override var wantsUpdateLayer: Bool { true }
 
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    needsDisplay = true
+  }
+
   override func updateLayer() {
     layer?.cornerRadius = Space.s8
     layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
