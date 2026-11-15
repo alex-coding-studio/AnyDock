@@ -26,7 +26,7 @@ Build from source and open the app:
 ./scripts/run.sh
 ```
 
-This needs Xcode 27.2 (Swift 6.4.2) or a compatible Swift 6 toolchain; no third-party packages are required. AnyDock lives in the menu bar without a Dock icon; open Settings with the gear button in the tray. Images are saved to `~/Downloads/SnapDock` by default, which you can change under Receiving in Settings.
+This needs Xcode 26 or later; no third-party packages are required. AnyDock lives in the menu bar without a Dock icon; open Settings with the gear button in the tray. Images are saved to `~/Downloads/SnapDock` by default, which you can change under Receiving in Settings.
 
 ## Set up your iPhone
 
@@ -49,10 +49,6 @@ Repeat this once for each phone that will send. If AirDrop or signing is unavail
 ```
 
 Read [AGENTS.md](AGENTS.md), [ProjectContext.md](ProjectContext.md) and [docs/PROJECT.md](docs/PROJECT.md) for contribution conventions, architecture and engineering details.
-
-## Upgrading from SnapDock
-
-AnyDock keeps your existing preferences, connection key and receive folder. Existing iPhone shortcuts keep working, and previously received images still appear.
 
 ## Contributing
 

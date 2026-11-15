@@ -26,7 +26,7 @@
 ./scripts/run.sh
 ```
 
-需要 Xcode 27.2（Swift 6.4.2）或兼容的 Swift 6 工具链，不需要安装第三方依赖。随手坞只在菜单栏显示，没有 Dock 图标；点托盘里的齿轮按钮打开设置。图片默认保存到 `~/Downloads/SnapDock`，可以在设置的「接收」里修改。
+需要 Xcode 26 或更高版本，不需要安装第三方依赖。随手坞只在菜单栏显示，没有 Dock 图标；点托盘里的齿轮按钮打开设置。图片默认保存到 `~/Downloads/SnapDock`，可以在设置的「接收」里修改。
 
 ## 设置 iPhone
 
@@ -49,10 +49,6 @@
 ```
 
 贡献约定、架构和工程细节见 [AGENTS.md](AGENTS.md)、[ProjectContext.md](ProjectContext.md) 和 [docs/PROJECT.md](docs/PROJECT.md)。
-
-## 从 SnapDock 升级
-
-随手坞沿用原来的偏好设置、连接密钥和接收文件夹，已有的 iPhone 快捷指令可以继续使用，之前收到的图片也会照常显示。
 
 ## 参与贡献
 
