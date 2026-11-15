@@ -152,11 +152,24 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     increment("Oversize")
     end(size_group)
     action("repeat.each", GroupingIdentifier=repeat_group, WFControlFlowMode=2)
-    action("notification", WFNotificationActionTitle="随手坞", WFNotificationActionBody=message([
-        "成功 ", variable("Success"), " 项，失败 ", variable("Failure"), " 项。\n",
-        "超过 50MB：", variable("Oversize"), "；密钥无效：", variable("Unauthorized"),
-        "；格式不支持：", variable("Unsupported"), "；其他错误：", variable("Other"), "。",
-    ]), WFNotificationActionSound=False)
+    assign("Summary", action("gettext", WFTextActionText=message(["成功 ", variable("Success"), " 项"])))
+    failure_group = condition(variable("Failure"), 4, WFConditionalActionString="0")
+    otherwise(failure_group)
+    assign("Details", literal(""))
+    assign("Separator", literal(""))
+    for counter, label in [("Oversize", "超过 50MB "), ("Unauthorized", "密钥无效 "),
+                           ("Unsupported", "格式不支持 "), ("Other", "其他错误 ")]:
+        group = condition(variable(counter), 4, WFConditionalActionString="0")
+        otherwise(group)
+        assign("Details", action("gettext", WFTextActionText=message([
+            variable("Details"), variable("Separator"), label, variable(counter), " 项"])))
+        assign("Separator", literal("，"))
+        end(group)
+    assign("Summary", action("gettext", WFTextActionText=message([
+        variable("Summary"), "，失败 ", variable("Failure"), " 项：", variable("Details")])))
+    end(failure_group)
+    action("notification", WFNotificationActionTitle="随手坞",
+           WFNotificationActionBody=message([variable("Summary")]), WFNotificationActionSound=False)
     return {
         "WFWorkflowName": name,
         "WFWorkflowClientVersion": "2700",

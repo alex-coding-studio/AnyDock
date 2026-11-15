@@ -128,8 +128,8 @@ class ShortcutTests(unittest.TestCase):
         fields = upload["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]
         headers = {f["WFKey"]["Value"]["string"]: f["WFValue"] for f in fields}
         self.assertEqual(headers["X-AnyDock-Filename"]["Value"]["attachmentsByRange"]["{0, 1}"]["VariableName"], "Filename")
-        guards = [p for n, p in zip(names, parameters)
-                  if n == "conditional" and p.get("WFConditionalActionString") == "0"]
+        guards = [p for i, (n, p) in enumerate(zip(names, parameters))
+                  if i < repeats[1][0] and n == "conditional" and p.get("WFConditionalActionString") == "0"]
         self.assertEqual(len(guards), 1)
         guard = guards[0]
         guard_else = next(i for i, p in enumerate(parameters) if p.get("GroupingIdentifier") == guard["GroupingIdentifier"]
@@ -145,12 +145,68 @@ class ShortcutTests(unittest.TestCase):
         notifications = [i for i, n in enumerate(names) if n == "notification"]
         self.assertEqual(len(notifications), 1)
         self.assertGreater(notifications[0], repeats[1][0])
-        summary = parameters[notifications[0]]["WFNotificationActionBody"]["Value"]
-        self.assertEqual({r["VariableName"] for r in summary["attachmentsByRange"].values()},
-                         {"Success", "Failure", "Oversize", "Unauthorized", "Unsupported", "Other"})
+        self.assertEqual(parameters[notifications[0]]["WFNotificationActionTitle"], "随手坞")
         defined = {p["WFVariableName"] for n, p in zip(names, parameters) if n == "setvariable"}
         self.assertTrue({"Success", "Failure", "Oversize", "Unauthorized", "Unsupported", "Other"} <= defined)
         self.assertEqual([q["ActionIndex"] for q in shortcut["WFWorkflowImportQuestions"]], [0, 1])
+
+    def test_summary_lists_only_failure_reasons_with_nonzero_counts(self):
+        actions = module.make_shortcut("http://Mac.local:8765/upload", "test-key")["WFWorkflowActions"]
+        names = [a["WFWorkflowActionIdentifier"].removeprefix("is.workflow.actions.") for a in actions]
+        loop_end = max(i for i, n in enumerate(names) if n == "repeat.each")
+        tail = [a["WFWorkflowActionParameters"] for a in actions[loop_end + 1:]]
+        tail_names = names[loop_end + 1:]
+
+        def run(counters):
+            variables = dict(counters)
+            outputs = {}
+
+            def resolve(token):
+                if token["Type"] == "Variable":
+                    return variables[token["VariableName"]]
+                return outputs[token["OutputUUID"]]
+
+            def render(value):
+                if isinstance(value, str):
+                    return value
+                content = value["Value"]
+                result = content["string"]
+                for key in sorted(content.get("attachmentsByRange", {}),
+                                  key=lambda k: int(k.strip("{}").split(",")[0]), reverse=True):
+                    offset = int(key.strip("{}").split(",")[0])
+                    result = result[:offset] + str(resolve(content["attachmentsByRange"][key])) + result[offset + 1:]
+                return result
+
+            def skip_to(group, modes, index):
+                return next(j for j in range(index + 1, len(tail)) if tail[j].get("GroupingIdentifier") == group
+                            and tail[j].get("WFControlFlowMode") in modes)
+
+            index = 0
+            body = None
+            while index < len(tail):
+                name, p = tail_names[index], tail[index]
+                if name == "gettext":
+                    outputs[p["UUID"]] = render(p["WFTextActionText"])
+                elif name == "setvariable":
+                    variables[p["WFVariableName"]] = resolve(p["WFInput"]["Value"])
+                elif name == "conditional" and p["WFControlFlowMode"] == 0:
+                    self.assertEqual(p["WFCondition"], 4)
+                    value = str(resolve(p["WFInput"]["Variable"]["Value"]))
+                    if value != p["WFConditionalActionString"]:
+                        index = skip_to(p["GroupingIdentifier"], {1, 2}, index)
+                elif name == "conditional" and p["WFControlFlowMode"] == 1:
+                    index = skip_to(p["GroupingIdentifier"], {2}, index)
+                elif name == "notification":
+                    body = render(p["WFNotificationActionBody"])
+                index += 1
+            return body
+
+        zero = {"Success": 0, "Failure": 0, "Oversize": 0, "Unauthorized": 0, "Unsupported": 0, "Other": 0}
+        self.assertEqual(run({**zero, "Success": 6}), "成功 6 项")
+        self.assertEqual(run({**zero, "Success": 5, "Failure": 1, "Oversize": 1}),
+                         "成功 5 项，失败 1 项：超过 50MB 1 项")
+        self.assertEqual(run({**zero, "Failure": 3, "Unauthorized": 2, "Other": 1}),
+                         "成功 0 项，失败 3 项：密钥无效 2 项，其他错误 1 项")
 
 
 if __name__ == "__main__":
