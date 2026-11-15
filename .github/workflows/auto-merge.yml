@@ -43,10 +43,11 @@ jobs:
             [[ -n "$PR" ]] || { echo "No open PR has $HEAD_SHA as a commit."; exit 0; }
           fi
           if [[ "$(gh pr view "$PR" --json reviews --jq "[.reviews[]
+              | select(.authorAssociation | IN(\"OWNER\", \"MEMBER\", \"COLLABORATOR\"))
               | select(.state | IN(\"APPROVED\", \"CHANGES_REQUESTED\", \"DISMISSED\"))]
               | group_by(.author.login) | map(max_by(.submittedAt))
               | any(.state == \"APPROVED\" and .commit.oid == \"$HEAD_SHA\") and all(.state != \"CHANGES_REQUESTED\")")" != true ]]; then
-            echo "$HEAD_SHA is not approved by every reviewer's latest decision; a later review will retry."
+            echo "$HEAD_SHA is not approved by every repository reviewer's latest decision; a later review will retry."
             exit 0
           fi
           if [[ "$(gh pr view "$PR" --json headRefOid --jq .headRefOid)" != "$HEAD_SHA" ]]; then
