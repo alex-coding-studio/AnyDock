@@ -79,10 +79,16 @@ AnyDock validates incoming image data, saves unique originals and never overwrit
 
 Read [AGENTS.md](AGENTS.md), [ProjectContext.md](ProjectContext.md) and [docs/PROJECT.md](docs/PROJECT.md) for contribution conventions, architecture and engineering details. Automated checks do not replace actual iPhone upload or target-chat acceptance.
 
-## License
-
-License: **MIT**. See [LICENSE](LICENSE).
-
 ## Compatibility with existing installations
 
 The app keeps the `studio.alex.snapdock` bundle identifier, existing preferences, connection key and `Application Support/SnapDock` configuration location. The default receive folder remains `~/Downloads/SnapDock`; your saved folder is preserved. New images use `AnyDock-` filenames, while existing `SnapDock-` images remain visible and can still be recycled. Existing iPhone shortcuts continue to use the same upload protocol.
+
+## Contributing
+
+This is a personally maintained project and is not accepting external issues or pull requests at this time; you are welcome to fork and modify it under the MIT license.
+
+这是个人维护的项目，目前不接受外部 issue 和 pull request；欢迎 fork 后按 MIT 许可证自行修改。
+
+## License
+
+License: **MIT**. See [LICENSE](LICENSE).
