@@ -45,7 +45,7 @@ public actor ImageStore {
         guard request.contentType?.hasPrefix("image/") != true else {
           throw HTTPFailure(415, "Unsupported Image")
         }
-        suffix = "-" + filename
+        suffix = "-" + Self.nameMatchingContent(filename, data: data)
       }
     }
     guard data.count <= HTTPRequestDecoder.maximumBodySize else {
@@ -57,7 +57,7 @@ public actor ImageStore {
     try writer.write(data, named: url.lastPathComponent, quarantined: kind != .image)
     return ReceivedItem(
       url: url, kind: kind, thumbnail: thumbnail, receivedAt: Date(),
-      isPlainText: kind == .file && Self.isPlainText(data, filename: request.filename ?? ""))
+      isPlainText: kind == .file && Self.isPlainText(data, filename: url.lastPathComponent))
   }
 
   public func listImages(in directory: URL) throws -> [ReceivedImage] {
@@ -121,6 +121,30 @@ public actor ImageStore {
       return ReceivedItem(
         url: url, kind: category, thumbnail: thumbnail, receivedAt: date, isPlainText: plainText)
     }
+  }
+
+  private static func nameMatchingContent(_ filename: String, data: Data) -> String {
+    let signatures: [(offset: Int, bytes: [UInt8], type: UTType)] = [
+      (0, Array("%PDF-".utf8), .pdf),
+      (0, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], .png),
+      (0, [0xFF, 0xD8, 0xFF], .jpeg),
+      (0, Array("GIF8".utf8), .gif),
+      (4, Array("ftypheic".utf8), .heic),
+      (4, Array("ftypheix".utf8), .heic),
+      (0, [0x50, 0x4B, 0x03, 0x04], .zip),
+    ]
+    guard
+      let type = signatures.first(where: { data.dropFirst($0.offset).starts(with: $0.bytes) })?
+        .type,
+      let fileExtension = type.preferredFilenameExtension
+    else { return filename }
+    let current = (filename as NSString).pathExtension
+    if !current.isEmpty,
+      type == .zip || UTType(filenameExtension: current)?.conforms(to: type) == true
+    {
+      return filename
+    }
+    return filename + "." + fileExtension
   }
 
   private static func isPlainText(_ data: Data, filename: String) -> Bool {

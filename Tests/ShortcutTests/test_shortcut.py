@@ -128,6 +128,18 @@ class ShortcutTests(unittest.TestCase):
         fields = upload["WFHTTPHeaders"]["Value"]["WFDictionaryFieldValueItems"]
         headers = {f["WFKey"]["Value"]["string"]: f["WFValue"] for f in fields}
         self.assertEqual(headers["X-AnyDock-Filename"]["Value"]["attachmentsByRange"]["{0, 1}"]["VariableName"], "Filename")
+        by_uuid = {p["UUID"]: (n, p) for n, p in zip(names, parameters)}
+        filename = next(p for n, p in zip(names, parameters)
+                        if n == "setvariable" and p["WFVariableName"] == "Filename")
+        encode_name, encode = by_uuid[filename["WFInput"]["Value"]["OutputUUID"]]
+        self.assertEqual(encode_name, "urlencode")
+        content = encode["WFInput"]["Value"]
+        self.assertEqual(content["string"], "\ufffc.\ufffc")
+        parts = [by_uuid[content["attachmentsByRange"][key]["OutputUUID"]] for key in ["{0, 1}", "{2, 1}"]]
+        self.assertEqual([n for n, _ in parts], ["getitemname", "properties.files"])
+        self.assertEqual(parts[1][1]["WFContentItemPropertyName"], "File Extension")
+        for _, part in parts:
+            self.assertEqual(part["WFInput"]["Value"]["VariableName"], "Repeat Item")
         guards = [p for i, (n, p) in enumerate(zip(names, parameters))
                   if i < repeats[1][0] and n == "conditional" and p.get("WFConditionalActionString") == "0"]
         self.assertEqual(len(guards), 1)

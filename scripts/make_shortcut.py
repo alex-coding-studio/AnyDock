@@ -97,7 +97,9 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
     item = variable("Repeat Item")
     item_type = action("getitemtype", WFInput=attachment(item))
     item_name = action("getitemname", WFInput=attachment(item), GetWebPageTitle=False)
-    encoded_name = action("urlencode", WFInput=text(reference=item_name), WFEncodeMode="Encode")
+    item_extension = action("properties.files", WFInput=attachment(item),
+                            WFContentItemPropertyName="File Extension")
+    encoded_name = action("urlencode", WFInput=message([item_name, ".", item_extension]), WFEncodeMode="Encode")
     assign("Filename", encoded_name)
     assign("Kind", literal("file"))
     assign("Mime", literal("application/octet-stream"))
