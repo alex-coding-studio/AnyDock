@@ -2,7 +2,6 @@
 "shortcut.airdrop.unsupported" = "AirDrop is not available on this Mac. Use manual setup below.";
 "shortcut.airdrop.unavailable" = "AirDrop is unavailable. Check Wi-Fi and Bluetooth, or use manual setup.";
 "Allow AnyDock in System Settings → Login Items." = "Allow AnyDock in System Settings → Login Items.";
-"Your phone-to-Mac drop zone" = "Your phone-to-Mac drop zone";
 "Appearance" = "Appearance";
 "Apply" = "Apply";
 "Change…" = "Change…";
@@ -48,7 +47,7 @@
 "Send to %@" = "Send to %@";
 "Send to Mac" = "Send to Mac";
 "Send to iPhone…" = "Send to iPhone…";
-"settings.shortcut.note" = "Send via AirDrop, then tap Add Shortcut on your iPhone. The shortcut contains your connection key; system signing sends a copy to Apple for validation. Send it only to your own iPhone.";
+"settings.shortcut.note" = "The shortcut contains your connection key, and system signing sends a copy to Apple for validation. Send it only to your own iPhone.";
 "Settings" = "Settings";
 "Share content on your iPhone and choose your Mac’s shortcut." = "Share content on your iPhone and choose your Mac’s shortcut.";
 "Shortcut name" = "Shortcut name";
@@ -79,8 +78,8 @@
 "Unable to restart AnyDock: %@" = "Unable to restart AnyDock: %@";
 "Unable to send the shortcut: %@" = "Unable to send the shortcut: %@";
 "Unapplied changes" = "Unapplied changes";
-"settings.port.note" = "Use a port between 1024 and 65535. Resend the iPhone shortcut after changing the port.";
-"settings.manual.note" = "Use only on a trusted LAN; HTTP is not encrypted. Resend the shortcut after changing the port. Enter the address and key when importing the generic shortcut.";
+"settings.port.note" = "Resend the iPhone shortcut after changing the port.";
+"settings.manual.note" = "Use only on a trusted LAN; HTTP is not encrypted. Enter the address and key when importing the generic shortcut.";
 "shortcut.name.normalized" = "Will use “%@”. Leading and trailing spaces are removed; / and : become -.";
 "configuration.recovery" = "Your configuration has not been changed. Check Application Support/AnyDock and restart.";
 "[redacted]" = "[redacted]";
@@ -97,7 +96,6 @@
 "Link" = "Link";
 "File" = "File";
 "Copy new items automatically" = "Copy new items automatically";
-"settings.autoCopy.note" = "Images are copied as image data, text and links as plain text, and files as the file itself.";
 "filter_accessibility" = "%1$@: %2$d";
 "New %@: %@, %@" = "New %1$@: %2$@, %3$@";
 "%@: %@, %@" = "%1$@: %2$@, %3$@";
@@ -108,7 +106,7 @@
 "migration.copyFailed" = "The old configuration could not be copied to the new location.";
 "meta_separator" = "%1$@ · %2$@";
 "Clipboard" = "Clipboard";
-"settings.clipboardHistory.note" = "Only plain text is kept, in memory, and cleared when AnyDock quits. Password managers' content is skipped.";
+"settings.clipboardHistory.note" = "Kept in memory only and cleared when you quit.";
 "Keep last 4 clipboard texts" = "Keep last 4 clipboard texts";
 "Clear" = "Clear";
 "clipboard_expanded_title" = "Clipboard · Double-click to copy";
@@ -121,6 +119,11 @@
 "Type shortcut…" = "Type shortcut…";
 "hotkey.clear" = "Clear";
 "hotkey.clear.accessibility" = "Clear wake shortcut";
-"settings.hotkey.note" = "Press it in any app to open or close the tray. Press Esc to cancel recording.";
 "hotkey.modifierRequired" = "Include ⌘, ⌥ or ⌃ in the shortcut. ⇧ alone is not enough.";
 "hotkey.unavailable" = "%@ is already in use by macOS or another app. Choose a different shortcut.";
+"about.tagline" = "From iPhone to Mac, in one easy hand-over.";
+"About" = "About";
+"Version %@ (%@)" = "Version %@ (%@)";
+"GitHub Project" = "GitHub Project";
+"Author @Cunqi" = "Author @Cunqi";
+"about.copyright" = "© 2026 Cunqi · MIT License";
