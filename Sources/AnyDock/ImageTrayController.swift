@@ -44,9 +44,6 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
   var openSettings: (() -> Void)?
   var didFinishDragging: (() -> Void)?
 
-  private static let controlInset: CGFloat = 10
-  private static let controlSize: CGFloat = 34
-
   private var singleColumn: Bool { contents.filter == .kind(.text) }
 
   override func loadView() {
@@ -90,7 +87,6 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
     ])
     configureEmptyState(in: content)
-    configureEdgeBlur(in: content)
     configureFilterBar(in: content)
     configureControls(in: content)
     updateControls()
@@ -107,24 +103,6 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         lessThanOrEqualTo: content.trailingAnchor, constant: -TrayMetrics.margin),
       filterBar.topAnchor.constraint(equalTo: content.topAnchor, constant: TrayMetrics.margin),
     ])
-  }
-
-  private func configureEdgeBlur(in content: NSView) {
-    let topHeight = TrayMetrics.margin + TrayMetrics.scopeBarHeight + Space.s16
-    let bottomHeight = Self.controlInset + Self.controlSize + Space.s16
-    for (fromTop, height) in [(true, topHeight), (false, bottomHeight)] {
-      let blur = EdgeBlurView(fromTop: fromTop, fade: Space.s16)
-      blur.translatesAutoresizingMaskIntoConstraints = false
-      content.addSubview(blur)
-      NSLayoutConstraint.activate([
-        blur.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-        blur.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-        blur.heightAnchor.constraint(equalToConstant: height),
-        fromTop
-          ? blur.topAnchor.constraint(equalTo: content.topAnchor)
-          : blur.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-      ])
-    }
   }
 
   private func updateFilterBar() {
@@ -177,7 +155,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     let countContent = NSStackView(views: [selectionCount])
     countContent.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
     let capsule = glassSurface(countContent, cornerRadius: 17)
-    capsule.heightAnchor.constraint(equalToConstant: Self.controlSize).isActive = true
+    capsule.heightAnchor.constraint(equalToConstant: 34).isActive = true
     selectionCapsule = capsule
     let right = NSStackView(views: [capsule, trash, settings])
     right.spacing = 8
@@ -187,10 +165,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
       content.addSubview(element)
     }
     NSLayoutConstraint.activate([
-      folder.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: Self.controlInset),
-      folder.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -Self.controlInset),
-      right.trailingAnchor.constraint(
-        equalTo: content.trailingAnchor, constant: -Self.controlInset),
+      folder.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 10),
+      folder.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -10),
+      right.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -10),
       right.centerYAnchor.constraint(equalTo: folder.centerYAnchor),
       right.leadingAnchor.constraint(greaterThanOrEqualTo: folder.trailingAnchor, constant: 8),
     ])
@@ -238,8 +215,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     button.setAccessibilityLabel(title)
     let surface = glassSurface(button, cornerRadius: 17)
     NSLayoutConstraint.activate([
-      surface.widthAnchor.constraint(equalToConstant: Self.controlSize),
-      surface.heightAnchor.constraint(equalToConstant: Self.controlSize),
+      surface.widthAnchor.constraint(equalToConstant: 34),
+      surface.heightAnchor.constraint(equalToConstant: 34),
     ])
     return surface
   }
