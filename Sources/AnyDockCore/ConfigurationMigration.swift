@@ -16,23 +16,26 @@ public enum ConfigurationMigration {
   ) -> Failure? {
     let manager = FileManager.default
     let preferences = defaults.persistentDomain(forName: domain) ?? [:]
-    guard preferences[completionKey] as? Bool != true,
-      !manager.fileExists(atPath: configuration.path)
-    else { return nil }
+    guard preferences[completionKey] as? Bool != true else { return nil }
     let legacyPreferences = defaults.persistentDomain(forName: legacyDomain) ?? [:]
+    let hasConfiguration = manager.fileExists(atPath: configuration.path)
     let hasLegacyFile: Bool
-    do {
-      _ = try manager.attributesOfItem(atPath: legacyConfiguration.path)
-      hasLegacyFile = true
-    } catch let error as CocoaError {
-      guard error.code == .fileNoSuchFile || error.code == .fileReadNoSuchFile else {
+    if hasConfiguration {
+      hasLegacyFile = false
+    } else {
+      do {
+        _ = try manager.attributesOfItem(atPath: legacyConfiguration.path)
+        hasLegacyFile = true
+      } catch let error as CocoaError {
+        guard error.code == .fileNoSuchFile || error.code == .fileReadNoSuchFile else {
+          return .readFailed
+        }
+        hasLegacyFile = false
+      } catch {
         return .readFailed
       }
-      hasLegacyFile = false
-    } catch {
-      return .readFailed
     }
-    guard hasLegacyFile || !legacyPreferences.isEmpty else { return nil }
+    guard hasConfiguration || hasLegacyFile || !legacyPreferences.isEmpty else { return nil }
 
     if hasLegacyFile {
       let data: Data
