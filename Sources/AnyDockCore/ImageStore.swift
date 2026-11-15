@@ -1,5 +1,3 @@
-import CoreServices
-import Darwin
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
@@ -53,38 +51,10 @@ public actor ImageStore {
     guard data.count <= HTTPRequestDecoder.maximumBodySize else {
       throw HTTPFailure(413, "Payload Too Large")
     }
-    let folder = directory.appendingPathComponent(kind.directoryName, isDirectory: true)
-    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-    let values = try folder.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-    guard values.isDirectory == true, values.isSymbolicLink != true,
-      folder.resolvingSymlinksInPath().deletingLastPathComponent()
-        == directory.resolvingSymlinksInPath().standardizedFileURL
-    else { throw CocoaError(.fileWriteInvalidFileName) }
+    let writer = try ItemWriter(in: directory, kind: kind)
     let stem = "AnyDock-\(Int(Date().timeIntervalSince1970 * 1000))-\(UUID().uuidString)"
-    let url = folder.appendingPathComponent(stem + suffix)
-    let staging = folder.appendingPathComponent("." + stem + ".pending")
-    defer { try? FileManager.default.removeItem(at: staging) }
-    let descriptor = open(staging.path, O_CREAT | O_EXCL | O_WRONLY | O_NOFOLLOW, 0o600)
-    guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
-    let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
-    try handle.write(contentsOf: data)
-    try handle.close()
-    if kind != .image {
-      var properties = URLResourceValues()
-      properties.quarantineProperties = [
-        kLSQuarantineAgentNameKey as String: "AnyDock",
-        kLSQuarantineTypeKey as String: kLSQuarantineTypeOtherDownload,
-        kLSQuarantineTimeStampKey as String: Date(),
-      ]
-      var target = staging
-      try target.setResourceValues(properties)
-      guard getxattr(staging.path, "com.apple.quarantine", nil, 0, 0, 0) > 0 else {
-        throw CocoaError(.fileWriteUnknown)
-      }
-    }
-    guard renamex_np(staging.path, url.path, UInt32(RENAME_EXCL)) == 0 else {
-      throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-    }
+    let url = writer.directory.appendingPathComponent(stem + suffix)
+    try writer.write(data, named: url.lastPathComponent, quarantined: kind != .image)
     return ReceivedItem(
       url: url, kind: kind, thumbnail: thumbnail, receivedAt: Date(),
       isPlainText: kind == .file && Self.isPlainText(data, filename: request.filename ?? ""))

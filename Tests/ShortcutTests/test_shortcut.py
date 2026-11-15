@@ -42,7 +42,13 @@ class ShortcutTests(unittest.TestCase):
 
     def test_mixed_items_use_clipboard_fallback_and_continue_after_recoverable_failures(self):
         shortcut = plistlib.loads(plistlib.dumps(module.make_shortcut("http://Mac.local:8765/upload", "test-key")))
-        self.assertEqual(shortcut["WFWorkflowInputContentItemClasses"], ["WFContentItem"])
+        classes = shortcut["WFWorkflowInputContentItemClasses"]
+        self.assertNotIn("WFContentItem", classes)
+        self.assertEqual(set(classes), {
+            "WFImageContentItem", "WFStringContentItem", "WFRichTextContentItem",
+            "WFURLContentItem", "WFSafariWebPageContentItem", "WFGenericFileContentItem",
+            "WFPDFContentItem", "WFAVAssetContentItem",
+        })
         actions = shortcut["WFWorkflowActions"]
         parameters = [a["WFWorkflowActionParameters"] for a in actions]
         names = [a["WFWorkflowActionIdentifier"].removeprefix("is.workflow.actions.") for a in actions]

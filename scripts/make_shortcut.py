@@ -160,7 +160,11 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
         "WFWorkflowMinimumClientVersionString": "900",
         "WFWorkflowIcon": {"WFWorkflowIconStartColor": 4282601983, "WFWorkflowIconGlyphNumber": 59799},
         "WFWorkflowTypes": ["ActionExtension"],
-        "WFWorkflowInputContentItemClasses": ["WFContentItem"],
+        "WFWorkflowInputContentItemClasses": [
+            "WFImageContentItem", "WFStringContentItem", "WFRichTextContentItem",
+            "WFURLContentItem", "WFSafariWebPageContentItem", "WFGenericFileContentItem",
+            "WFPDFContentItem", "WFAVAssetContentItem",
+        ],
         "WFWorkflowOutputContentItemClasses": [],
         "WFWorkflowHasShortcutInputVariables": True,
         "WFWorkflowHasOutputFallback": False,

@@ -74,6 +74,8 @@ func storesTypedContentWithQuarantine() async throws {
   for item in [text, link, file, video] {
     #expect(item.url.lastPathComponent.hasPrefix("AnyDock-"))
     #expect(getxattr(item.url.path, "com.apple.quarantine", nil, 0, 0, 0) > 0)
+    let properties = try item.url.resourceValues(forKeys: [.quarantinePropertiesKey])
+    #expect(properties.quarantineProperties != nil)
   }
   #expect(try Data(contentsOf: text.url) == Data("hello".utf8))
   let property = try PropertyListSerialization.propertyList(
@@ -138,6 +140,26 @@ func listsLegacyImagesAndRejectsDirectoryEscape() async throws {
   let paths = Set(listed.map { $0.url.resolvingSymlinksInPath().path })
   #expect(paths == Set([legacy, renamed].map { $0.resolvingSymlinksInPath().path }))
   #expect(FileManager.default.fileExists(atPath: legacy.path))
+}
+
+@Test("分类目录验证后被替换为符号链接时，不能向外部目录写入")
+func rejectsDirectoryReplacementAfterValidation() throws {
+  let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  let outside = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer {
+    try? FileManager.default.removeItem(at: root)
+    try? FileManager.default.removeItem(at: outside)
+  }
+  try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+  let writer = try ItemWriter(in: root, kind: .file)
+  let retired = root.appendingPathComponent("OriginalFiles", isDirectory: true)
+  try FileManager.default.moveItem(at: writer.directory, to: retired)
+  try FileManager.default.createSymbolicLink(at: writer.directory, withDestinationURL: outside)
+  #expect(throws: (any Error).self) {
+    try writer.write(Data("fixture".utf8), named: "AnyDock-replacement.txt", quarantined: true)
+  }
+  #expect(try FileManager.default.contentsOfDirectory(atPath: outside.path).isEmpty)
+  #expect(try FileManager.default.contentsOfDirectory(atPath: retired.path).isEmpty)
 }
 
 func decodeContent(
