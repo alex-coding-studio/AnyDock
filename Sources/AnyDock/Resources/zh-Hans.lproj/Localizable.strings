@@ -107,3 +107,11 @@
 "migration.invalidConfiguration" = "旧配置文件无效。";
 "migration.copyFailed" = "无法将旧配置复制到新位置。";
 "meta_separator" = "%1$@ · %2$@";
+"Clipboard" = "剪贴板";
+"settings.clipboardHistory.note" = "只保留纯文本，仅存在内存中，退出随手坞即清空；密码管理器的内容会被跳过。";
+"Keep last 4 clipboard texts" = "保留最近 4 条剪贴板文本";
+"Clear" = "清空";
+"clipboard_expanded_title" = "剪贴板 · 双击复制";
+"Collapse Clipboard" = "收起剪贴板";
+"Expand Clipboard" = "展开剪贴板";
+"Double-click to copy" = "双击复制";

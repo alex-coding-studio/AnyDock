@@ -66,5 +66,21 @@
 			<string>Move %d Items to Trash</string>
 		</dict>
 	</dict>
+	<key>clipboard_collapsed_title</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>Clipboard · %d item</string>
+			<key>other</key>
+			<string>Clipboard · %d items</string>
+		</dict>
+	</dict>
 </dict>
 </plist>
