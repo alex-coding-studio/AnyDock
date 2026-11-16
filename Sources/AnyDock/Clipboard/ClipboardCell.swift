@@ -86,9 +86,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     override func updateLayer() {
         layer?.cornerRadius = PKYShape.Radius.tile
-        effectiveAppearance.performAsCurrentDrawingAppearance {
-            layer?.backgroundColor = PKYThemeFallback.system.color.filled.quiet(.tertiary).cgColor
-        }
+        layer?.backgroundColor = NSColor.white.cgColor
     }
 
     override func accessibilityPerformPress() -> Bool {
