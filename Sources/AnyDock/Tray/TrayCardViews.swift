@@ -10,7 +10,7 @@ final class BadgeView: NSView {
     }
 
     private static let fontSize = NSFont.smallSystemFontSize - 2
-    private static let mediaBackground = NSColor(white: 0, alpha: 0.6)
+    private static let mediaBackground = NSColor(white: 0, alpha: PKYOpacity.dimmed)
 
     private var style = Style.neutral
 

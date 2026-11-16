@@ -12,7 +12,6 @@ final class TrayScopeBar: NSView {
         let filter: TrayFilter
     }
 
-    private static let indicatorDuration: TimeInterval = 0.2
     private static let maxFadeFraction: CGFloat = 0.5
     private static let scrollEdgeTolerance: CGFloat = 0.5
     private static let fadeStartPoint = CGPoint(x: 0, y: 0.5)
@@ -176,7 +175,7 @@ final class TrayScopeBar: NSView {
         }
         isAnimating = true
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = Self.indicatorDuration
+            context.duration = PKYMotion.Duration.standard
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             indicator.animator().frame = target
         } completionHandler: { [weak self] in
@@ -275,7 +274,7 @@ private final class FlippedView: NSView {
 
 @MainActor
 private final class ScopeIndicator: NSView {
-    private static let darkFill = NSColor(white: 1, alpha: 0.18)
+    private static let darkFill = NSColor(white: 1, alpha: PKYOpacity.tint)
 
     override var wantsUpdateLayer: Bool {
         true

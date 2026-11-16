@@ -88,7 +88,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
     }
 
     override func updateLayer() {
-        layer?.cornerRadius = PKYLayout.Space.s8
+        layer?.cornerRadius = PKYShape.Radius.compact
         layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
     }
 
