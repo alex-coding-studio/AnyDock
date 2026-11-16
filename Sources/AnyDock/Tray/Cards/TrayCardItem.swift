@@ -66,7 +66,7 @@ class TrayCardItem: NSCollectionViewItem {
     func showThumbnail(_: NSImage) {}
 
     func configure(_ entry: TrayEntry, singleColumn _: Bool, time _: String, latest: Bool) {
-        badge.show(entry.badge, style: entry.badgeStyle)
+        badge.show(entry.badge, fill: entry.kind.tint)
         dot.isHidden = !latest
     }
 
@@ -131,7 +131,8 @@ final class ImageCardItem: TrayCardItem {
 
     private lazy var timeCapsule: BadgeView = {
         let capsule = BadgeView()
-        capsule.show("", style: .media)
+        let fill = PKYThemeFallback.system.color.media.scrim.withAlphaComponent(PKYOpacity.dimmed)
+        capsule.show("", fill: fill, textColor: PKYThemeFallback.system.color.media.content)
         return capsule
     }()
 

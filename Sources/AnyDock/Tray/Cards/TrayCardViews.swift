@@ -4,16 +4,7 @@ import SnapKit
 
 @MainActor
 final class BadgeView: NSView {
-    enum Style {
-        case solid(NSColor)
-        case neutral
-        case media
-    }
-
-    private static let mediaBackground = PKYThemeFallback.system.color.media.scrim
-        .withAlphaComponent(PKYOpacity.dimmed)
-
-    private var style = Style.neutral
+    private var fill = NSColor.clear
 
     private lazy var label: NSTextField = {
         let label = NSTextField(labelWithString: "")
@@ -49,9 +40,10 @@ final class BadgeView: NSView {
         updateColors()
     }
 
-    func show(_ text: String, style: Style) {
+    func show(_ text: String, fill: NSColor, textColor: NSColor = .white) {
         label.stringValue = text
-        self.style = style
+        self.fill = fill
+        label.textColor = textColor
         updateColors()
     }
 
@@ -61,17 +53,7 @@ final class BadgeView: NSView {
 
     private func updateColors() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            switch style {
-            case let .solid(color):
-                layer?.backgroundColor = color.cgColor
-                label.textColor = .white
-            case .neutral:
-                layer?.backgroundColor = NSColor.pkyContent(.quaternary).cgColor
-                label.textColor = .pkyContent(.secondary)
-            case .media:
-                layer?.backgroundColor = Self.mediaBackground.cgColor
-                label.textColor = PKYThemeFallback.system.color.media.content
-            }
+            layer?.backgroundColor = fill.cgColor
         }
     }
 }
