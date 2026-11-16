@@ -14,6 +14,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  SWIFTFORMAT_VERSION: 0.62.1
+  SWIFTFORMAT_SHA256: 7cb1cb1fae04932047c7015441c543848e8e60e1572d808d080e0a1f1661114a
+
 jobs:
   check:
     name: Lint, test and build
@@ -28,6 +32,17 @@ jobs:
           sudo xcode-select -s "${newest:-/Applications/Xcode.app}"
           xcodebuild -version
           swift --version
+
+      - name: Install SwiftFormat ${{ env.SWIFTFORMAT_VERSION }}
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/swiftformat.zip" \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/$SWIFTFORMAT_VERSION/swiftformat.zip"
+          echo "$SWIFTFORMAT_SHA256  $RUNNER_TEMP/swiftformat.zip" | shasum -a 256 -c -
+          mkdir -p "$RUNNER_TEMP/bin"
+          unzip -o -q "$RUNNER_TEMP/swiftformat.zip" -d "$RUNNER_TEMP/bin"
+          chmod +x "$RUNNER_TEMP/bin/swiftformat"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          test "$("$RUNNER_TEMP/bin/swiftformat" --version)" = "$SWIFTFORMAT_VERSION"
 
       - name: Lint
         run: ./scripts/lint.sh
