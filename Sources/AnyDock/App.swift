@@ -53,9 +53,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             return
         }
         configuration = current
-
-        // Start http servers
-
         tray.openSettings = { [weak self] in self?.showSettings() }
         tray.openFolder = { [weak self] in self?.openFolder() }
         tray.didFinishDragging = { [weak self] in self?.popover.performClose(nil) }
