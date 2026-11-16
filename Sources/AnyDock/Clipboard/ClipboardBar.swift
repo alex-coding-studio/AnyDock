@@ -3,14 +3,19 @@ import AppKit
 
 @MainActor
 final class ClipboardBar: NSView {
-    static let collapsedHeight = Space.s8 + 24 + Space.s8
-    static let expandedHeight = collapsedHeight + 52 + Space.s8
+    static let collapsedHeight = Space.s8 + headerHeight + Space.s8
+    static let expandedHeight = collapsedHeight + cellRowHeight + Space.s8
+
+    private static let headerHeight: CGFloat = 24
+    private static let cellRowHeight: CGFloat = 52
 
     var onClear: (() -> Void)?
     var onCopy: ((ClipboardClip) -> Void)?
     var onExpandedChange: ((Bool) -> Void)?
+
     private(set) var isExpanded = false
     private(set) var clips = [ClipboardClip]()
+
     let title = NSTextField(labelWithString: "")
     let clearButton = NSButton()
     let chevron = NSButton()
@@ -62,11 +67,11 @@ final class ClipboardBar: NSView {
         NSLayoutConstraint.activate([
             height,
             header.topAnchor.constraint(equalTo: topAnchor, constant: Space.s8),
-            header.heightAnchor.constraint(equalToConstant: 24),
+            header.heightAnchor.constraint(equalToConstant: Self.headerHeight),
             header.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
             header.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
             cellRow.topAnchor.constraint(equalTo: header.bottomAnchor, constant: Space.s8),
-            cellRow.heightAnchor.constraint(equalToConstant: 52),
+            cellRow.heightAnchor.constraint(equalToConstant: Self.cellRowHeight),
             cellRow.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
             cellRow.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
         ])

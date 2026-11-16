@@ -34,9 +34,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private let configurationStore = ConnectionConfigurationStore()
 
-    private let tray = ImageTrayController()
+    private lazy var tray = ImageTrayController(clipboard: clipboard)
     private let store = InboxStore()
-    private let clipboard = ClipboardMonitor()
+    private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
     private let hotKeys = HotKeyCenter()
     private var server: HTTPServer?
 
@@ -61,16 +61,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         }
         tray.loadItems = { [weak self] in try await self?.currentItems() ?? [] }
         tray.recycleItems = { [weak self] urls in try await self?.recycleItems(urls) }
-        tray.clearClips = { [weak self] in self?.clipboard.clear() }
-        tray.clipboardWillChange = { [weak self] in self?.clipboard.poll() }
-        tray.clipsCopied = { [weak self] in self?.clipboard.ignoreCurrentContents() }
-        clipboard.onChange = { [weak self] clips in self?.tray.replaceClips(clips) }
-        clipboard.setEnabled(Preferences.keepsClipboardHistory)
         let preferences = SettingsController(configuration: current)
         preferences.apply = { [weak self] next in try await self?.apply(next) }
-        preferences.clipboardHistoryChanged = { [weak self] enabled in
-            self?.clipboard.setEnabled(enabled)
-        }
         hotKeys.onPress = { [weak self] in self?.togglePopover() }
         preferences.registerHotKey = { [weak self] hotKey in self?.hotKeys.register(
             hotKey

@@ -14,7 +14,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     let hotKeyRecorder = HotKeyRecorder()
     let hotKeyStatus = NSTextField(wrappingLabelWithString: "")
     var apply: ((ConnectionConfiguration) async throws -> Void)?
-    var clipboardHistoryChanged: ((Bool) -> Void)?
     var registerHotKey: ((HotKey?) -> Bool)?
 
     private var configuration: ConnectionConfiguration
@@ -792,7 +791,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     @objc private func toggleClipboardHistory() {
         Preferences.keepsClipboardHistory = clipboardHistory.state == .on
-        clipboardHistoryChanged?(clipboardHistory.state == .on)
     }
 
     @objc private func copyConnectionAddress() {

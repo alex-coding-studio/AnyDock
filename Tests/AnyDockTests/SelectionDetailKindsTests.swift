@@ -64,7 +64,7 @@ func singleSelectionDetailIsVisibleForEveryKind(kind: String) throws {
             isPlainText: false
         )
     }
-    let tray = ImageTrayController()
+    let tray = makeTestTray()
     let window = NSWindow(
         contentRect: NSRect(x: 0, y: 0, width: 480, height: 640),
         styleMask: .borderless,

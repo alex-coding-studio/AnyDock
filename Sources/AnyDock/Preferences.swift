@@ -1,5 +1,6 @@
 // swiftformat:disable redundantRawValues
 
+import Combine
 import Foundation
 
 @MainActor
@@ -32,6 +33,19 @@ enum Preferences {
     static var wakeHotKey: HotKey? {
         get { HotKey(preference: defaults.object(forKey: Key.wakeHotKey.rawValue)) }
         set { defaults.set(newValue?.preference, forKey: Key.wakeHotKey.rawValue) }
+    }
+
+    nonisolated static var keepsClipboardHistoryChanges: AnyPublisher<Bool, Never> {
+        let read = { UserDefaults.standard.object(
+            forKey: Key.keepClipboardHistory.rawValue
+        ) as? Bool ?? true }
+        return NotificationCenter.default
+            .publisher(for: UserDefaults.didChangeNotification, object: UserDefaults.standard)
+            .receive(on: DispatchQueue.main)
+            .map { _ in read() }
+            .prepend(read())
+            .removeDuplicates()
+            .eraseToAnyPublisher()
     }
 
     private static var defaults: UserDefaults {
