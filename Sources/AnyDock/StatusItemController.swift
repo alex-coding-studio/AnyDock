@@ -4,7 +4,15 @@ import Combine
 @MainActor
 final class StatusItemController: NSObject {
     private let clickSubject = PassthroughSubject<Void, Never>()
-    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+
+    private lazy var statusItem: NSStatusItem = {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.button?.setAccessibilityLabel(L10n.text("AnyDock"))
+        item.button?.toolTip = L10n.text("AnyDock")
+        item.button?.target = self
+        item.button?.action = #selector(clicked)
+        return item
+    }()
 
     var clicks: AnyPublisher<Void, Never> {
         clickSubject.eraseToAnyPublisher()
@@ -16,10 +24,6 @@ final class StatusItemController: NSObject {
 
     override init() {
         super.init()
-        statusItem.button?.setAccessibilityLabel(L10n.text("AnyDock"))
-        statusItem.button?.toolTip = L10n.text("AnyDock")
-        statusItem.button?.target = self
-        statusItem.button?.action = #selector(clicked)
         showFailure(false)
     }
 

@@ -25,11 +25,21 @@ class TrayCardItem: NSCollectionViewItem {
         return [component]
     }
 
-    let card = ThumbnailView()
-    let badge = BadgeView()
-    let dot = LatestDot()
+    private(set) lazy var card: ThumbnailView = {
+        let card = ThumbnailView()
+        card.checkmark = check
+        return card
+    }()
 
-    override func loadView() {
+    private(set) lazy var badge: BadgeView = {
+        let badge = BadgeView()
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        return badge
+    }()
+
+    private(set) lazy var dot = LatestDot()
+
+    private lazy var check: NSImageView = {
         let check = NSImageView(
             image: NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
                 ?? NSImage()
@@ -38,7 +48,10 @@ class TrayCardItem: NSCollectionViewItem {
             paletteColors: [.white, .controlAccentColor]
         )
         check.translatesAutoresizingMaskIntoConstraints = false
-        badge.translatesAutoresizingMaskIntoConstraints = false
+        return check
+    }()
+
+    override func loadView() {
         buildContent(in: card)
         card.addSubview(check)
         NSLayoutConstraint.activate([
@@ -47,7 +60,6 @@ class TrayCardItem: NSCollectionViewItem {
             check.widthAnchor.constraint(equalToConstant: Self.checkmarkSide),
             check.heightAnchor.constraint(equalToConstant: Self.checkmarkSide),
         ])
-        card.checkmark = check
         view = card
         updateSelection()
     }
@@ -95,27 +107,48 @@ final class ImageCardItem: TrayCardItem {
 
     private static let timeFontSize: CGFloat = 9
 
-    private let placeholder = PreviewArea()
-    private let preview = TopAlignedImageView()
-    private let time = NSTextField(labelWithString: "")
-
-    override func buildContent(in container: NSView) {
+    private lazy var placeholder: PreviewArea = {
+        let placeholder = PreviewArea()
         placeholder.wantsLayer = true
         placeholder.layer?.cornerRadius = TrayMetrics.cornerRadius
-        pin(placeholder, in: container, inset: 0)
+        return placeholder
+    }()
+
+    private lazy var preview: TopAlignedImageView = {
+        let preview = TopAlignedImageView()
         preview.wantsLayer = true
         preview.layer?.cornerRadius = TrayMetrics.cornerRadius
         preview.layer?.masksToBounds = true
-        pin(preview, in: container, inset: 0)
+        return preview
+    }()
+
+    private lazy var time: NSTextField = {
+        let time = NSTextField(labelWithString: "")
         time.font = .monospacedDigitSystemFont(ofSize: Self.timeFontSize, weight: .medium)
         time.textColor = .white
+        return time
+    }()
+
+    private lazy var timeRow: NSStackView = {
         let row = NSStackView(views: [dot, time])
         row.spacing = Space.s4
         row.edgeInsets = NSEdgeInsets(top: 0, left: Space.s4, bottom: 0, right: Space.s4)
+        row.translatesAutoresizingMaskIntoConstraints = false
+        return row
+    }()
+
+    private lazy var timeCapsule: BadgeView = {
         let capsule = BadgeView()
         capsule.show("", style: .media)
         capsule.translatesAutoresizingMaskIntoConstraints = false
-        row.translatesAutoresizingMaskIntoConstraints = false
+        return capsule
+    }()
+
+    override func buildContent(in container: NSView) {
+        pin(placeholder, in: container, inset: 0)
+        pin(preview, in: container, inset: 0)
+        let row = timeRow
+        let capsule = timeCapsule
         capsule.addSubview(row)
         container.addSubview(capsule)
         container.addSubview(badge)

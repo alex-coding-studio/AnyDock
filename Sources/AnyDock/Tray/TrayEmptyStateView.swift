@@ -41,10 +41,8 @@ final class TrayEmptyStateView: NSStackView {
     init(viewModel: TrayViewModel) {
         self.viewModel = viewModel
         super.init(frame: .zero)
+        configure()
         setViews([icon, title, detail], in: .center)
-        orientation = .vertical
-        alignment = .centerX
-        spacing = Self.itemSpacing
         NSLayoutConstraint.activate([
             icon.widthAnchor.constraint(equalToConstant: Self.iconSide),
             icon.heightAnchor.constraint(equalToConstant: Self.iconSide),
@@ -54,6 +52,13 @@ final class TrayEmptyStateView: NSStackView {
 
     required init?(coder _: NSCoder) {
         nil
+    }
+
+    private func configure() {
+        orientation = .vertical
+        alignment = .centerX
+        spacing = Self.itemSpacing
+        translatesAutoresizingMaskIntoConstraints = false
     }
 
     private func subscribeEvents() {

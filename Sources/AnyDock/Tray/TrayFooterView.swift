@@ -7,8 +7,8 @@ final class TrayFooterView: NSView {
     private static let releasePollInterval: TimeInterval = 1.0 / 60
     private static let primaryButtonMask = 1
 
-    let dropZone = TrayDropZone()
-    let clipboardBar = ClipboardBar()
+    private(set) lazy var dropZone = TrayDropZone()
+    private(set) lazy var clipboardBar = ClipboardBar()
 
     private(set) lazy var dropZoneSurface: NSView = {
         let surface = TrayGlass.surface(dropZone, cornerRadius: Self.dropZoneHeight / 2)
@@ -73,7 +73,6 @@ final class TrayFooterView: NSView {
             dropZoneSurface.topAnchor.constraint(equalTo: topAnchor),
         ])
         subscribeEvents()
-        updateClipboardSurface()
     }
 
     required init?(coder _: NSCoder) {
