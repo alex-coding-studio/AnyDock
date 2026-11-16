@@ -25,14 +25,24 @@ enum SettingsControls {
     }
 
     static func style(_ button: NSButton, role: Role) {
+        button.bezelStyle = .push
+        button.isBordered = true
         button.controlSize = .regular
-        if #available(macOS 26, *) {
-            button.bezelStyle = .glass
-            button.borderShape = .capsule
-            button.tintProminence = role == .primary ? .primary : .none
-        } else {
-            button.bezelStyle = .push
-            button.bezelColor = role == .primary ? .pkyAccent(.primary) : nil
+        if role == .primary {
+            button.bezelColor = .pkyAccent(.primary)
+            if #available(macOS 26, *) {
+                button.tintProminence = .primary
+            }
+            button.image = button.image?.withSymbolConfiguration(
+                .init(paletteColors: [.pkyOnAccent])
+            )
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.alignment = .center
+            button.attributedTitle = NSAttributedString(string: button.title, attributes: [
+                .foregroundColor: NSColor.pkyOnAccent,
+                .font: button.font ?? PKYTypographyRole.body.nsFont(in: PKYThemeFallback.system),
+                .paragraphStyle: paragraph,
+            ])
         }
         button.setContentHuggingPriority(.required, for: .horizontal)
         button.setContentCompressionResistancePriority(.required, for: .horizontal)

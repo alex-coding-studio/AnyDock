@@ -25,7 +25,7 @@ final class SettingsCard: NSView {
         layer?.cornerCurve = .continuous
         layer?.borderWidth = PKYShape.Stroke.standard
         stack.orientation = .vertical
-        stack.alignment = .trailing
+        stack.alignment = .centerX
         stack.spacing = 0
         addSubview(stack)
         stack.snp.makeConstraints { $0.edges.equalToSuperview() }
@@ -35,7 +35,7 @@ final class SettingsCard: NSView {
                 separator.boxType = .separator
                 stack.addArrangedSubview(separator)
                 separator.snp.makeConstraints {
-                    $0.width.equalTo(stack).offset(-PKYLayout.Inset.row.horizontal())
+                    $0.width.equalTo(stack).offset(-2 * PKYLayout.Inset.row.horizontal())
                 }
                 separators[ObjectIdentifier(row)] = separator
             }

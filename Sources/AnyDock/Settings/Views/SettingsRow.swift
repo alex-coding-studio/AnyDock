@@ -26,9 +26,12 @@ final class SettingsRow: NSView {
         leading.spacing = PKYLayout.Gap.content()
         leading.distribution = .fill
         leading.setClippingResistancePriority(.defaultLow, for: .horizontal)
-        for accessory in accessories
-            where accessory.contentCompressionResistancePriority(for: .horizontal) > .defaultLow {
-            accessory.setContentCompressionResistancePriority(.required, for: .horizontal)
+        leading.setHuggingPriority(.fittingSizeCompression, for: .horizontal)
+        for accessory in accessories {
+            accessory.setContentHuggingPriority(.required, for: .horizontal)
+            if accessory.contentCompressionResistancePriority(for: .horizontal) > .defaultLow {
+                accessory.setContentCompressionResistancePriority(.required, for: .horizontal)
+            }
         }
         let controls = NSStackView(views: accessories)
         controls.orientation = .horizontal

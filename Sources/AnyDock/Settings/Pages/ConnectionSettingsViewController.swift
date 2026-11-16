@@ -61,6 +61,7 @@ final class ConnectionSettingsViewController: NSViewController, NSTextFieldDeleg
         send.keyEquivalent = "\r"
         let form = NSStackView(views: [shortcutName, send])
         form.orientation = .horizontal
+        form.alignment = .centerY
         form.spacing = PKYLayout.Gap.content()
         let description = SettingsLabel.make(
             L10n.text("settings.oneStep.description"),

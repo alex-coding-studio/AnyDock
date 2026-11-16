@@ -54,6 +54,7 @@ final class GeneralSettingsViewController: NSViewController {
             language.setLabel(Self.title(of: option), forSegment: index)
         }
         language.trackingMode = .selectOne
+        language.segmentDistribution = .fit
         language.target = self
         language.action = #selector(changeLanguage)
         language.setAccessibilityLabel(L10n.text("Language"))
