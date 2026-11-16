@@ -61,36 +61,6 @@
   },
   {
     "violation": {
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "file": "Sources/AnyDock/ClipboardBar.swift",
-        "character": 44,
-        "line": 65
-      },
-      "reason": "Use a local Metrics role"
-    },
-    "text": "            header.heightAnchor.constraint(equalToConstant: 24),"
-  },
-  {
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "location": {
-        "file": "Sources/AnyDock/ClipboardBar.swift",
-        "character": 45,
-        "line": 69
-      },
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error"
-    },
-    "text": "            cellRow.heightAnchor.constraint(equalToConstant: 52),"
-  },
-  {
-    "violation": {
       "location": {
         "file": "Sources/AnyDock/ImageTrayController.swift",
         "character": 56,

@@ -21,10 +21,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     var openFolder: (() -> Void)?
     var openSettings: (() -> Void)?
     var didFinishDragging: (() -> Void)?
-    var clearClips: (() -> Void)?
-    var clipboardWillChange: (() -> Void)?
-    var clipsCopied: (() -> Void)?
 
+    private let clipboard: ClipboardMonitor
+    private var subscriptions = Set<AnyCancellable>()
     private let layout = MasonryCollectionLayout()
     private let scroll = NSScrollView()
     private let timeFormatter = DateFormatter()
@@ -55,6 +54,16 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         collection.selectionIndexPaths.sorted { $0.item < $1.item }.compactMap {
             entries.indices.contains($0.item) ? entries[$0.item] : nil
         }
+    }
+
+    init(clipboard: ClipboardMonitor) {
+        self.clipboard = clipboard
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 
     override func loadView() {
@@ -350,9 +359,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
 
     func copyToPasteboard(_ item: ReceivedItem) {
         let entry = cache[item.url] ?? TrayEntry(item: item)
-        clipboardWillChange?()
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.writeObjects([pasteboardItem(for: entry)])
+        clipboard.write(recordingInHistory: true) { $0.writeObjects([pasteboardItem(for: entry)]) }
     }
 
     func previewPanel(_ panel: QLPreviewPanel!, handle event: NSEvent!) -> Bool {
@@ -516,7 +523,10 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     }
 
     private func configureClipboardBar(in content: NSView) {
-        clipboardBar.onClear = { [weak self] in self?.clearClips?() }
+        clipboardBar.onClear = { [weak self] in self?.clipboard.clear() }
+        clipboard.clipsPublisher
+            .sink { [weak self] in self?.replaceClips($0) }
+            .store(in: &subscriptions)
         clipboardBar.onCopy = { [weak self] clip in self?.copyClip(clip) }
         clipboardBar.onExpandedChange = { [weak self] _ in self?.updateClipboardSurface() }
         let surface = glassSurface(clipboardBar, cornerRadius: ClipboardBar.collapsedHeight / 2)
@@ -556,10 +566,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     }
 
     private func copyClip(_ clip: ClipboardClip) {
-        clipboardWillChange?()
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(clip.text, forType: .string)
-        clipsCopied?()
+        clipboard.write(recordingInHistory: false) { $0.setString(clip.text, forType: .string) }
     }
 
     private func configureEmptyState(in content: NSView) {
@@ -819,9 +826,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         guard !selected.isEmpty else {
             return
         }
-        clipboardWillChange?()
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.writeObjects(selected.map(pasteboardItem(for:)))
+        clipboard.write(recordingInHistory: true) { $0.writeObjects(
+            selected.map(pasteboardItem(for:))
+        ) }
     }
 
     private func revealSelection() {
