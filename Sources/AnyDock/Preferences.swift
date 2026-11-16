@@ -2,6 +2,7 @@
 
 import Combine
 import Foundation
+import PockyFoundation
 
 @MainActor
 enum Preferences {
@@ -12,6 +13,8 @@ enum Preferences {
         case wakeHotKey = "wakeHotKey"
     }
 
+    static let appearance = PKYAppearance(key: Key.appearance.rawValue)
+
     static var copiesNewItems: Bool {
         get { defaults.bool(forKey: Key.copyNewItems.rawValue) }
         set { defaults.set(newValue, forKey: Key.copyNewItems.rawValue) }
@@ -20,14 +23,6 @@ enum Preferences {
     static var keepsClipboardHistory: Bool {
         get { defaults.object(forKey: Key.keepClipboardHistory.rawValue) as? Bool ?? true }
         set { defaults.set(newValue, forKey: Key.keepClipboardHistory.rawValue) }
-    }
-
-    static var appearance: AppAppearance {
-        get {
-            AppAppearance(rawValue: defaults.string(forKey: Key.appearance.rawValue) ?? "")
-                ?? .system
-        }
-        set { defaults.set(newValue.rawValue, forKey: Key.appearance.rawValue) }
     }
 
     static var wakeHotKey: KeyCombination? {

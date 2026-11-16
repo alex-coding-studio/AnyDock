@@ -10,14 +10,16 @@ final class BadgeView: NSView {
         case media
     }
 
-    private static let fontSize = NSFont.smallSystemFontSize - 2
-    private static let mediaBackground = NSColor(white: 0, alpha: PKYOpacity.dimmed)
+    private static let mediaBackground = PKYThemeFallback.system.color.media.scrim
+        .withAlphaComponent(PKYOpacity.dimmed)
 
     private var style = Style.neutral
 
     private lazy var label: NSTextField = {
         let label = NSTextField(labelWithString: "")
-        label.font = .systemFont(ofSize: Self.fontSize, weight: .semibold)
+        label.font = PKYTypographyRole.caption.semibold
+            .withReferenceSize(TrayMetrics.denseBadgeFontSize)
+            .nsFont(in: PKYThemeFallback.system)
         return label
     }()
 
@@ -68,7 +70,7 @@ final class BadgeView: NSView {
                 label.textColor = .secondaryLabelColor
             case .media:
                 layer?.backgroundColor = Self.mediaBackground.cgColor
-                label.textColor = .white
+                label.textColor = PKYThemeFallback.system.color.media.content
             }
         }
     }
@@ -99,7 +101,7 @@ final class LatestDot: NSView {
 
     private func updateColors() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            layer?.backgroundColor = NSColor.controlAccentColor.cgColor
+            layer?.backgroundColor = NSColor.pkyAccent(.primary).cgColor
         }
     }
 }
@@ -116,7 +118,7 @@ final class PreviewArea: NSView {
     }
 
     override func updateLayer() {
-        layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
+        layer?.backgroundColor = PKYThemeFallback.system.color.media.placeholder.cgColor
     }
 }
 
@@ -193,7 +195,7 @@ final class ThumbnailView: NSView {
             layer?.borderWidth =
                 selected ? PKYShape.Stroke.strong : (polaroid ? PKYShape.Stroke.standard : 0)
             layer?.borderColor =
-                (selected ? NSColor.controlAccentColor : NSColor.separatorColor).cgColor
+                (selected ? NSColor.pkyAccent(.primary) : NSColor.separatorColor).cgColor
             layer?.pkyApplyElevation(
                 polaroid ? .subtle : .none,
                 color: CGColor.black,

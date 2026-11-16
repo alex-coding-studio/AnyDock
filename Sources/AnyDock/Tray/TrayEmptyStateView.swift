@@ -22,7 +22,7 @@ final class TrayEmptyStateView: NSStackView {
 
     private lazy var title: NSTextField = {
         let title = NSTextField(labelWithString: L10n.text("Nothing received yet"))
-        title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
+        title.font = PKYTypographyRole.heading.nsFont(in: PKYThemeFallback.system)
         return title
     }()
 
@@ -32,7 +32,7 @@ final class TrayEmptyStateView: NSStackView {
                 "Share content on your iPhone and choose your Mac’s shortcut."
             )
         )
-        detail.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        detail.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
         detail.textColor = .secondaryLabelColor
         detail.alignment = .center
         return detail

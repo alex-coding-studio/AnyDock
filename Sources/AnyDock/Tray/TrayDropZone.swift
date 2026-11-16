@@ -61,7 +61,9 @@ final class TrayDropZone: NSView {
     }
 
     override func updateLayer() {
-        layer?.backgroundColor = isTargeted ? NSColor.systemRed.cgColor : NSColor.clear.cgColor
+        layer?.backgroundColor = isTargeted ? NSColor.pkyStatus(
+            .destructive
+        ).cgColor : NSColor.clear.cgColor
     }
 
     override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
@@ -114,12 +116,12 @@ final class TrayDropZone: NSView {
     }
 
     private func refresh() {
-        let font = NSFont.monospacedDigitSystemFont(
-            ofSize: NSFont.smallSystemFontSize,
-            weight: isTargeted ? .semibold : .medium
-        )
+        let role = isTargeted ? PKYTypographyRole.supporting.semibold : PKYTypographyRole.supporting.medium
+        let font = role.monospacedDigits.nsFont(in: PKYThemeFallback.system)
         for field in [label, suffix] {
-            field.textColor = isTargeted ? .white : isArmed ? .systemRed : .labelColor
+            field.textColor = isTargeted ? .pkyOnStatus(.destructive) : isArmed ? .pkyStatus(
+                .destructive
+            ) : .labelColor
             field.font = font
         }
         needsDisplay = true

@@ -43,7 +43,7 @@ class TrayCardItem: NSCollectionViewItem {
                 ?? NSImage()
         )
         check.symbolConfiguration = NSImage.SymbolConfiguration(
-            paletteColors: [.white, .controlAccentColor]
+            paletteColors: [NSColor.pkyOnAccent, NSColor.pkyAccent(.primary)]
         )
         return check
     }()
@@ -91,8 +91,6 @@ class TrayCardItem: NSCollectionViewItem {
 
 @MainActor
 final class ImageCardItem: TrayCardItem {
-    private static let timeFontSize: CGFloat = 9
-
     private lazy var placeholder: PreviewArea = {
         let placeholder = PreviewArea()
         placeholder.wantsLayer = true
@@ -110,8 +108,10 @@ final class ImageCardItem: TrayCardItem {
 
     private lazy var time: NSTextField = {
         let time = NSTextField(labelWithString: "")
-        time.font = .monospacedDigitSystemFont(ofSize: Self.timeFontSize, weight: .medium)
-        time.textColor = .white
+        time.font = PKYTypographyRole.caption.medium.monospacedDigits
+            .withReferenceSize(TrayMetrics.denseBadgeFontSize)
+            .nsFont(in: PKYThemeFallback.system)
+        time.textColor = PKYThemeFallback.system.color.media.content
         return time
     }()
 

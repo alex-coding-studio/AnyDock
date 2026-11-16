@@ -18,7 +18,7 @@ final class ClipboardBar: NSView {
 
     private(set) lazy var title: NSTextField = {
         let title = NSTextField(labelWithString: "")
-        title.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+        title.font = PKYTypographyRole.supporting.semibold.nsFont(in: PKYThemeFallback.system)
         title.textColor = .secondaryLabelColor
         title.lineBreakMode = .byTruncatingTail
         title.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)

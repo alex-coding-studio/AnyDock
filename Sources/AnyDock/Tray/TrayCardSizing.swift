@@ -12,12 +12,18 @@ final class TrayCardSizing {
         let singleColumn: Bool
     }
 
-    static let bodyFont = NSFont.systemFont(ofSize: 12)
-    static let domainFont = NSFont.systemFont(ofSize: 13, weight: .bold)
-    static let addressFont = NSFont.systemFont(ofSize: 11)
-    static let fileLinesFont = NSFont.monospacedSystemFont(ofSize: 9, weight: .regular)
-    static let captionFont = NSFont.systemFont(ofSize: 11, weight: .medium)
-    static let timeFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+    static let bodyFont = PKYTypographyRole.body.withReferenceSize(TrayMetrics.cardBodyFontSize)
+        .nsFont(in: PKYThemeFallback.system)
+    static let domainFont = PKYTypographyRole.heading.bold.nsFont(in: PKYThemeFallback.system)
+    static let addressFont = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
+    static let fileLinesFont = NSFont.monospacedSystemFont(
+        ofSize: TrayMetrics.fileLinesFontSize,
+        weight: .regular
+    )
+    static let captionFont = PKYTypographyRole.supporting.medium.nsFont(in: PKYThemeFallback.system)
+    static let timeFont = PKYTypographyRole.caption.monospacedDigits.nsFont(
+        in: PKYThemeFallback.system
+    )
     static let badgeClearance = TrayMetrics.badgeHeight + PKYLayout.Gap.content(.compact) * 2
 
     private static let squareRatio: CGFloat = 1

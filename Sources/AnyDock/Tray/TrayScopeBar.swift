@@ -341,7 +341,7 @@ private final class ScopeSegmentButton: NSButton {
         attributedTitle = NSAttributedString(
             string: plainTitle,
             attributes: [
-                .font: NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: .semibold),
+                .font: PKYTypographyRole.action.nsFont(in: PKYThemeFallback.system),
                 .foregroundColor: isChosen ? NSColor.labelColor : NSColor.secondaryLabelColor,
             ]
         )

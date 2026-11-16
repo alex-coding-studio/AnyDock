@@ -156,8 +156,8 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     func setStatus(_ text: String, isError: Bool) {
         receiverStatus.stringValue = text
-        receiverStatus.textColor = isError ? .systemRed : .labelColor
-        statusIcon.contentTintColor = isError ? .systemRed : .systemGreen
+        receiverStatus.textColor = isError ? .pkyStatus(.destructive) : .labelColor
+        statusIcon.contentTintColor = isError ? .pkyStatus(.destructive) : .pkyStatus(.success)
         statusIcon.image = NSImage(
             systemSymbolName: isError ? "exclamationmark.circle.fill" : "circle.fill",
             accessibilityDescription: isError ? L10n.text("Receiver Failed") : L10n.text(
@@ -270,7 +270,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             L10n.text("Light"),
             L10n.text("Dark"),
         ])
-        appearance.selectItem(at: AppAppearance.allCases.firstIndex(of: .current) ?? 0)
+        appearance.selectItem(
+            at: PKYAppearance.Mode.allCases.firstIndex(of: Preferences.appearance.storedMode()) ?? 0
+        )
         appearance.target = self
         appearance.action = #selector(changeAppearance)
         appearance.setAccessibilityLabel(L10n.text("Appearance"))
@@ -283,7 +285,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         language.target = self
         language.action = #selector(changeLanguage)
         language.setAccessibilityLabel(L10n.text("Language"))
-        languageNotice.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        languageNotice.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
         languageNotice.textColor = .secondaryLabelColor
         languageNotice.isHidden = true
         languageNotice.setContentCompressionResistancePriority(.required, for: .vertical)
@@ -347,7 +349,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.snp.makeConstraints { $0.size.equalTo(Metrics.aboutIconSide) }
         let name = NSTextField(labelWithString: L10n.text("AnyDock"))
-        name.font = .systemFont(ofSize: NSFont.systemFontSize + 7, weight: .semibold)
+        name.font = PKYTypographyRole.pageTitle.semibold.nsFont(in: PKYThemeFallback.system)
         let version = footnote(Self.versionText(bundle: .main) ?? "")
         version.isHidden = version.stringValue.isEmpty
         version.isSelectable = true
@@ -404,15 +406,18 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         address.isSelectable = true
         address.maximumNumberOfLines = 2
         address.lineBreakMode = .byCharWrapping
-        address.font = .monospacedSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+        let detailFontSize = PKYTypographyRole.supporting.nsFont(
+            in: PKYThemeFallback.system
+        ).pointSize
+        address.font = .monospacedSystemFont(ofSize: detailFontSize, weight: .regular)
         refreshAddress()
         let key = NSTextField(labelWithString: "•••• •••• •••• ••••")
-        key.font = .monospacedSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+        key.font = .monospacedSystemFont(ofSize: detailFontSize, weight: .regular)
         key.textColor = .secondaryLabelColor
         send.target = self
         send.action = #selector(sendToPhone)
         send.bezelStyle = .rounded
-        send.bezelColor = .controlAccentColor
+        send.bezelColor = .pkyAccent(.primary)
         configureMessage(connectionStatus)
         configureMessage(shortcutNameStatus)
         shortcutName.delegate = self
@@ -462,7 +467,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         port.stringValue = String(inbox.configuration.receiver.port)
         port.placeholderString = String(ConnectionConfiguration.Receiver.defaultPort)
         port.alignment = .right
-        port.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        port.font = PKYTypographyRole.body.monospacedDigits.nsFont(in: PKYThemeFallback.system)
         port.snp.makeConstraints { $0.width.equalTo(Metrics.portWidth) }
         port.delegate = self
         port.setAccessibilityLabel(L10n.text("Listening port"))
@@ -472,7 +477,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             $0.height.greaterThanOrEqualTo(Metrics.statusRowMinimumHeight)
         }
         configureMessage(receivingError)
-        pending.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        pending.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
         pending.textColor = .secondaryLabelColor
         save.target = self
         save.action = #selector(saveSettings)
@@ -601,22 +606,22 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     private func footnote(_ text: String) -> NSTextField {
         let label = NSTextField(wrappingLabelWithString: text)
-        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        label.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
         label.textColor = .secondaryLabelColor
         label.setContentCompressionResistancePriority(.required, for: .vertical)
         return label
     }
 
     private func configureMessage(_ label: NSTextField) {
-        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        label.textColor = .systemRed
+        label.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
+        label.textColor = .pkyStatus(.destructive)
         label.isHidden = true
         label.setContentCompressionResistancePriority(.required, for: .vertical)
     }
 
     private func section(_ title: String, rows: [NSView], note: String? = nil) -> NSStackView {
         let label = NSTextField(labelWithString: title)
-        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+        label.font = PKYTypographyRole.supporting.semibold.nsFont(in: PKYThemeFallback.system)
         label.textColor = .secondaryLabelColor
         let stack = NSStackView(
             views: [label, group(rows: rows)] + (note.map { [footnote($0)] } ?? [])
@@ -679,7 +684,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             send.isEnabled = !isSending && !inbox.configuration.receiver.token.isEmpty
         } catch {
             shortcutNameStatus.stringValue = error.localizedDescription
-            shortcutNameStatus.textColor = .systemRed
+            shortcutNameStatus.textColor = .pkyStatus(.destructive)
             shortcutNameStatus.isHidden = false
             send.isEnabled = false
         }
@@ -742,12 +747,12 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     @objc private func changeAppearance() {
         let index = appearance.indexOfSelectedItem
-        guard AppAppearance.allCases.indices.contains(index) else {
+        guard PKYAppearance.Mode.allCases.indices.contains(index) else {
             return
         }
-        let selected = AppAppearance.allCases[index]
-        Preferences.appearance = selected
-        selected.apply()
+        let selected = PKYAppearance.Mode.allCases[index]
+        Preferences.appearance.save(selected)
+        NSApp.appearance = selected.nsAppearance
     }
 
     @objc private func changeLanguage() {
@@ -854,7 +859,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     private func showConnectionMessage(_ text: String, isError: Bool = true) {
         connectionStatus.stringValue = text
-        connectionStatus.textColor = isError ? .systemRed : .secondaryLabelColor
+        connectionStatus.textColor = isError ? .pkyStatus(.destructive) : .secondaryLabelColor
         connectionStatus.isHidden = false
     }
 
