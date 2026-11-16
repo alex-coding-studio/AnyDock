@@ -18,9 +18,7 @@ final class TrayCardSizing {
     static let fileLinesFont = NSFont.monospacedSystemFont(ofSize: 9, weight: .regular)
     static let captionFont = NSFont.systemFont(ofSize: 11, weight: .medium)
     static let timeFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
-    static let textTop = PKYLayout.Space.s24
-    static let textInset = PKYLayout.Space.s8
-    static let lineGap = PKYLayout.Space.s4
+    static let badgeClearance = TrayMetrics.badgeHeight + PKYLayout.Gap.content(.compact) * 2
 
     private static let squareRatio: CGFloat = 1
     private static let documentCardRatio: CGFloat = 1.4
@@ -32,7 +30,7 @@ final class TrayCardSizing {
     private var heights = [Key: CGFloat]()
 
     private static func textBlock(_ content: CGFloat) -> CGFloat {
-        textTop + content + textInset
+        badgeClearance + content + PKYLayout.Inset.container(.compact)
     }
 
     private static func lineHeight(_ font: NSFont) -> CGFloat {
@@ -88,12 +86,13 @@ final class TrayCardSizing {
         }
         let caption = entry.kind == .file ? Self.captionFont : Self.timeFont
         let strip = max(Self.lineHeight(caption), PKYLayout.Size.dot(.compact))
-        let height = PKYLayout.Inset.container(.compact) * 2 + preview + Self.lineGap + strip
+        let height = PKYLayout.Inset.container(.compact) * 2
+            + preview + PKYLayout.Gap.content(.compact) + strip
         return min(height, maximum)
     }
 
     private func previewHeight(of entry: TrayEntry, width: CGFloat) -> CGFloat? {
-        let textWidth = width - Self.textInset * 2
+        let textWidth = width - PKYLayout.Inset.container(.compact) * 2
         switch entry.kind {
         case .image:
             return nil
@@ -110,7 +109,7 @@ final class TrayCardSizing {
                 font: Self.addressFont,
                 width: textWidth
             )
-            return Self.textBlock(domain + Self.lineGap + address)
+            return Self.textBlock(domain + PKYLayout.Gap.content(.compact) + address)
         case .file:
             if entry.item.isPlainText {
                 return Self.textBlock(

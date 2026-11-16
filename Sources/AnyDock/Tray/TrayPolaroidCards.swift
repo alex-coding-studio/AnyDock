@@ -1,5 +1,6 @@
 import AppKit
 import PockyFoundation
+import SnapKit
 
 @MainActor
 class PolaroidCardItem: TrayCardItem {
@@ -23,38 +24,28 @@ class PolaroidCardItem: TrayCardItem {
 
     private lazy var strip: NSStackView = {
         let strip = NSStackView(views: [dot, caption])
-        strip.spacing = PKYLayout.Space.s4
+        strip.spacing = PKYLayout.Gap.content(.compact)
         strip.setHuggingPriority(.defaultHigh, for: .vertical)
         return strip
     }()
 
     override func buildContent(in container: NSView) {
-        pin(previewArea, in: container, inset: PKYLayout.Inset.container(.compact))
-        pin(strip, in: container, inset: PKYLayout.Inset.container(.compact))
+        container.addSubview(previewArea)
+        container.addSubview(strip)
         previewArea.addSubview(badge)
         buildPreview(in: previewArea)
-        NSLayoutConstraint.activate([
-            previewArea.topAnchor.constraint(
-                equalTo: container.topAnchor,
-                constant: PKYLayout.Inset.container(.compact)
-            ),
-            previewArea.bottomAnchor.constraint(
-                equalTo: strip.topAnchor,
-                constant: -TrayCardSizing.lineGap
-            ),
-            strip.bottomAnchor.constraint(
-                equalTo: container.bottomAnchor,
-                constant: -PKYLayout.Inset.container(.compact)
-            ),
-            badge.leadingAnchor.constraint(
-                equalTo: previewArea.leadingAnchor,
-                constant: PKYLayout.Space.s4
-            ),
-            badge.topAnchor.constraint(
-                equalTo: previewArea.topAnchor,
-                constant: PKYLayout.Space.s4
-            ),
-        ])
+        previewArea.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+                .inset(PKYLayout.Inset.container(.compact))
+            make.bottom.equalTo(strip.snp.top).offset(-PKYLayout.Gap.content(.compact))
+        }
+        strip.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalToSuperview()
+                .inset(PKYLayout.Inset.container(.compact))
+        }
+        badge.snp.makeConstraints {
+            $0.top.leading.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
+        }
     }
 
     override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
@@ -64,14 +55,6 @@ class PolaroidCardItem: TrayCardItem {
 
     func buildPreview(in _: NSView) {}
 
-    func fill(_ subview: NSView, in area: NSView, top: CGFloat) {
-        fill(subview, in: area, topAnchor: area.topAnchor, offset: top)
-    }
-
-    func fill(_ subview: NSView, in area: NSView, below anchor: NSView) {
-        fill(subview, in: area, topAnchor: anchor.bottomAnchor, offset: TrayCardSizing.lineGap)
-    }
-
     func showTime(_ time: String) {
         caption.font = TrayCardSizing.timeFont
         caption.textColor = .secondaryLabelColor
@@ -79,29 +62,20 @@ class PolaroidCardItem: TrayCardItem {
         caption.stringValue = time
     }
 
-    private func fill(
+    fileprivate func fill(
         _ subview: NSView,
         in area: NSView,
-        topAnchor: NSLayoutYAxisAnchor,
+        top target: ConstraintItem,
         offset: CGFloat
     ) {
-        subview.translatesAutoresizingMaskIntoConstraints = false
         area.addSubview(subview, positioned: .below, relativeTo: badge)
-        NSLayoutConstraint.activate([
-            subview.leadingAnchor.constraint(
-                equalTo: area.leadingAnchor,
-                constant: TrayCardSizing.textInset
-            ),
-            subview.trailingAnchor.constraint(
-                equalTo: area.trailingAnchor,
-                constant: -TrayCardSizing.textInset
-            ),
-            subview.topAnchor.constraint(equalTo: topAnchor, constant: offset),
-            subview.bottomAnchor.constraint(
-                lessThanOrEqualTo: area.bottomAnchor,
-                constant: -TrayCardSizing.textInset
-            ),
-        ])
+        subview.snp.makeConstraints { make in
+            make.directionalHorizontalEdges.equalToSuperview()
+                .inset(PKYLayout.Inset.container(.compact))
+            make.top.equalTo(target).offset(offset)
+            make.bottom.lessThanOrEqualToSuperview()
+                .inset(PKYLayout.Inset.container(.compact))
+        }
     }
 }
 
@@ -110,7 +84,7 @@ final class TextCardItem: PolaroidCardItem {
     lazy var body = label(font: TrayCardSizing.bodyFont, lines: 0)
 
     override func buildPreview(in area: NSView) {
-        fill(body, in: area, top: TrayCardSizing.textTop)
+        fill(body, in: area, top: area.snp.top, offset: TrayCardSizing.badgeClearance)
     }
 
     override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
@@ -135,8 +109,8 @@ final class LinkCardItem: PolaroidCardItem {
     }()
 
     override func buildPreview(in area: NSView) {
-        fill(domain, in: area, top: TrayCardSizing.textTop)
-        fill(address, in: area, below: domain)
+        fill(domain, in: area, top: area.snp.top, offset: TrayCardSizing.badgeClearance)
+        fill(address, in: area, top: domain.snp.bottom, offset: PKYLayout.Gap.content(.compact))
     }
 
     override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
@@ -154,7 +128,6 @@ final class FileCardItem: PolaroidCardItem {
         preview.imageScaling = .scaleProportionallyUpOrDown
         preview.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         preview.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
-        preview.translatesAutoresizingMaskIntoConstraints = false
         return preview
     }()
 
@@ -166,13 +139,8 @@ final class FileCardItem: PolaroidCardItem {
 
     override func buildPreview(in area: NSView) {
         area.addSubview(preview, positioned: .below, relativeTo: badge)
-        NSLayoutConstraint.activate([
-            preview.leadingAnchor.constraint(equalTo: area.leadingAnchor),
-            preview.trailingAnchor.constraint(equalTo: area.trailingAnchor),
-            preview.topAnchor.constraint(equalTo: area.topAnchor),
-            preview.bottomAnchor.constraint(equalTo: area.bottomAnchor),
-        ])
-        fill(lines, in: area, top: TrayCardSizing.textTop)
+        preview.snp.makeConstraints { $0.edges.equalToSuperview() }
+        fill(lines, in: area, top: area.snp.top, offset: TrayCardSizing.badgeClearance)
     }
 
     override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
