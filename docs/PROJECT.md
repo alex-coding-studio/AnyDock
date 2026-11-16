@@ -65,7 +65,7 @@ Language selection reads only the app's persistent preference domain, not inheri
 
 ## Build and run
 
-Use `./scripts/build.sh`, `./scripts/run.sh`, `./scripts/lint.sh` and `./scripts/test.sh`. Use a compatible Swift 6 compiler and an SDK containing the macOS 26 glass APIs; the development toolchain is Xcode 27.2 / Apple Swift 6.4.2. The selected Xcode compiler builds the Swift package and the build script creates and ad-hoc signs `dist/AnyDock.app`. Build products are disposable. No dependency installation is required. Keep the app bundle identifier `com.cuxiao.mac.anydock`.
+Use `./scripts/build.sh`, `./scripts/run.sh`, `./scripts/lint.sh` and `./scripts/test.sh`. Use a compatible Swift 6 compiler and an SDK containing the macOS 26 glass APIs; the development toolchain is Xcode 27.2 / Apple Swift 6.4.2. The selected Xcode compiler builds the Swift package and the build script creates and ad-hoc signs `dist/AnyDock.app`. Build products are disposable. The app needs no dependency installation; `lint.sh` needs SwiftFormat 0.62.1, the version CI pins and installs from its GitHub release binary. Formatting follows `.swiftformat` and `.swift-version`, copied from the owner's shared iOS rules. Keep the app bundle identifier `com.cuxiao.mac.anydock`.
 
 ## Release
 
