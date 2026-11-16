@@ -261,7 +261,8 @@ func listenerStatusMapping() {
     receiver.statusSubject.send(.failed("port busy"))
     subscription.cancel()
     #expect(statuses.map(\.tone) == [.pending, .listening, .failed])
-    #expect(statuses[1].summary == L10n.text("Listening · %d", 8766))
+    #expect(statuses[1].summary == L10n.text("Listening · %@", "8766"))
+    #expect(statuses[1].title.contains("8766"))
     #expect(statuses[2].summary == L10n.text("Receiver Failed"))
     #expect(statuses[2].detail == "port busy")
 }

@@ -54,14 +54,6 @@ enum SettingsLabel {
         return view
     }
 
-    static func button(_ title: String, target: AnyObject, action: Selector) -> NSButton {
-        let button = NSButton(title: title, target: target, action: action)
-        button.bezelStyle = .push
-        button.setContentHuggingPriority(.required, for: .horizontal)
-        button.setContentCompressionResistancePriority(.required, for: .horizontal)
-        return button
-    }
-
     static func noted(_ symbolName: String, _ text: String) -> NSStackView {
         let icon = symbol(symbolName, size: .accessory)
         let stack = NSStackView(views: [icon, footnote(text)])

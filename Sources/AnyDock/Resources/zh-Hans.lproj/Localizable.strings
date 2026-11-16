@@ -25,7 +25,7 @@
 "Launch at login" = "登录时自动启动";
 "Light" = "浅色";
 "Listening port" = "监听端口";
-"Listening · %d" = "监听中 · %d";
+"Listening · %@" = "监听中 · %@";
 "Manual Setup" = "手动设置";
 "Drop here to move to Trash" = "拖到这里放入废纸篓";
 "Move to Trash" = "移到废纸篓";
@@ -67,7 +67,7 @@
 "Unable to Read AnyDock Configuration" = "无法读取随手坞配置";
 "Unable to change the login item: %@" = "无法更改登录项：%@";
 "shortcut.signing.fileFailed" = "无法创建签名临时文件。";
-"Unable to listen on port %d: %@" = "端口 %d 无法监听：%@";
+"Unable to listen on port %@: %@" = "端口 %@ 无法监听：%@";
 "Unable to read the receive folder: %@" = "无法读取接收文件夹：%@";
 "shortcut.cleanup.failed" = "无法清理含密钥的临时文件：%@。请点击发送按钮重试清理。";
 "Unable to remove temporary shortcut files: %@" = "无法清理快捷指令临时文件：%@";
@@ -122,7 +122,7 @@
 "settings.receiving.subtitle" = "内容存到哪里，从哪个端口收";
 "Startup & Keyboard" = "启动与键盘";
 "settings.oneStep.description" = "把专属快捷指令隔空投送到 iPhone，打开即可添加，不用手动填写地址和密钥。";
-"Listening on port %d" = "正在监听端口 %d";
+"Listening on port %@" = "正在监听端口 %@";
 "settings.receiving.listening.detail" = "iPhone 发来的内容会直接存进下面的文件夹。";
 "Sorted by type" = "按类型分入";
 "settings.port.range" = "1024–65535";

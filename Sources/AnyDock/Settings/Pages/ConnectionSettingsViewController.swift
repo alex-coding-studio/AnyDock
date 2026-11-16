@@ -6,10 +6,16 @@ import SnapKit
 @MainActor
 final class ConnectionSettingsViewController: NSViewController, NSTextFieldDelegate {
     private let viewModel: ConnectionSettingsViewModel
-    private let shortcutName = NSTextField()
+    private let shortcutName = SettingsControls.textField()
     private let nameMessage = SettingsLabel.message()
     private let status = SettingsLabel.message()
-    private let send = NSButton()
+    private lazy var send = SettingsControls.button(
+        L10n.text("Send to iPhone…"),
+        symbol: "paperplane.fill",
+        role: .primary,
+        target: self,
+        action: #selector(sendToPhone)
+    )
     private let address = SettingsLabel.make()
     private var subscriptions = Set<AnyCancellable>()
 
@@ -52,14 +58,7 @@ final class ConnectionSettingsViewController: NSViewController, NSTextFieldDeleg
         shortcutName.setAccessibilityLabel(L10n.text("Shortcut name"))
         shortcutName.placeholderString = L10n.text("Shortcut name")
         shortcutName.snp.makeConstraints { $0.width.equalTo(SettingsMetrics.shortcutNameWidth) }
-        send.title = L10n.text("Send to iPhone…")
-        send.image = NSImage(systemSymbolName: "paperplane.fill", accessibilityDescription: nil)
-        send.imagePosition = .imageLeading
-        send.bezelStyle = .push
-        send.bezelColor = .pkyAccent(.primary)
         send.keyEquivalent = "\r"
-        send.target = self
-        send.action = #selector(sendToPhone)
         let form = NSStackView(views: [shortcutName, send])
         form.orientation = .horizontal
         form.spacing = PKYLayout.Gap.content()
@@ -111,13 +110,13 @@ final class ConnectionSettingsViewController: NSViewController, NSTextFieldDeleg
         address.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         let key = SettingsLabel.make("•••• •••• •••• ••••", color: .pkyContent(.secondary))
         key.font = monospaced
-        let copyAddress = SettingsLabel.button(
+        let copyAddress = SettingsControls.button(
             L10n.text("Copy"),
             target: self,
             action: #selector(copyAddress)
         )
         copyAddress.setAccessibilityLabel(L10n.text("Copy receive address"))
-        let copyKey = SettingsLabel.button(
+        let copyKey = SettingsControls.button(
             L10n.text("Copy"),
             target: self,
             action: #selector(copyKey)
@@ -128,7 +127,7 @@ final class ConnectionSettingsViewController: NSViewController, NSTextFieldDeleg
             SettingsRow(title: L10n.text("Connection key"), accessories: [key, copyKey]),
             SettingsRow(title: L10n.text("Generic shortcut"), accessories: [
                 SettingsLabel.make(L10n.text("Send to Mac"), color: .pkyContent(.secondary)),
-                SettingsLabel.button(
+                SettingsControls.button(
                     L10n.text("Export…"),
                     target: self,
                     action: #selector(exportShortcut)

@@ -15,6 +15,7 @@ final class CapsuleView: NSView {
         let content = NSStackView(views: views)
         content.orientation = .horizontal
         content.spacing = PKYLayout.Gap.content(.compact)
+        content.setHuggingPriority(.required, for: .horizontal)
         addSubview(content)
         content.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(

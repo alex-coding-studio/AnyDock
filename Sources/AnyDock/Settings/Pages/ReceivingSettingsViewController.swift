@@ -9,12 +9,36 @@ final class ReceivingSettingsViewController: NSViewController, NSTextFieldDelega
     private let viewModel: ReceivingSettingsViewModel
     private let banner = ListenerBanner()
     private let folderIcon = NSImageView()
-    private let folderName = SettingsLabel.make()
-    private let folderPath = SettingsLabel.make(font: .supporting, color: .pkyContent(.secondary))
-    private let port = NSTextField()
+    private let port = SettingsControls.textField()
     private let error = SettingsLabel.message()
-    private let revert = NSButton()
-    private let apply = NSButton()
+    private lazy var folderRow = SettingsRow(
+        icon: folderIcon,
+        title: "",
+        detail: "",
+        accessories: [
+            SettingsControls.button(
+                L10n.text("Show in Finder"),
+                target: self,
+                action: #selector(showInFinder)
+            ),
+            SettingsControls.button(
+                L10n.text("Change…"),
+                target: self,
+                action: #selector(chooseFolder)
+            ),
+        ]
+    )
+    private lazy var revert = SettingsControls.button(
+        L10n.text("Revert"),
+        target: self,
+        action: #selector(revertChanges)
+    )
+    private lazy var apply = SettingsControls.button(
+        L10n.text("Apply"),
+        role: .primary,
+        target: self,
+        action: #selector(applyChanges)
+    )
     private var page: SettingsPageView?
     private var subscriptions = Set<AnyCancellable>()
 
@@ -49,43 +73,17 @@ final class ReceivingSettingsViewController: NSViewController, NSTextFieldDelega
     private func folderSection() -> NSView {
         folderIcon.imageScaling = .scaleProportionallyUpOrDown
         folderIcon.snp.makeConstraints { $0.size.equalTo(SettingsMetrics.folderIconSide) }
-        folderPath.lineBreakMode = .byTruncatingMiddle
-        folderPath.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        folderName.lineBreakMode = .byTruncatingMiddle
-        folderName.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        let names = NSStackView(views: [folderName, folderPath])
-        names.orientation = .vertical
-        names.alignment = .leading
-        names.spacing = PKYLayout.Gap.content(.compact)
-        names.setHuggingPriority(.defaultLow, for: .horizontal)
-        let folder = NSStackView(views: [
-            folderIcon,
-            names,
-            SettingsLabel.button(
-                L10n.text("Show in Finder"),
-                target: self,
-                action: #selector(showInFinder)
-            ),
-            SettingsLabel.button(
-                L10n.text("Change…"),
-                target: self,
-                action: #selector(chooseFolder)
-            ),
-        ])
-        folder.orientation = .horizontal
-        folder.spacing = PKYLayout.Gap.content()
-        let chips = NSStackView(views: [
-            SettingsLabel.make(
-                L10n.text("Sorted by type"),
-                font: .supporting,
-                color: .pkyContent(.secondary)
-            ),
-        ] + ReceivedKind.allCases.map { CapsuleView(kind: $0) })
-        chips.orientation = .horizontal
-        chips.spacing = PKYLayout.Gap.content(.compact)
+        for label in [folderRow.titleLabel, folderRow.detailLabel] {
+            label.maximumNumberOfLines = 1
+            label.lineBreakMode = .byTruncatingMiddle
+        }
+        let chips = SettingsRow(
+            title: L10n.text("Sorted by type"),
+            accessories: ReceivedKind.allCases.map { CapsuleView(kind: $0) }
+        )
         return SettingsCard.titled(
             L10n.text("Save Location"),
-            card: SettingsCard(rows: [SettingsRow(content: folder), SettingsRow(content: chips)]),
+            card: SettingsCard(rows: [folderRow, chips]),
             footer: SettingsLabel.footnote(L10n.text("settings.folder.note"))
         )
     }
@@ -112,28 +110,17 @@ final class ReceivingSettingsViewController: NSViewController, NSTextFieldDelega
     }
 
     private func bottomBar() -> NSView {
-        revert.title = L10n.text("Revert")
-        revert.bezelStyle = .push
-        revert.target = self
-        revert.action = #selector(revertChanges)
-        apply.title = L10n.text("Apply")
-        apply.bezelStyle = .push
         apply.keyEquivalent = "\r"
-        apply.target = self
-        apply.action = #selector(applyChanges)
-        let content = NSStackView(views: [
-            SettingsLabel.symbol("circle.fill", size: .accessory, color: .pkyStatus(.warning)),
-            SettingsLabel.make(
-                L10n.text("Unapplied changes"),
-                font: .supporting,
-                color: .pkyContent(.secondary)
+        let content = SettingsRow(
+            icon: SettingsLabel.symbol(
+                "circle.fill",
+                size: .accessory,
+                color: .pkyStatus(.warning)
             ),
-            NSView(),
-            revert,
-            apply,
-        ])
-        content.orientation = .horizontal
-        content.spacing = PKYLayout.Gap.content()
+            title: L10n.text("Unapplied changes"),
+            accessories: [revert, apply]
+        )
+        content.titleLabel.textColor = .pkyContent(.secondary)
         let separator = NSBox()
         separator.boxType = .separator
         let bar = NSView()
@@ -141,8 +128,8 @@ final class ReceivingSettingsViewController: NSViewController, NSTextFieldDelega
         bar.addSubview(content)
         separator.snp.makeConstraints { $0.top.leading.trailing.equalToSuperview() }
         content.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(PKYLayout.Inset.page(.wide))
-            make.top.bottom.equalToSuperview().inset(PKYLayout.Inset.page())
+            make.leading.trailing.equalToSuperview().inset(PKYLayout.Inset.page())
+            make.top.bottom.equalToSuperview()
         }
         return bar
     }
@@ -150,9 +137,9 @@ final class ReceivingSettingsViewController: NSViewController, NSTextFieldDelega
     private func render(_ state: ReceivingSettingsState) {
         banner.status = state.status
         folderIcon.image = NSWorkspace.shared.icon(forFile: state.folder.path)
-        folderName.stringValue = state.folderName
-        folderPath.stringValue = state.folderPath
-        folderPath.toolTip = state.folder.path
+        folderRow.titleLabel.stringValue = state.folderName
+        folderRow.detailLabel.stringValue = state.folderPath
+        folderRow.detailLabel.toolTip = state.folder.path
         if port.stringValue != state.portText {
             port.stringValue = state.portText
         }

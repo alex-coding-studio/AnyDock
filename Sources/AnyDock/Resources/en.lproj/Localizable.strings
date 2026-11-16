@@ -25,7 +25,7 @@
 "Launch at login" = "Launch at login";
 "Light" = "Light";
 "Listening port" = "Listening port";
-"Listening · %d" = "Listening · %d";
+"Listening · %@" = "Listening · %@";
 "Manual Setup" = "Manual Setup";
 "Drop here to move to Trash" = "Drop here to move to Trash";
 "Move to Trash" = "Move to Trash";
@@ -67,7 +67,7 @@
 "Unable to Read AnyDock Configuration" = "Unable to Read AnyDock Configuration";
 "Unable to change the login item: %@" = "Unable to change the login item: %@";
 "shortcut.signing.fileFailed" = "Unable to create a temporary signing file.";
-"Unable to listen on port %d: %@" = "Unable to listen on port %d: %@";
+"Unable to listen on port %@: %@" = "Unable to listen on port %@: %@";
 "Unable to read the receive folder: %@" = "Unable to read the receive folder: %@";
 "shortcut.cleanup.failed" = "Unable to remove temporary files containing the key: %@. Click Send to retry cleanup.";
 "Unable to remove temporary shortcut files: %@" = "Unable to remove temporary shortcut files: %@";
@@ -122,7 +122,7 @@
 "settings.receiving.subtitle" = "Where content is saved and which port receives it";
 "Startup & Keyboard" = "Startup & Keyboard";
 "settings.oneStep.description" = "AirDrop a personal shortcut to your iPhone. Open it to add it; there is no address or key to enter.";
-"Listening on port %d" = "Listening on port %d";
+"Listening on port %@" = "Listening on port %@";
 "settings.receiving.listening.detail" = "Content from your iPhone is saved straight into the folder below.";
 "Sorted by type" = "Sorted by type";
 "settings.port.range" = "1024–65535";

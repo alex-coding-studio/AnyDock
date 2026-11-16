@@ -31,14 +31,16 @@ final class AboutSettingsViewController: NSViewController {
         let version = CapsuleView(views: [versionLabel])
         version.isHidden = about.version == nil
         let links = NSStackView(views: [
-            linkButton(
+            SettingsControls.button(
                 L10n.text("GitHub Project"),
                 symbol: "chevron.left.forwardslash.chevron.right",
+                target: self,
                 action: #selector(openRepository)
             ),
-            linkButton(
+            SettingsControls.button(
                 L10n.text("Author @Cunqi"),
                 symbol: "person.crop.circle",
+                target: self,
                 action: #selector(openAuthor)
             ),
         ])
@@ -50,19 +52,14 @@ final class AboutSettingsViewController: NSViewController {
         identity.spacing = PKYLayout.Gap.content()
         identity.setCustomSpacing(PKYLayout.Gap.group(), after: icon)
         identity.setCustomSpacing(PKYLayout.Gap.group(), after: version)
-        let quit = NSButton(
-            title: L10n.text("Quit AnyDock"),
+        let quit = SettingsControls.button(
+            L10n.text("Quit AnyDock"),
             target: NSApp,
             action: #selector(NSApplication.terminate(_:))
         )
-        quit.bezelStyle = .push
-        let copyright = SettingsLabel.make(
-            L10n.text("about.copyright"),
-            font: .supporting,
-            color: .pkyContent(.secondary)
-        )
-        let bottom = NSStackView(views: [copyright, NSView(), quit])
-        bottom.orientation = .horizontal
+        let bottom = SettingsRow(title: L10n.text("about.copyright"), accessories: [quit])
+        bottom.titleLabel.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
+        bottom.titleLabel.textColor = .pkyContent(.secondary)
         let separator = NSBox()
         separator.boxType = .separator
         let content = NSView(frame: NSRect(origin: .zero, size: SettingsMetrics.windowContentSize))
@@ -75,23 +72,15 @@ final class AboutSettingsViewController: NSViewController {
             make.leading.greaterThanOrEqualToSuperview().inset(PKYLayout.Inset.page(.wide))
         }
         bottom.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(PKYLayout.Inset.page(.wide))
-            make.bottom.equalToSuperview().inset(PKYLayout.Inset.page())
+            make.leading.trailing.equalToSuperview().inset(PKYLayout.Inset.page())
+            make.bottom.equalToSuperview()
             make.top.greaterThanOrEqualTo(identity.snp.bottom).offset(PKYLayout.Gap.section())
         }
         separator.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(bottom.snp.top).offset(-PKYLayout.Inset.page())
+            make.bottom.equalTo(bottom.snp.top)
         }
         view = content
-    }
-
-    private func linkButton(_ title: String, symbol: String, action: Selector) -> NSButton {
-        let button = SettingsLabel.button(title, target: self, action: action)
-        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-        button.imagePosition = .imageLeading
-        button.bezelStyle = .push
-        return button
     }
 
     @objc private func openRepository() {

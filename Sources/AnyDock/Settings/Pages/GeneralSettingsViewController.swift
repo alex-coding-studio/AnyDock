@@ -76,28 +76,24 @@ final class GeneralSettingsViewController: NSViewController {
         clearHotKey.setAccessibilityLabel(L10n.text("hotkey.clear.accessibility"))
         clearHotKey.target = self
         clearHotKey.action = #selector(clearSavedHotKey)
+        SettingsControls.style(hotKeyRecorder, role: .secondary)
     }
 
     private func appearanceSection() -> NSView {
-        let notice = NSStackView(views: [
-            SettingsLabel.symbol(
+        let restartRow = SettingsRow(
+            icon: SettingsLabel.symbol(
                 "arrow.clockwise.circle",
                 size: .control,
                 color: .pkyAccent(.primary)
             ),
-            SettingsLabel.make(
-                L10n.text("Restart AnyDock to apply the language change."),
-                wraps: true
-            ),
-            SettingsLabel.button(
+            title: L10n.text("Restart AnyDock to apply the language change."),
+            accessories: [SettingsControls.button(
                 L10n.text("Restart Now"),
+                role: .primary,
                 target: self,
                 action: #selector(restart)
-            ),
-        ])
-        notice.orientation = .horizontal
-        notice.spacing = PKYLayout.Gap.content()
-        let restartRow = SettingsRow(content: notice)
+            )]
+        )
         let card = SettingsCard(rows: [
             SettingsRow(content: appearancePicker),
             SettingsRow(title: L10n.text("Language"), accessories: [language]),
