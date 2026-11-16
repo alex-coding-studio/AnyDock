@@ -23,7 +23,7 @@ Read `ProjectContext.md` and `docs/PROJECT.md` before changing the project. Thes
 
 Run the project entry points from the project root:
 
-- `./scripts/lint.sh`: check SwiftFormat formatting, script syntax and bundle metadata. Formatting rules live in `.swiftformat` and `.swift-version`; the SwiftFormat version is pinned in `.github/workflows/ci.yml`. Use check mode while other contributors may be editing; `--fix` rewrites sources across the project.
+- `./scripts/lint.sh`: check SwiftFormat formatting, SwiftLint, script syntax and bundle metadata. Formatting rules live in `.swiftformat` and `.swift-version`, lint rules in `.swiftlint.yml`; both tool versions are pinned in `.github/workflows/ci.yml`. Existing SwiftLint violations are recorded in `.swiftlint-baseline.json`; new code must not add violations, and the baseline is never re-recorded to accept them. File and type line counts are not a lint gate; keep magic values in local Metrics roles such as `TrayMetrics`. Use check mode while other contributors may be editing; `--fix` rewrites sources across the project.
 - `./scripts/test.sh`: run Swift and shortcut checks.
 - `./scripts/build.sh`: build and ad-hoc sign `dist/AnyDock.app`.
 - `./scripts/run.sh`: build and open the app when an app launch is requested.
