@@ -1,6 +1,8 @@
 import Foundation
 
 public actor InboxStore {
+    private var aspectRatios = [URL: (modified: Date, ratio: Double)]()
+
     public init() {}
 
     public func save(_ request: UploadRequest, in directory: URL) throws -> ReceivedItem {
@@ -8,12 +10,14 @@ public actor InboxStore {
         let writer = try ItemWriter(in: directory, kind: content.kind)
         let filename = Self.uniqueStem() + content.nameSuffix
         try writer.write(content.data, named: filename, quarantined: content.isQuarantined)
+        let url = writer.directory.appendingPathComponent(filename)
         return ReceivedItem(
-            url: writer.directory.appendingPathComponent(filename),
+            url: url,
             kind: content.kind,
             thumbnail: content.thumbnail,
             receivedAt: Date(),
-            isPlainText: content.isPlainText
+            isPlainText: content.isPlainText,
+            aspectRatio: content.kind == .image ? ImagePreview.headerAspectRatio(at: url) : nil
         )
     }
 
@@ -30,8 +34,51 @@ public actor InboxStore {
         for (folder, category) in folders where kind == nil || kind == category {
             candidates += try Self.candidates(in: folder, kind: category)
         }
-        let newest = candidates.sorted { $0.date > $1.date }.prefix(Self.maximumListedItems)
-        return newest.compactMap(Self.item)
+        if kind == nil || kind == .image {
+            let present = Set(candidates.map(\.url))
+            aspectRatios = aspectRatios.filter { present.contains($0.key) }
+        }
+        return candidates.sorted { $0.date > $1.date }.compactMap(item)
+    }
+
+    private func item(_ candidate: Candidate) -> ReceivedItem? {
+        let url = candidate.url
+        var ratio: Double?
+        var plainText = false
+        switch candidate.kind {
+        case .image:
+            guard let found = aspectRatio(of: candidate) else {
+                return nil
+            }
+            ratio = found
+        case .text:
+            break
+        case .link:
+            guard Self.isWebLocation(url) else {
+                return nil
+            }
+        case .file:
+            plainText = FileTypeDetector.isPlainTextFile(url)
+        }
+        return ReceivedItem(
+            url: url,
+            kind: candidate.kind,
+            thumbnail: nil,
+            receivedAt: candidate.date,
+            isPlainText: plainText,
+            aspectRatio: ratio
+        )
+    }
+
+    private func aspectRatio(of candidate: Candidate) -> Double? {
+        if let cached = aspectRatios[candidate.url], cached.modified == candidate.modified {
+            return cached.ratio
+        }
+        guard let ratio = ImagePreview.headerAspectRatio(at: candidate.url) else {
+            return nil
+        }
+        aspectRatios[candidate.url] = (candidate.modified, ratio)
+        return ratio
     }
 }
 
@@ -39,10 +86,10 @@ extension InboxStore {
     private struct Candidate {
         let url: URL
         let date: Date
+        let modified: Date
         let kind: ReceivedKind
     }
 
-    private static let maximumListedItems = 120
     private static let filenamePrefix = "AnyDock-"
     private static let folderKeys: Set<URLResourceKey> = [.isDirectoryKey, .isSymbolicLinkKey]
     private static let fileKeys: Set<URLResourceKey> = [
@@ -50,6 +97,7 @@ extension InboxStore {
         .isSymbolicLinkKey,
         .fileSizeKey,
         .creationDateKey,
+        .contentModificationDateKey,
     ]
 
     private static func candidates(in folder: URL, kind: ReceivedKind) throws -> [Candidate] {
@@ -73,38 +121,13 @@ extension InboxStore {
             else {
                 return nil
             }
-            return Candidate(url: url, date: values.creationDate ?? .distantPast, kind: kind)
+            return Candidate(
+                url: url,
+                date: values.creationDate ?? .distantPast,
+                modified: values.contentModificationDate ?? .distantPast,
+                kind: kind
+            )
         }
-    }
-
-    private static func item(_ candidate: Candidate) -> ReceivedItem? {
-        let url = candidate.url
-        var thumbnail: Data?
-        var plainText = false
-        switch candidate.kind {
-        case .image:
-            guard let data = try? Data(contentsOf: url), let preview = try? ImagePreview(data) else {
-                return nil
-            }
-            thumbnail = preview.png
-        case .text:
-            guard (try? String(contentsOf: url, encoding: .utf8)) != nil else {
-                return nil
-            }
-        case .link:
-            guard isWebLocation(url) else {
-                return nil
-            }
-        case .file:
-            plainText = FileTypeDetector.isPlainTextFile(url)
-        }
-        return ReceivedItem(
-            url: url,
-            kind: candidate.kind,
-            thumbnail: thumbnail,
-            receivedAt: candidate.date,
-            isPlainText: plainText
-        )
     }
 
     private static func uniqueStem() -> String {

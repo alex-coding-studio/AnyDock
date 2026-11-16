@@ -2,9 +2,13 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-struct ImagePreview {
+public struct ImagePreview {
     private static let maximumPixelCount = 80_000_000
     private static let maximumThumbnailSize = 640
+
+    private static var uncached: CFDictionary {
+        [kCGImageSourceShouldCache: false] as CFDictionary
+    }
 
     let png: Data
     let originalExtension: String
@@ -23,15 +27,39 @@ struct ImagePreview {
         self.originalExtension = originalExtension
     }
 
+    public static func thumbnail(at url: URL) -> CGImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, uncached),
+              hasAcceptableSize(source)
+        else {
+            return nil
+        }
+        return thumbnail(from: source)
+    }
+
+    static func headerAspectRatio(at url: URL) -> Double? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, uncached),
+              type(of: source)?.conforms(to: .image) == true
+        else {
+            return nil
+        }
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        guard let width = properties?[kCGImagePropertyPixelWidth] as? Int,
+              let height = properties?[kCGImagePropertyPixelHeight] as? Int,
+              width > 0, height > 0
+        else {
+            return 1
+        }
+        let orientation = properties?[kCGImagePropertyOrientation] as? Int ?? 1
+        return (5 ... 8).contains(orientation)
+            ? Double(width) / Double(height) : Double(height) / Double(width)
+    }
+
     static func isImage(_ data: Data) -> Bool {
         source(data).flatMap(type)?.conforms(to: .image) == true
     }
 
     private static func source(_ data: Data) -> CGImageSource? {
-        CGImageSourceCreateWithData(
-            data as CFData,
-            [kCGImageSourceShouldCache: false] as CFDictionary
-        )
+        CGImageSourceCreateWithData(data as CFData, uncached)
     }
 
     private static func type(of source: CGImageSource) -> UTType? {

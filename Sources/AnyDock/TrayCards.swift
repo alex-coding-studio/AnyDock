@@ -3,10 +3,12 @@ import AppKit
 import UniformTypeIdentifiers
 
 struct TrayEntry {
+    private static let textPreviewCharacters = 1000
+    private static let textPrefixBytes = 8192
+
     let item: ReceivedItem
     var thumbnail: NSImage?
     let text: String?
-    let characterCount: Int
     let link: URL?
     let size: Int64?
     let contentType: UTType?
@@ -21,6 +23,10 @@ struct TrayEntry {
 
     var fullText: String {
         (try? String(contentsOf: item.url, encoding: .utf8)) ?? text ?? ""
+    }
+
+    var characterCount: Int {
+        fullText.count
     }
 
     var displayName: String {
@@ -73,7 +79,6 @@ struct TrayEntry {
         self.item = item
         var thumbnail: NSImage?
         var text: String?
-        var characterCount = 0
         var link: URL?
         var size: Int64?
         var contentType = UTType(filenameExtension: item.url.pathExtension)
@@ -83,11 +88,16 @@ struct TrayEntry {
         }
         switch item.kind {
         case .image:
-            thumbnail = item.thumbnail.flatMap(NSImage.init(data:))
+            break
         case .text:
-            let full = (try? String(contentsOf: item.url, encoding: .utf8)) ?? ""
-            characterCount = full.count
-            text = String(full.prefix(1000))
+            let handle = try? FileHandle(forReadingFrom: item.url)
+            let prefix = (try? handle?.read(upToCount: Self.textPrefixBytes)) ?? Data()
+            try? handle?.close()
+            var decoded = String(decoding: prefix, as: UTF8.self)
+            if prefix.count == Self.textPrefixBytes, decoded.last == "\u{FFFD}" {
+                decoded.removeLast()
+            }
+            text = String(decoded.prefix(Self.textPreviewCharacters))
         case .link:
             if let data = try? Data(contentsOf: item.url),
                let property = try? PropertyListSerialization.propertyList(from: data, format: nil),
@@ -110,7 +120,6 @@ struct TrayEntry {
         }
         self.thumbnail = thumbnail
         self.text = text
-        self.characterCount = characterCount
         self.link = link
         self.size = size
         self.contentType = contentType
@@ -300,10 +309,14 @@ class TrayCardItem: NSCollectionViewItem {
 final class ImageCardItem: TrayCardItem {
     static let identifier = NSUserInterfaceItemIdentifier("ImageCard")
 
+    private let placeholder = PreviewArea()
     private let preview = TopAlignedImageView()
     private let time = NSTextField(labelWithString: "")
 
     override func buildContent(in container: NSView) {
+        placeholder.wantsLayer = true
+        placeholder.layer?.cornerRadius = TrayMetrics.cornerRadius
+        pin(placeholder, in: container, inset: 0)
         preview.wantsLayer = true
         preview.layer?.cornerRadius = TrayMetrics.cornerRadius
         preview.layer?.masksToBounds = true
@@ -339,7 +352,13 @@ final class ImageCardItem: TrayCardItem {
         super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
         card.polaroid = false
         preview.image = entry.thumbnail
+        placeholder.isHidden = false
         self.time.stringValue = time
+    }
+
+    func showThumbnail(_ image: NSImage) {
+        preview.image = image
+        placeholder.isHidden = true
     }
 }
 

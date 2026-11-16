@@ -8,6 +8,7 @@ enum FileTypeDetector {
         let type: UTType
     }
 
+    private static let plainTextProbeSize = 4096
     private static let signatures = [
         Signature(offset: 0, bytes: Array("%PDF-".utf8), type: .pdf),
         Signature(offset: 0, bytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], type: .png),
@@ -35,16 +36,22 @@ enum FileTypeDetector {
     }
 
     static func isPlainText(_ data: Data, filename: String) -> Bool {
-        guard declaredType(of: filename)?.conforms(to: .text) == true, !data.contains(0) else {
+        let probe = data.prefix(plainTextProbeSize)
+        guard declaredType(of: filename)?.conforms(to: .text) == true, !probe.contains(0) else {
             return false
         }
-        return String(data: data, encoding: .utf8) != nil
+        let cut = data.count > plainTextProbeSize ? 0 ... 3 : 0 ... 0
+        return cut.contains { String(data: probe.dropLast($0), encoding: .utf8) != nil }
     }
 
     static func isPlainTextFile(_ url: URL) -> Bool {
         guard declaredType(of: url.lastPathComponent)?.conforms(to: .text) == true,
-              let data = try? Data(contentsOf: url)
+              let handle = try? FileHandle(forReadingFrom: url)
         else {
+            return false
+        }
+        defer { try? handle.close() }
+        guard let data = try? handle.read(upToCount: plainTextProbeSize + 1) ?? Data() else {
             return false
         }
         return isPlainText(data, filename: url.lastPathComponent)
