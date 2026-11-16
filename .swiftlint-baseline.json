@@ -31,36 +31,6 @@
   },
   {
     "violation": {
-      "location": {
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "character": 56,
-        "line": 72
-      },
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "severity": "error"
-    },
-    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))"
-  },
-  {
-    "violation": {
-      "severity": "error",
-      "reason": "Use a local Metrics role",
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "location": {
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "line": 72,
-        "character": 68
-      },
-      "ruleName": "Literal layout value"
-    },
-    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))"
-  },
-  {
-    "violation": {
       "severity": "error",
       "location": {
         "line": 122,
@@ -252,81 +222,6 @@
       "severity": "error",
       "ruleIdentifier": "magic_layout_constant",
       "ruleName": "Literal layout value"
-    }
-  },
-  {
-    "text": "            size: CGSize(width: 240, height: 240),",
-    "violation": {
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "reason": "Use a local Metrics role",
-      "location": {
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "character": 26,
-        "line": 699
-      }
-    }
-  },
-  {
-    "text": "            size: CGSize(width: 240, height: 240),",
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "location": {
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "character": 38,
-        "line": 699
-      }
-    }
-  },
-  {
-    "text": "    func numberOfPreviewItems(in _: QLPreviewPanel!) -> Int {",
-    "violation": {
-      "ruleIdentifier": "implicitly_unwrapped_optional",
-      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
-      "ruleName": "Implicitly Unwrapped Optional",
-      "location": {
-        "character": 37,
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "line": 907
-      },
-      "severity": "error",
-      "reason": "Implicitly unwrapped optionals should be avoided when possible"
-    }
-  },
-  {
-    "text": "    func previewPanel(_: QLPreviewPanel!, previewItemAt index: Int) -> (any QLPreviewItem)! {",
-    "violation": {
-      "ruleIdentifier": "implicitly_unwrapped_optional",
-      "reason": "Implicitly unwrapped optionals should be avoided when possible",
-      "ruleName": "Implicitly Unwrapped Optional",
-      "severity": "error",
-      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
-      "location": {
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "line": 911,
-        "character": 26
-      }
-    }
-  },
-  {
-    "text": "    func previewPanel(_: QLPreviewPanel!, previewItemAt index: Int) -> (any QLPreviewItem)! {",
-    "violation": {
-      "ruleName": "Implicitly Unwrapped Optional",
-      "severity": "error",
-      "location": {
-        "line": 911,
-        "character": 72,
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift"
-      },
-      "reason": "Implicitly unwrapped optionals should be avoided when possible",
-      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
-      "ruleIdentifier": "implicitly_unwrapped_optional"
     }
   },
   {
@@ -803,7 +698,7 @@
       "location": {
         "character": 56,
         "line": 175,
-        "file": "Sources/AnyDock/TrayCards.swift"
+        "file": "Sources/AnyDock/Tray/TrayCards.swift"
       },
       "reason": "Use a local Metrics role or a semantic system color"
     },
@@ -816,7 +711,7 @@
       "ruleName": "Literal layout value",
       "location": {
         "line": 254,
-        "file": "Sources/AnyDock/TrayCards.swift",
+        "file": "Sources/AnyDock/Tray/TrayCards.swift",
         "character": 42
       },
       "reason": "Use a local Metrics role",
@@ -831,7 +726,7 @@
       "reason": "Use a local Metrics role",
       "location": {
         "line": 255,
-        "file": "Sources/AnyDock/TrayCards.swift",
+        "file": "Sources/AnyDock/Tray/TrayCards.swift",
         "character": 43
       },
       "ruleDescription": "",
@@ -844,7 +739,7 @@
       "severity": "error",
       "location": {
         "line": 592,
-        "file": "Sources/AnyDock/TrayCards.swift",
+        "file": "Sources/AnyDock/Tray/TrayCards.swift",
         "character": 20
       },
       "ruleDescription": "",
@@ -860,7 +755,7 @@
       "ruleIdentifier": "magic_shadow_param",
       "location": {
         "line": 593,
-        "file": "Sources/AnyDock/TrayCards.swift",
+        "file": "Sources/AnyDock/Tray/TrayCards.swift",
         "character": 20
       },
       "ruleName": "Literal shadow parameter",
@@ -873,7 +768,7 @@
     "violation": {
       "location": {
         "line": 594,
-        "file": "Sources/AnyDock/TrayCards.swift",
+        "file": "Sources/AnyDock/Tray/TrayCards.swift",
         "character": 20
       },
       "ruleIdentifier": "magic_shadow_param",
@@ -889,7 +784,7 @@
       "ruleDescription": "",
       "location": {
         "character": 35,
-        "file": "Sources/AnyDock/TrayScopeBar.swift",
+        "file": "Sources/AnyDock/Tray/TrayScopeBar.swift",
         "line": 268
       },
       "ruleName": "Literal opacity",
@@ -907,7 +802,7 @@
       "ruleIdentifier": "magic_shadow_param",
       "severity": "error",
       "location": {
-        "file": "Sources/AnyDock/TrayScopeBar.swift",
+        "file": "Sources/AnyDock/Tray/TrayScopeBar.swift",
         "line": 270,
         "character": 16
       }
@@ -920,7 +815,7 @@
       "location": {
         "line": 271,
         "character": 16,
-        "file": "Sources/AnyDock/TrayScopeBar.swift"
+        "file": "Sources/AnyDock/Tray/TrayScopeBar.swift"
       },
       "ruleName": "Literal shadow parameter",
       "severity": "error",
@@ -933,7 +828,7 @@
     "violation": {
       "ruleName": "Literal shadow parameter",
       "location": {
-        "file": "Sources/AnyDock/TrayScopeBar.swift",
+        "file": "Sources/AnyDock/Tray/TrayScopeBar.swift",
         "line": 272,
         "character": 16
       },
