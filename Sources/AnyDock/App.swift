@@ -18,8 +18,17 @@ enum AnyDockApp {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var statusItem: NSStatusItem?
-    private let popover = NSPopover()
     private var popoverAppearance: NSKeyValueObservation?
+    private lazy var popover: NSPopover = {
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.delegate = self
+        popover.contentViewController = tray
+        popover.contentSize = NSSize(width: 480, height: 640)
+        popoverAppearance = AppAppearance.follow(popover)
+        return popover
+    }()
+
     private let tray = ImageTrayController()
     private let store = ImageStore()
     private let clipboard = ClipboardMonitor()
@@ -31,19 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
 
     func applicationDidFinishLaunching(_: Notification) {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = BrandIcon.menuBar()
-        item.button?.setAccessibilityLabel(L10n.text("AnyDock"))
-        item.button?.image?.isTemplate = true
-        item.button?.target = self
-        item.button?.action = #selector(togglePopover)
-        item.button?.toolTip = L10n.text("AnyDock")
-        statusItem = item
-        popover.behavior = .transient
-        popover.delegate = self
-        popover.contentViewController = tray
-        popoverAppearance = AppAppearance.follow(popover)
-        popover.contentSize = NSSize(width: 480, height: 640)
+        setUpStatusItem()
         tray.openSettings = { [weak self] in self?.showSettings() }
         tray.openFolder = { [weak self] in self?.openFolder() }
         tray.didFinishDragging = { [weak self] in self?.popover.performClose(nil) }
@@ -111,6 +108,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             return
         }
         tray.trayDidClose()
+    }
+
+    private func setUpStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.button?.image = BrandIcon.menuBar()
+        item.button?.setAccessibilityLabel(L10n.text("AnyDock"))
+        item.button?.image?.isTemplate = true
+        item.button?.target = self
+        item.button?.action = #selector(togglePopover)
+        item.button?.toolTip = L10n.text("AnyDock")
+        statusItem = item
     }
 
     private func startReceiver(_ next: ReceiverConfiguration) async {
