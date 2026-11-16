@@ -21,7 +21,7 @@ User-visible behaviour that must not regress, and release and operations procedu
 - Space or double-click opens Quick Look for the selection; arrows navigate and Space closes it. The tray stays open meanwhile, and closing only Quick Look keeps the selection.
 - Command-C copies images as file plus PNG, text and links as plain values, files as the file. Finder reveal uses the selected originals.
 - Esc collapses an expanded clipboard bar first; otherwise it clears the selection.
-- Tray shortcuts (⌘C copy, ⌘⌫ move to Trash, Space preview, Esc) come from one table shared by key handling and the context menu. ⌘C and Space match the character of the current keyboard layout, so ⌘⇧C does not copy; ⌘⌫ and Esc match the physical key.
+- The context menu shows the same shortcuts the tray handles (⌘C copy, ⌘⌫ move to Trash). ⌘C and Space match the character of the current keyboard layout, so ⌘⇧C does not copy; ⌘⌫ and Esc match the physical key.
 - Every actual tray close clears the selection.
 
 ## Selection capsule and drag to Trash
