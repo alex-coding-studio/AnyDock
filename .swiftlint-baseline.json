@@ -1006,66 +1006,6 @@
   },
   {
     "violation": {
-      "ruleName": "Cyclomatic Complexity",
-      "ruleDescription": "Complexity of function bodies should be limited.",
-      "location": {
-        "line": 19,
-        "character": 12,
-        "file": "Sources/AnyDockCore/HTTPProtocol.swift"
-      },
-      "ruleIdentifier": "cyclomatic_complexity",
-      "severity": "warning",
-      "reason": "Function should have complexity 10 or less; currently complexity is 13"
-    },
-    "text": "    public init("
-  },
-  {
-    "violation": {
-      "ruleName": "Cyclomatic Complexity",
-      "severity": "warning",
-      "reason": "Function should have complexity 10 or less; currently complexity is 17",
-      "location": {
-        "character": 22,
-        "line": 165,
-        "file": "Sources/AnyDockCore/HTTPProtocol.swift"
-      },
-      "ruleDescription": "Complexity of function bodies should be limited.",
-      "ruleIdentifier": "cyclomatic_complexity"
-    },
-    "text": "    private mutating func parseHeader(_ header: String) throws {"
-  },
-  {
-    "violation": {
-      "ruleIdentifier": "cyclomatic_complexity",
-      "reason": "Function should have complexity 10 or less; currently complexity is 15",
-      "ruleDescription": "Complexity of function bodies should be limited.",
-      "ruleName": "Cyclomatic Complexity",
-      "location": {
-        "file": "Sources/AnyDockCore/ImageStore.swift",
-        "line": 171,
-        "character": 12
-      },
-      "severity": "warning"
-    },
-    "text": "    public func list(in directory: URL, kind: ReceivedKind? = nil) throws -> [ReceivedItem] {"
-  },
-  {
-    "violation": {
-      "ruleName": "Function Body Length",
-      "severity": "warning",
-      "location": {
-        "line": 171,
-        "character": 12,
-        "file": "Sources/AnyDockCore/ImageStore.swift"
-      },
-      "ruleIdentifier": "function_body_length",
-      "reason": "Function body should span 80 lines or less excluding comments and whitespace: currently spans 85 lines",
-      "ruleDescription": "Function bodies should not span too many lines"
-    },
-    "text": "    public func list(in directory: URL, kind: ReceivedKind? = nil) throws -> [ReceivedItem] {"
-  },
-  {
-    "violation": {
       "ruleDescription": "Force casts should be avoided",
       "reason": "Force casts should be avoided",
       "location": {

@@ -6,9 +6,9 @@ public actor HTTPServer {
     private var startup: CheckedContinuation<Void, any Error>?
     private var generation = UUID()
     private var connections = [UUID: NWConnection]()
-    private let store: ImageStore
+    private let store: InboxStore
 
-    public init(store: ImageStore) {
+    public init(store: InboxStore) {
         self.store = store
     }
 
@@ -63,7 +63,7 @@ public actor HTTPServer {
         guard configuration.port >= 1024, !configuration.token.isEmpty,
               let port = NWEndpoint.Port(rawValue: configuration.port)
         else {
-            throw HTTPFailure(400, "Invalid Configuration")
+            throw UploadError.invalidConfiguration
         }
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = false
@@ -166,7 +166,7 @@ public actor HTTPServer {
             while true {
                 let data = try await Self.receive(connection)
                 guard !data.isEmpty else {
-                    throw HTTPFailure(400, "Incomplete Request")
+                    throw UploadError.incompleteRequest
                 }
                 if let request = try decoder.append(data) {
                     let image = try await store.save(request, in: configuration.directory)
@@ -184,7 +184,7 @@ public actor HTTPServer {
                     continued = true
                 }
             }
-        } catch let error as HTTPFailure {
+        } catch let error as UploadError {
             try? await Self.send(
                 connection,
                 status: error.status,

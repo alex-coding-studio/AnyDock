@@ -30,14 +30,14 @@ func decodesContentAndRejectsUnsafeInputs() throws {
         do {
             _ = try decodeContent(kind: kind, name: name, body: body, key: key)
             Issue.record("Unsafe content was accepted")
-        } catch let error as HTTPFailure {
+        } catch let error as UploadError {
             #expect(error.status == status)
         }
     }
     var decoder = HTTPRequestDecoder(token: "test-key")
     let header =
         "POST /upload HTTP/1.1\r\nX-AnyDock-Key: test-key\r\nContent-Length: 50000001\r\n\r\n"
-    #expect(throws: HTTPFailure.self) { try decoder.append(Data(header.utf8)) }
+    #expect(throws: UploadError.self) { try decoder.append(Data(header.utf8)) }
     var partial = HTTPRequestDecoder(token: "test-key")
     let incomplete =
         "POST /upload HTTP/1.1\r\nX-AnyDock-Key: test-key\r\nContent-Length: 10\r\n"
@@ -49,7 +49,7 @@ func decodesContentAndRejectsUnsafeInputs() throws {
 func storesTypedContentWithQuarantine() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let text = try await store.save(
         decodeContent(kind: "text", body: Data("hello".utf8)),
         in: directory
@@ -66,7 +66,7 @@ func storesTypedContentWithQuarantine() async throws {
         decodeContent(kind: "file", name: "clip.mp4", body: Data([0, 1, 255])),
         in: directory
     )
-    let image = try await store.save(makeImage(), in: directory)
+    let image = try await store.save(UploadRequest(body: makeImage(), kind: .image), in: directory)
     #expect(text.url.deletingLastPathComponent().lastPathComponent == "Text")
     #expect(text.url.pathExtension == "txt")
     #expect(link.url.deletingLastPathComponent().lastPathComponent == "Links")
@@ -97,14 +97,14 @@ func storesTypedContentWithQuarantine() async throws {
     #expect(second.url != file.url)
     #expect(try Data(contentsOf: file.url) == Data("{}".utf8))
     #expect(try await store.list(in: directory).count == 6)
-    #expect(try await store.listImages(in: directory).count == 1)
+    #expect(try await store.list(in: directory, kind: .image).count == 1)
 }
 
 @Test("图片按实际内容识别，伪装扩展名不能绕过声明校验")
 func classifiesImagesByContentAndDeclaration() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let image = try await store.save(
         decodeContent(kind: "file", name: "document.pdf", body: makeImage()),
         in: directory
@@ -123,7 +123,7 @@ func classifiesImagesByContentAndDeclaration() async throws {
         filename: "fake.png",
         contentType: "image/png"
     )
-    await #expect(throws: HTTPFailure.self) {
+    await #expect(throws: UploadError.self) {
         try await store.save(invalid, in: directory)
     }
     #expect(try await store.list(in: directory).count == 2)
@@ -133,7 +133,7 @@ func classifiesImagesByContentAndDeclaration() async throws {
 func appendsExtensionFromContentSignature() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let pdf = Data("%PDF-1.7\n".utf8)
     let cases: [(String, Data, String)] = [
         ("SECRETARY OF STATE", pdf, "-SECRETARY OF STATE.pdf"),
@@ -176,7 +176,7 @@ func listsLegacyImagesAndRejectsDirectoryEscape() async throws {
         at: root.appendingPathComponent("Files"),
         withDestinationURL: outside
     )
-    let store = ImageStore()
+    let store = InboxStore()
     await #expect(throws: (any Error).self) {
         try await store.save(
             decodeContent(kind: "file", name: "notes.txt", body: Data("hi".utf8)),

@@ -30,7 +30,7 @@ func rejectsUnsafeRequests() throws {
         do {
             _ = try decoder.append(Data("POST /upload HTTP/1.1\r\n\(headers)\r\n".utf8))
             Issue.record("Unsafe request was accepted")
-        } catch let error as HTTPFailure {
+        } catch let error as UploadError {
             #expect(error.status == status)
         }
     }
@@ -41,14 +41,15 @@ func storesOriginalsWithoutOverwriting() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
     let image = try makeImage()
-    let store = ImageStore()
-    let first = try await store.save(image, in: directory)
-    let second = try await store.save(image, in: directory)
+    let store = InboxStore()
+    let first = try await store.save(UploadRequest(body: image, kind: .image), in: directory)
+    let second = try await store.save(UploadRequest(body: image, kind: .image), in: directory)
     #expect(first.url != second.url)
     #expect(try Data(contentsOf: first.url) == image)
     #expect(try Data(contentsOf: second.url) == image)
-    await #expect(throws: HTTPFailure.self) {
-        try await store.save(Data("not an image".utf8), in: directory)
+    let invalid = try UploadRequest(body: Data("not an image".utf8), kind: .image)
+    await #expect(throws: UploadError.self) {
+        try await store.save(invalid, in: directory)
     }
     #expect(try await store.list(in: directory).count == 2)
 }
@@ -58,8 +59,8 @@ func listsOnlyAnyDockOriginals() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
     let data = try makeImage()
-    let store = ImageStore()
-    let received = try await store.save(data, in: directory)
+    let store = InboxStore()
+    let received = try await store.save(UploadRequest(body: data, kind: .image), in: directory)
     try data.write(to: directory.appendingPathComponent("holiday.png"))
     #expect(received.url.lastPathComponent.hasPrefix("AnyDock-"))
     let listed = try await store.list(in: directory)
@@ -71,7 +72,7 @@ func listsOnlyAnyDockOriginals() async throws {
 func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let server = HTTPServer(store: store)
     let conflicting = HTTPServer(store: store)
     let port = UInt16.random(in: 20000 ... 45000)
