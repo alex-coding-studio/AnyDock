@@ -1,5 +1,6 @@
 import AnyDockCore
 import AppKit
+import Combine
 import QuartzCore
 
 @MainActor
@@ -10,8 +11,10 @@ final class TrayScopeBar: NSView {
         let filter: TrayFilter
     }
 
-    var onSelect: ((TrayFilter) -> Void)?
-    var onSelectAll: ((TrayFilter) -> Void)?
+    private static let indicatorDuration: TimeInterval = 0.2
+    private static let maxFadeFraction: CGFloat = 0.5
+    private static let scrollEdgeTolerance: CGFloat = 0.5
+
     private(set) var segments = [Segment]()
     private(set) var selected = TrayFilter.all
 
@@ -23,6 +26,16 @@ final class TrayScopeBar: NSView {
     private var buttons = [ScopeSegmentButton]()
     private var widthConstraint: NSLayoutConstraint?
     private var isAnimating = false
+    private let selectionSubject = PassthroughSubject<TrayFilter, Never>()
+    private let selectAllSubject = PassthroughSubject<TrayFilter, Never>()
+
+    var selections: AnyPublisher<TrayFilter, Never> {
+        selectionSubject.eraseToAnyPublisher()
+    }
+
+    var selectAllRequests: AnyPublisher<TrayFilter, Never> {
+        selectAllSubject.eraseToAnyPublisher()
+    }
 
     var selectedButtonFrame: NSRect? {
         guard let index = segments.firstIndex(where: { $0.filter == selected }) else {
@@ -149,7 +162,7 @@ final class TrayScopeBar: NSView {
         }
         isAnimating = true
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.2
+            context.duration = Self.indicatorDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             indicator.animator().frame = target
         } completionHandler: { [weak self] in
@@ -180,9 +193,9 @@ final class TrayScopeBar: NSView {
     private func updateFade() {
         let visible = scroll.contentView.bounds
         let width = max(scroll.bounds.width, 1)
-        let length = min(TrayMetrics.scopeFade / width, 0.5)
-        let leading = visible.minX > 0.5
-        let trailing = content.frame.width - visible.maxX > 0.5
+        let length = min(TrayMetrics.scopeFade / width, Self.maxFadeFraction)
+        let leading = visible.minX > Self.scrollEdgeTolerance
+        let trailing = content.frame.width - visible.maxX > Self.scrollEdgeTolerance
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         fade.frame = scroll.bounds
@@ -209,9 +222,9 @@ final class TrayScopeBar: NSView {
         }
         let filter = segments[sender.tag].filter
         if Self.togglesSelection(NSApp.currentEvent) {
-            onSelectAll?(filter)
+            selectAllSubject.send(filter)
         } else {
-            onSelect?(filter)
+            selectionSubject.send(filter)
         }
     }
 }
@@ -266,10 +279,7 @@ private final class ScopeIndicator: NSView {
         let dark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         layer?.backgroundColor =
             (dark ? NSColor.white.withAlphaComponent(0.18) : NSColor.white).cgColor
-        layer?.shadowColor = NSColor.black.cgColor
-        layer?.shadowOpacity = dark ? 0 : 0.08
-        layer?.shadowRadius = 2
-        layer?.shadowOffset = .zero
+        layer?.apply(dark ? .none : .scopeIndicator)
     }
 }
 

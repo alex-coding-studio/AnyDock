@@ -607,10 +607,7 @@ final class ThumbnailView: NSView {
             layer?.borderWidth = selected ? 2 : (polaroid ? 0.5 : 0)
             layer?.borderColor =
                 (selected ? NSColor.controlAccentColor : NSColor.separatorColor).cgColor
-            layer?.shadowColor = NSColor.black.cgColor
-            layer?.shadowOpacity = polaroid ? (dark ? 0.35 : 0.14) : 0
-            layer?.shadowRadius = Space.s4
-            layer?.shadowOffset = CGSize(width: 0, height: -1)
+            layer?.apply(polaroid ? (dark ? .cardDark : .card) : .none)
             checkmark?.isHidden = !selected
         }
     }

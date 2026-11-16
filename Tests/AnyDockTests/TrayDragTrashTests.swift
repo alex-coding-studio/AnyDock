@@ -80,7 +80,7 @@ func doubleClickingFilterSelectsOnlyThatKind() throws {
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.toggleSelectAll(in: .kind(.text))
     #expect(tray.collection.selectionIndexPaths.count == items.count(where: { $0.kind == .text }))
-    #expect(tray.filterBar.selected == .kind(.text))
+    #expect(tray.header.filterBar.selected == .kind(.text))
     tray.toggleSelectAll(in: .kind(.text))
     #expect(tray.collection.selectionIndexPaths.isEmpty)
     tray.toggleSelectAll(in: .all)

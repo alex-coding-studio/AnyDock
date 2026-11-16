@@ -76,7 +76,7 @@ func cardsStayInsideTrayMarginsWithBadgesAtTopLeft() throws {
         tray.select(filter)
         settle(tray)
         let bounds = tray.view.bounds
-        let bar = tray.filterBar.convert(tray.filterBar.bounds, to: tray.view)
+        let bar = tray.header.filterBar.convert(tray.header.filterBar.bounds, to: tray.view)
         let visible = cards(tray)
         #expect(visible.count == (filter == .all ? 4 : 3))
         let leftmost = visible.map(\.1.minX).min() ?? 0
@@ -126,13 +126,13 @@ func cardsStayInsideTrayMarginsWithBadgesAtTopLeft() throws {
 func scopeIndicatorFollowsSelection() async throws {
     let (tray, window) = try makeTray(texts: ["一", "二"])
     settle(tray)
-    #expect(tray.filterBar.selectedButtonFrame == tray.filterBar.indicatorFrame)
+    #expect(tray.header.filterBar.selectedButtonFrame == tray.header.filterBar.indicatorFrame)
     tray.select(.kind(.link))
     settle(tray)
     try await Task.sleep(for: .milliseconds(400))
-    let expected = try #require(tray.filterBar.selectedButtonFrame)
-    #expect(abs(tray.filterBar.indicatorFrame.minX - expected.minX) < 1)
-    #expect(abs(tray.filterBar.indicatorFrame.width - expected.width) < 1)
+    let expected = try #require(tray.header.filterBar.selectedButtonFrame)
+    #expect(abs(tray.header.filterBar.indicatorFrame.minX - expected.minX) < 1)
+    #expect(abs(tray.header.filterBar.indicatorFrame.width - expected.width) < 1)
     withExtendedLifetime(window) {}
 }
 
@@ -148,8 +148,8 @@ func filterBarAndControlGroupShareTopRow() throws {
     let (tray, window) = try makeTray(texts: ["一", "二"])
     settle(tray)
     let bounds = tray.view.bounds
-    let bar = try frame(of: tray.filterBar, in: tray)
-    let group = try frame(of: tray.controlGroup, in: tray)
+    let bar = try frame(of: tray.header.filterBar, in: tray)
+    let group = try frame(of: tray.header.controlGroup, in: tray)
     #expect(!bar.intersects(group))
     #expect(bar.maxX < group.minX)
     #expect(bounds.contains(bar))
