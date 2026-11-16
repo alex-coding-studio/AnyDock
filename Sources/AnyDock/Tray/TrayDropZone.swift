@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import PockyFoundation
+import SnapKit
 
 @MainActor
 final class TrayDropZone: NSView {
@@ -32,7 +33,6 @@ final class TrayDropZone: NSView {
     private lazy var row: NSStackView = {
         let row = NSStackView(views: [label, suffix])
         row.spacing = 0
-        row.translatesAutoresizingMaskIntoConstraints = false
         return row
     }()
 
@@ -44,11 +44,11 @@ final class TrayDropZone: NSView {
         super.init(frame: frame)
         configure()
         addSubview(row)
-        NSLayoutConstraint.activate([
-            row.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s12),
-            row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -PKYLayout.Space.s12),
-            row.centerYAnchor.constraint(equalTo: centerYAnchor),
-        ])
+        row.snp.makeConstraints { make in
+            make.directionalHorizontalEdges.equalToSuperview()
+                .inset(PKYLayout.Inset.control.horizontal(.standard))
+            make.centerY.equalToSuperview()
+        }
     }
 
     required init?(coder _: NSCoder) {

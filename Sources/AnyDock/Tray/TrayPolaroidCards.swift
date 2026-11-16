@@ -29,14 +29,14 @@ class PolaroidCardItem: TrayCardItem {
     }()
 
     override func buildContent(in container: NSView) {
-        pin(previewArea, in: container, inset: TrayMetrics.framePadding)
-        pin(strip, in: container, inset: TrayMetrics.framePadding)
+        pin(previewArea, in: container, inset: PKYLayout.Inset.container(.compact))
+        pin(strip, in: container, inset: PKYLayout.Inset.container(.compact))
         previewArea.addSubview(badge)
         buildPreview(in: previewArea)
         NSLayoutConstraint.activate([
             previewArea.topAnchor.constraint(
                 equalTo: container.topAnchor,
-                constant: TrayMetrics.framePadding
+                constant: PKYLayout.Inset.container(.compact)
             ),
             previewArea.bottomAnchor.constraint(
                 equalTo: strip.topAnchor,
@@ -44,7 +44,7 @@ class PolaroidCardItem: TrayCardItem {
             ),
             strip.bottomAnchor.constraint(
                 equalTo: container.bottomAnchor,
-                constant: -TrayMetrics.framePadding
+                constant: -PKYLayout.Inset.container(.compact)
             ),
             badge.leadingAnchor.constraint(
                 equalTo: previewArea.leadingAnchor,

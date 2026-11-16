@@ -92,9 +92,9 @@ final class TrayScopeBar: NSView {
         content.addSubview(indicator)
         content.addSubview(stack)
         addSubview(scroll)
-        let inset = TrayMetrics.scopeBarInset
+        let inset = PKYLayout.Gap.content(.compact)
         NSLayoutConstraint.activate([
-            heightAnchor.constraint(equalToConstant: TrayMetrics.scopeBarHeight),
+            heightAnchor.constraint(equalToConstant: PKYLayout.Size.button(.compact)),
             widthConstraint,
             surface.leadingAnchor.constraint(equalTo: leadingAnchor),
             surface.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -153,7 +153,7 @@ final class TrayScopeBar: NSView {
             button.isChosen = segment.filter == filter
         }
         layoutSubtreeIfNeeded()
-        widthConstraint.constant = stack.fittingSize.width + TrayMetrics.scopeBarInset * 2
+        widthConstraint.constant = stack.fittingSize.width + PKYLayout.Gap.content(.compact) * 2
         layoutSubtreeIfNeeded()
         moveIndicator(animated: animate)
         reveal(animated: animate)
@@ -326,7 +326,7 @@ private final class ScopeSegmentButton: NSButton {
         let size = super.intrinsicContentSize
         return NSSize(
             width: size.width + PKYLayout.Space.s12 * 2,
-            height: TrayMetrics.scopeBarHeight - TrayMetrics.scopeBarInset * 2
+            height: PKYLayout.Size.button(.compact) - PKYLayout.Gap.content(.compact) * 2
         )
     }
 
