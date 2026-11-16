@@ -56,7 +56,7 @@ class TrayCardItem: NSCollectionViewItem {
         card.addSubview(badge)
         badge.snp.makeConstraints { make in
             make.top.leading.equalToSuperview()
-                .inset(PKYLayout.Inset.container(.compact) + PKYLayout.Gap.content(.compact))
+                .inset(PKYLayout.Gap.content(.compact))
         }
         card.addSubview(check)
         check.snp.makeConstraints { make in
@@ -156,7 +156,7 @@ final class ImageCardItem: TrayCardItem {
         }
         capsule.snp.makeConstraints {
             $0.leading.bottom.equalToSuperview()
-                .inset(PKYLayout.Inset.container(.compact) + PKYLayout.Gap.content(.compact))
+                .inset(PKYLayout.Gap.content(.compact))
         }
         imageView = preview
         textField = time
