@@ -4,9 +4,6 @@
     "Sources/AnyDock/Clipboard/ClipboardBar.swift": {
       "anchor": 9
     },
-    "Sources/AnyDock/Clipboard/ClipboardCell.swift": {
-      "anchor": 7
-    },
     "Sources/AnyDock/SettingsController.swift": {
       "anchor": 33
     },
