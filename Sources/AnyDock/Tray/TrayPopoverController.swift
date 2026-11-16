@@ -24,10 +24,6 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         reloadSubject.eraseToAnyPublisher()
     }
 
-    var isShown: Bool {
-        popover.isShown
-    }
-
     init(tray: TrayViewController, statusItem: StatusItemController) {
         self.tray = tray
         self.statusItem = statusItem
@@ -78,7 +74,7 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
             .sink { [weak self] in self?.holdPresentation($0) }
             .store(in: &subscriptions)
         tray.dragFinishes
-            .sink { [weak self] in self?.close() }
+            .sink { [weak self] in self?.popover.performClose(nil) }
             .store(in: &subscriptions)
     }
 
