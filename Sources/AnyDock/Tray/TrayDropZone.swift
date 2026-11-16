@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 @MainActor
 final class TrayDropZone: NSView {
@@ -7,12 +8,17 @@ final class TrayDropZone: NSView {
     }
 
     var canAccept: ((AnyObject?) -> Bool)?
-    var performDrop: (() -> Bool)?
     let label = NSTextField(labelWithString: "")
     let suffix = NSTextField(labelWithString: "")
     private(set) var isArmed = false
     private(set) var isTargeted = false {
         didSet { refresh() }
+    }
+
+    private let dropSubject = PassthroughSubject<Void, Never>()
+
+    var drops: AnyPublisher<Void, Never> {
+        dropSubject.eraseToAnyPublisher()
     }
 
     override init(frame: NSRect) {
@@ -71,7 +77,8 @@ final class TrayDropZone: NSView {
         guard isTargeted, canAccept?(sender.draggingSource as AnyObject?) == true else {
             return false
         }
-        return performDrop?() ?? false
+        dropSubject.send()
+        return true
     }
 
     override func draggingEnded(_: any NSDraggingInfo) {

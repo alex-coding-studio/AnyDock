@@ -76,7 +76,7 @@ func singleSelectionDetailIsVisibleForEveryKind(kind: String) throws {
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.collection.selectionChanged?()
     tray.view.layoutSubtreeIfNeeded()
-    let zone = tray.dropZone
+    let zone = tray.footer.dropZone
     let shown = zone.label.stringValue + (zone.suffix.isHidden ? "" : zone.suffix.stringValue)
     #expect(!zone.isHiddenOrHasHiddenAncestor)
     #expect(!zone.label.stringValue.isEmpty)

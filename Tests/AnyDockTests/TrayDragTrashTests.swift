@@ -46,7 +46,7 @@ func droppingOnTrashRecyclesOnlyDraggedItems() async throws {
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.beginDrag([IndexPath(item: 1, section: 0), IndexPath(item: 3, section: 0)])
     let task = try #require(tray.trashDraggedItems())
-    #expect(tray.dropZoneSurface?.isHidden == true)
+    #expect(tray.footer.dropZoneSurface.isHidden == true)
     tray.endDrag(operation: .delete)
     await task.value
     #expect(recycled == [items[1].url, items[3].url])

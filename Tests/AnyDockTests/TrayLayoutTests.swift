@@ -162,23 +162,23 @@ func filterBarAndControlGroupShareTopRow() throws {
 @Test("选中详情胶囊浮在剪贴板条上方，出现和消失都不改变内容区")
 func floatingDetailLeavesContentFrameUnchanged() throws {
     let (tray, window) = try makeTray(texts: ["一", "二"])
-    tray.replaceClips([ClipboardClip(text: "clip", copiedAt: Date())])
+    tray.footer.replaceClips([ClipboardClip(text: "clip", copiedAt: Date())])
     settle(tray)
     let scroll = try #require(tray.collection.enclosingScrollView)
     let before = scroll.frame
-    #expect(tray.dropZoneSurface?.isHidden == true)
+    #expect(tray.footer.dropZoneSurface.isHidden == true)
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.collection.selectionChanged?()
     settle(tray)
-    #expect(tray.dropZoneSurface?.isHidden == false)
+    #expect(tray.footer.dropZoneSurface.isHidden == false)
     #expect(scroll.frame == before)
-    let pill = try frame(of: tray.dropZoneSurface, in: tray)
-    let clipboard = try frame(of: tray.clipboardSurface, in: tray)
+    let pill = try frame(of: tray.footer.dropZoneSurface, in: tray)
+    let clipboard = try frame(of: tray.footer.clipboardSurface, in: tray)
     #expect(pill.minY >= clipboard.maxY)
     #expect(abs(pill.midX - tray.view.bounds.midX) < 1)
     tray.clearSelection()
     settle(tray)
-    #expect(tray.dropZoneSurface?.isHidden == true)
+    #expect(tray.footer.dropZoneSurface.isHidden == true)
     #expect(scroll.frame == before)
     withExtendedLifetime(window) {}
 }
@@ -187,8 +187,8 @@ func floatingDetailLeavesContentFrameUnchanged() throws {
 @Test("滚到底时最后一张卡片完整露在剪贴板条和选中胶囊上方")
 func lastCardClearsBottomControlsWhenScrolledToEnd() throws {
     let (tray, window) = try makeTray(texts: (0 ..< 24).map { "第 \($0) 条" })
-    tray.replaceClips([ClipboardClip(text: "clip", copiedAt: Date())])
-    tray.clipboardBar.setExpanded(true, animated: false)
+    tray.footer.replaceClips([ClipboardClip(text: "clip", copiedAt: Date())])
+    tray.footer.clipboardBar.setExpanded(true, animated: false)
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.collection.selectionChanged?()
     settle(tray)
@@ -200,8 +200,8 @@ func lastCardClearsBottomControlsWhenScrolledToEnd() throws {
     scroll.reflectScrolledClipView(scroll.contentView)
     settle(tray)
     let lowest = try #require(cards(tray).map(\.1).min { $0.minY < $1.minY })
-    let clipboard = try frame(of: tray.clipboardSurface, in: tray)
-    let pill = try frame(of: tray.dropZoneSurface, in: tray)
+    let clipboard = try frame(of: tray.footer.clipboardSurface, in: tray)
+    let pill = try frame(of: tray.footer.dropZoneSurface, in: tray)
     #expect(lowest.minY >= clipboard.maxY)
     #expect(lowest.minY >= pill.maxY)
     withExtendedLifetime(window) {}

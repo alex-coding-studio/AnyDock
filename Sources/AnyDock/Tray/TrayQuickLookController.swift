@@ -3,8 +3,7 @@ import Combine
 import Quartz
 
 @MainActor
-final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSource,
-    @MainActor QLPreviewPanelDelegate {
+final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDelegate {
     private static let previousKeyCodes: Set<UInt16> = [123, 126]
     private static let nextKeyCodes: Set<UInt16> = [124, 125]
 
@@ -13,7 +12,7 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSour
     private let holdSubject = PassthroughSubject<Bool, Never>()
     private weak var owner: NSResponder?
     private weak var focusTarget: NSView?
-    private var urls = [URL]()
+    private var source: QuickLookSource?
 
     var holds: AnyPublisher<Bool, Never> {
         holdSubject.eraseToAnyPublisher()
@@ -32,7 +31,7 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSour
         guard !selection.isEmpty, let panel = QLPreviewPanel.shared() else {
             return
         }
-        urls = selection
+        source = QuickLookSource(urls: selection)
         isShowing = true
         holdSubject.send(true)
         focus()
@@ -41,7 +40,7 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSour
     }
 
     func beginControl(_ panel: QLPreviewPanel) {
-        panel.dataSource = self
+        panel.dataSource = source
         panel.delegate = self
         panel.reloadData()
         panel.currentPreviewItemIndex = 0
@@ -63,14 +62,6 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSour
         finish()
     }
 
-    func numberOfPreviewItems(in _: QLPreviewPanel?) -> Int {
-        urls.count
-    }
-
-    func previewPanel(_: QLPreviewPanel?, previewItemAt index: Int) -> (any QLPreviewItem)? {
-        urls[index] as NSURL
-    }
-
     func previewPanel(_ panel: QLPreviewPanel?, handle event: NSEvent?) -> Bool {
         guard let panel, let event, event.type == .keyDown else {
             return false
@@ -79,7 +70,7 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSour
             close()
             return true
         }
-        guard !urls.isEmpty else {
+        guard let urls = source?.urls, !urls.isEmpty else {
             return false
         }
         let step: Int
@@ -109,7 +100,7 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSour
             panel.dataSource = nil
             panel.delegate = nil
         }
-        urls = []
+        source = nil
         isShowing = false
         if NSApp.isActive, NSApp.keyWindow is QLPreviewPanel {
             focusTarget?.window?.makeKey()
@@ -129,5 +120,21 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDataSour
             return nil
         }
         return panel
+    }
+}
+
+private final class QuickLookSource: NSObject, QLPreviewPanelDataSource {
+    let urls: [URL]
+
+    init(urls: [URL]) {
+        self.urls = urls
+    }
+
+    func numberOfPreviewItems(in _: QLPreviewPanel?) -> Int {
+        urls.count
+    }
+
+    func previewPanel(_: QLPreviewPanel?, previewItemAt index: Int) -> (any QLPreviewItem)? {
+        urls[index] as NSURL
     }
 }

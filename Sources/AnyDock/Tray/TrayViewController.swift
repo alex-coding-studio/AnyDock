@@ -6,31 +6,27 @@ import Quartz
 @MainActor
 final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     NSCollectionViewDelegate {
-    private static let dropZoneHeight: CGFloat = 34
-
     let collection = TrayCollectionView()
-    let dropZone = TrayDropZone()
-    let clipboardBar = ClipboardBar()
-    private(set) var clipboardSurface: NSView?
-    private(set) lazy var header = TrayHeaderView(viewModel: viewModel)
-    private(set) var dropZoneSurface: NSView?
     let viewModel: TrayViewModel
+    private(set) lazy var header = TrayHeaderView(viewModel: viewModel)
+    private(set) lazy var footer = TrayFooterView(
+        viewModel: viewModel,
+        clipboard: clipboard,
+        entries: cache,
+        dragSource: collection
+    )
 
     private let clipboard: ClipboardMonitor
     private let pasteboard: TrayPasteboardWriter
     private let presentationHoldSubject = PassthroughSubject<Bool, Never>()
     private let layout = MasonryCollectionLayout()
     private let scroll = NSScrollView()
-    private let timeFormatter = DateFormatter()
-    private var dropZoneAboveClipboard: NSLayoutConstraint?
-    private var dropZoneAtBottom: NSLayoutConstraint?
-    private var emptyState: NSView?
+    private lazy var emptyState = TrayEmptyStateView(viewModel: viewModel)
     private var entries = [TrayEntry]()
-    private var cache = [URL: TrayEntry]()
+    private let cache = TrayEntryCache()
     private let previews = TrayPreviewCache()
     private var subscriptions = Set<AnyCancellable>()
     private lazy var quickLook = TrayQuickLookController(owner: self, focusTarget: collection)
-    private var releaseWatch: Timer?
     private var renderedLatestURL: URL?
     private var isApplyingSelection = false
 
@@ -101,7 +97,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         collection.previewItems = { [weak self] in self?.previewSelection() }
         collection.trashItems = { [weak self] in self?.viewModel.recycleSelection() }
         collection.selectionChanged = { [weak self] in self?.syncSelection() }
-        collection.escapePressed = { [weak self] in self?.collapseClipboard() ?? false }
+        collection.escapePressed = { [weak self] in self?.footer.collapseClipboard() ?? false }
         scroll.documentView = collection
         scroll.hasVerticalScroller = true
         scroll.scrollerStyle = .overlay
@@ -117,11 +113,29 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             scroll.topAnchor.constraint(equalTo: content.topAnchor),
             scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
         ])
-        configureEmptyState(in: content)
-        configureControls(in: content)
-        header.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(header)
+        for element in [emptyState, footer, header] {
+            element.translatesAutoresizingMaskIntoConstraints = false
+            content.addSubview(element)
+        }
         NSLayoutConstraint.activate([
+            emptyState.centerXAnchor.constraint(equalTo: content.centerXAnchor),
+            emptyState.centerYAnchor.constraint(
+                equalTo: content.centerYAnchor,
+                constant: TrayEmptyStateView.centerOffset
+            ),
+            emptyState.widthAnchor.constraint(
+                lessThanOrEqualTo: content.widthAnchor,
+                constant: -TrayEmptyStateView.sideInset * 2
+            ),
+            footer.leadingAnchor.constraint(
+                equalTo: content.leadingAnchor,
+                constant: TrayMetrics.margin
+            ),
+            footer.trailingAnchor.constraint(
+                equalTo: content.trailingAnchor,
+                constant: -TrayMetrics.margin
+            ),
+            footer.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -Space.s16),
             header.leadingAnchor.constraint(
                 equalTo: content.leadingAnchor,
                 constant: TrayMetrics.margin
@@ -160,24 +174,9 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         }
     }
 
-    func replaceClips(_ clips: [ClipboardClip]) {
-        loadViewIfNeeded()
-        clipboardBar.update(clips)
-        updateClipboardSurface()
-    }
-
-    @discardableResult
-    func collapseClipboard() -> Bool {
-        guard clipboardBar.isExpanded else {
-            return false
-        }
-        clipboardBar.setExpanded(false)
-        return true
-    }
-
     func trayDidClose() {
         clearSelection()
-        clipboardBar.setExpanded(false, animated: false)
+        footer.trayDidClose()
     }
 
     func focusCollection() {
@@ -217,7 +216,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         (item as? TrayCardItem)?.configure(
             entry,
             singleColumn: singleColumn,
-            time: timeText(entry.item.receivedAt),
+            time: TrayTimeFormat.short(entry.item.receivedAt),
             latest: latest
         )
         if entry.kind == .image || (entry.kind == .file && !entry.item.isPlainText) {
@@ -297,12 +296,9 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
 
     func beginDrag(_ indexPaths: Set<IndexPath>) {
         viewModel.beginDrag(urls(at: indexPaths))
-        watchForRelease()
     }
 
     func endDrag(operation: NSDragOperation) {
-        releaseWatch?.invalidate()
-        releaseWatch = nil
         viewModel.endDrag(succeeded: !operation.isEmpty)
     }
 
@@ -312,129 +308,11 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     func copyToPasteboard(_ item: ReceivedItem) {
-        pasteboard.copy([cache[item.url] ?? TrayEntry(item: item)])
+        pasteboard.copy([cache.entry(for: item)])
     }
 
     func closePreview() {
         quickLook.close()
-    }
-
-    private func configureControls(in content: NSView) {
-        dropZone.canAccept = { [weak self] source in
-            guard let self else {
-                return false
-            }
-            return source === collection && viewModel.canDropOnTrash()
-        }
-        dropZone.performDrop = { [weak self] in self?.viewModel.trashDraggedItems() != nil }
-        let zone = TrayGlass.surface(dropZone, cornerRadius: Self.dropZoneHeight / 2)
-        zone.heightAnchor.constraint(equalToConstant: Self.dropZoneHeight).isActive = true
-        dropZoneSurface = zone
-        zone.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(zone)
-        NSLayoutConstraint.activate([
-            zone.centerXAnchor.constraint(equalTo: content.centerXAnchor),
-            zone.leadingAnchor.constraint(
-                greaterThanOrEqualTo: content.leadingAnchor,
-                constant: TrayMetrics.margin
-            ),
-            zone.trailingAnchor.constraint(
-                lessThanOrEqualTo: content.trailingAnchor,
-                constant: -TrayMetrics.margin
-            ),
-        ])
-        dropZoneAtBottom = zone.bottomAnchor.constraint(
-            equalTo: content.bottomAnchor,
-            constant: -Space.s16
-        )
-        configureClipboardBar(in: content)
-        dropZoneAboveClipboard = clipboardSurface.map {
-            zone.bottomAnchor.constraint(equalTo: $0.topAnchor, constant: -Space.s8)
-        }
-        updateClipboardSurface()
-    }
-
-    private func configureClipboardBar(in content: NSView) {
-        clipboard.clipsPublisher
-            .sink { [weak self] in self?.replaceClips($0) }
-            .store(in: &subscriptions)
-        clipboardBar.clearRequests
-            .sink { [weak self] in self?.clipboard.clear() }
-            .store(in: &subscriptions)
-        clipboardBar.copyRequests
-            .sink { [weak self] in self?.copyClip($0) }
-            .store(in: &subscriptions)
-        clipboardBar.expandedChanges
-            .sink { [weak self] _ in self?.updateClipboardSurface() }
-            .store(in: &subscriptions)
-        let surface = TrayGlass.surface(
-            clipboardBar,
-            cornerRadius: ClipboardBar.collapsedHeight / 2
-        )
-        surface.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(surface, positioned: .below, relativeTo: dropZoneSurface)
-        NSLayoutConstraint.activate([
-            surface.leadingAnchor.constraint(
-                equalTo: content.leadingAnchor,
-                constant: TrayMetrics.margin
-            ),
-            surface.trailingAnchor.constraint(
-                equalTo: content.trailingAnchor,
-                constant: -TrayMetrics.margin
-            ),
-            surface.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -Space.s16),
-        ])
-        clipboardSurface = surface
-    }
-
-    private func updateClipboardSurface() {
-        guard let surface = clipboardSurface else {
-            return
-        }
-        let visible = !clipboardBar.clips.isEmpty
-        surface.isHidden = !visible
-        dropZoneAtBottom?.isActive = !visible
-        dropZoneAboveClipboard?.isActive = visible
-        let radius = clipboardBar.isExpanded ? Space.s16 : ClipboardBar.collapsedHeight / 2
-        TrayGlass.setCornerRadius(radius, of: surface)
-        let height =
-            clipboardBar.isExpanded ? ClipboardBar.expandedHeight : ClipboardBar.collapsedHeight
-        layout.extraBottomInset = visible ? height + Space.s8 : 0
-    }
-
-    private func copyClip(_ clip: ClipboardClip) {
-        clipboard.write(recordingInHistory: false) { $0.setString(clip.text, forType: .string) }
-    }
-
-    private func configureEmptyState(in content: NSView) {
-        let icon = NSImageView(
-            image: NSImage(systemSymbolName: "tray", accessibilityDescription: nil) ?? NSImage()
-        )
-        icon.contentTintColor = .secondaryLabelColor
-        let title = NSTextField(labelWithString: L10n.text("Nothing received yet"))
-        title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-        let detail = NSTextField(
-            wrappingLabelWithString: L10n.text(
-                "Share content on your iPhone and choose your Mac’s shortcut."
-            )
-        )
-        detail.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        detail.textColor = .secondaryLabelColor
-        detail.alignment = .center
-        let stack = NSStackView(views: [icon, title, detail])
-        stack.orientation = .vertical
-        stack.alignment = .centerX
-        stack.spacing = 10
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(stack)
-        NSLayoutConstraint.activate([
-            icon.widthAnchor.constraint(equalToConstant: 40),
-            icon.heightAnchor.constraint(equalToConstant: 40),
-            stack.centerXAnchor.constraint(equalTo: content.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: -24),
-            stack.widthAnchor.constraint(lessThanOrEqualTo: content.widthAnchor, constant: -64),
-        ])
-        emptyState = stack
     }
 
     private func subscribeEvents() {
@@ -453,18 +331,18 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         viewModel.selection
             .sink { [weak self] in self?.applySelection($0) }
             .store(in: &subscriptions)
-        viewModel.dragged
-            .sink { [weak self] _ in self?.updateControls() }
-            .store(in: &subscriptions)
         viewModel.recycling
             .dropFirst()
-            .sink { [weak self] in self?.recyclingChanged($0) }
+            .sink { [weak self] _ in self?.sendPresentationHold() }
             .store(in: &subscriptions)
         quickLook.holds
             .sink { [weak self] _ in self?.sendPresentationHold() }
             .store(in: &subscriptions)
         viewModel.recycleStarts
             .sink { [weak self] in self?.closePreview() }
+            .store(in: &subscriptions)
+        footer.bottomInsets
+            .sink { [weak self] in self?.layout.extraBottomInset = $0 }
             .store(in: &subscriptions)
         viewModel.errors
             .sink { [weak self] in self?.presentError($0) }
@@ -474,23 +352,15 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     private func render(_ list: TrayList) {
         if let latest = list.latestURL, latest != renderedLatestURL,
            let item = list.contents.items.first(where: { $0.url == latest }) {
-            cache[latest] = nil
+            cache.invalidate(latest)
             if let thumbnail = item.thumbnail {
                 previews.store(thumbnail, for: latest)
             }
         }
         renderedLatestURL = list.latestURL
-        let present = Set(list.contents.items.map(\.url))
-        previews.forget(cache.keys.filter { !present.contains($0) })
-        cache = cache.filter { present.contains($0.key) }
-        entries = list.contents.visibleItems.map { item in
-            if let cached = cache[item.url] {
-                return cached
-            }
-            let entry = TrayEntry(item: item)
-            cache[item.url] = entry
-            return entry
-        }
+        previews.forget(cache.keep(only: Set(list.contents.items.map(\.url))))
+        entries = list.contents.visibleItems.map(cache.entry(for:))
+        scroll.isHidden = list.contents.items.isEmpty
         layout.columnCount = singleColumn ? 1 : 4
         layout.topInset = TrayMetrics.margin + TrayMetrics.scopeBarHeight + Space.s16
         layout.invalidateLayout()
@@ -512,7 +382,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             collection.selectionIndexPaths = paths
             isApplyingSelection = false
         }
-        updateControls()
     }
 
     private func syncSelection() {
@@ -526,11 +395,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         indexPaths.sorted { $0.item < $1.item }.compactMap {
             entries.indices.contains($0.item) ? entries[$0.item].url : nil
         }
-    }
-
-    private func recyclingChanged(_: Bool) {
-        sendPresentationHold()
-        updateControls()
     }
 
     private func sendPresentationHold() {
@@ -579,61 +443,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         case .link: L10n.text("Link")
         case .file: L10n.text("File")
         }
-    }
-
-    private func watchForRelease() {
-        releaseWatch?.invalidate()
-        let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.hideTrashTargetIfReleased() }
-        }
-        RunLoop.main.add(timer, forMode: .common)
-        releaseWatch = timer
-    }
-
-    private func hideTrashTargetIfReleased() {
-        guard !viewModel.draggedURLs.isEmpty, NSEvent.pressedMouseButtons & 1 == 0 else {
-            return
-        }
-        releaseWatch?.invalidate()
-        releaseWatch = nil
-        dropZoneSurface?.alphaValue = 0
-    }
-
-    private func updateControls() {
-        let count = selectedEntries.count
-        let dragging = !viewModel.draggedURLs.isEmpty
-        if dragging {
-            dropZone.show(L10n.text("Drop here to move to Trash"), armed: true)
-        } else if count == 1, let entry = selectedEntries.first {
-            let segments = detailSegments(of: entry).filter { !$0.isEmpty }
-            let rest = segments.dropFirst().reduce("") { L10n.text("meta_separator", $0, $1) }
-            dropZone.show(segments.first ?? "", suffix: rest, armed: false)
-        } else {
-            dropZone.show(count > 1 ? L10n.text("selected_count", count) : "", armed: false)
-        }
-        dropZoneSurface?.isHidden = !dragging && dropZone.label.stringValue.isEmpty
-        dropZoneSurface?.alphaValue = 1
-        emptyState?.isHidden = !viewModel.isEmpty
-        scroll.isHidden = viewModel.isEmpty
-    }
-
-    private func detailSegments(of entry: TrayEntry) -> [String] {
-        let time = timeText(entry.item.receivedAt)
-        let size = entry.size.map { ByteCountFormatter.string(
-            fromByteCount: $0,
-            countStyle: .file
-        ) }
-        switch entry.kind {
-        case .file: return [entry.displayName, size ?? "", time]
-        case .image: return [entry.badge, size ?? "", time]
-        case .text: return [L10n.text("character_count", entry.characterCount), time]
-        case .link: return [entry.link?.absoluteString ?? entry.displayName]
-        }
-    }
-
-    private func timeText(_ date: Date) -> String {
-        timeFormatter.dateFormat = Calendar.current.isDateInToday(date) ? "HH:mm" : "M/d"
-        return timeFormatter.string(from: date)
     }
 
     private func copySelection() {
