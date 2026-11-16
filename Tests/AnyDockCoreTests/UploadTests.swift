@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 func fragmentedUploadPreservesBody() throws {
   var decoder = HTTPRequestDecoder(token: "test-key")
   let header = Data(
-    "POST /upload HTTP/1.1\r\nContent-Length: 4\r\nX-SnapDock-Key: test-key\r\n\r\n".utf8)
+    "POST /upload HTTP/1.1\r\nContent-Length: 4\r\nX-AnyDock-Key: test-key\r\n\r\n".utf8)
   #expect(try decoder.append(header.prefix(20)) == nil)
   #expect(try decoder.append(header.dropFirst(20) + Data([0, 255])) == nil)
   #expect(try decoder.append(Data([13, 10]))?.body == Data([0, 255, 13, 10]))
@@ -20,10 +20,10 @@ func fragmentedUploadPreservesBody() throws {
 func rejectsUnsafeRequests() throws {
   let cases: [(String, Int)] = [
     ("Content-Length: 1\r\n", 401),
-    ("X-SnapDock-Key: wrong\r\nContent-Length: 1\r\n", 401),
-    ("X-SnapDock-Key: test-key\r\nContent-Length: 1\r\nContent-Length: 2\r\n", 400),
-    ("X-SnapDock-Key: test-key\r\nContent-Length: 999999999\r\n", 413),
-    ("X-SnapDock-Key: test-key\r\nTransfer-Encoding: chunked\r\n", 400),
+    ("X-AnyDock-Key: wrong\r\nContent-Length: 1\r\n", 401),
+    ("X-AnyDock-Key: test-key\r\nContent-Length: 1\r\nContent-Length: 2\r\n", 400),
+    ("X-AnyDock-Key: test-key\r\nContent-Length: 999999999\r\n", 413),
+    ("X-AnyDock-Key: test-key\r\nTransfer-Encoding: chunked\r\n", 400),
   ]
   for (headers, status) in cases {
     var decoder = HTTPRequestDecoder(token: "test-key")
@@ -53,20 +53,18 @@ func storesOriginalsWithoutOverwriting() async throws {
   #expect(try await store.list(in: directory).count == 2)
 }
 
-@Test("新图片使用 AnyDock 前缀，旧 SnapDock 图片仍列入托盘与回收范围")
-func listsNewAndLegacyOriginals() async throws {
+@Test("新图片使用 AnyDock 前缀，只有 AnyDock 前缀的文件列入托盘与回收范围")
+func listsOnlyAnyDockOriginals() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { try? FileManager.default.removeItem(at: directory) }
   let data = try makeImage()
   let store = ImageStore()
   let received = try await store.save(data, in: directory)
-  let legacy = directory.appendingPathComponent("SnapDock-legacy.png")
-  try data.write(to: legacy)
   try data.write(to: directory.appendingPathComponent("holiday.png"))
   #expect(received.url.lastPathComponent.hasPrefix("AnyDock-"))
   let listed = try await store.list(in: directory)
   let names = Set(listed.map { $0.url.lastPathComponent })
-  #expect(names == Set([received.url.lastPathComponent, legacy.lastPathComponent]))
+  #expect(names == [received.url.lastPathComponent])
 }
 
 @Test("真实 HTTP 上传仅在鉴权和原图落盘后返回成功，端口冲突不会换端口")
@@ -90,7 +88,7 @@ func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     let (_, deniedResponse) = try await URLSession.shared.data(for: request)
     #expect((deniedResponse as? HTTPURLResponse)?.statusCode == 401)
     #expect(try await store.list(in: directory).isEmpty)
-    request.setValue("test-key", forHTTPHeaderField: "X-SnapDock-Key")
+    request.setValue("test-key", forHTTPHeaderField: "X-AnyDock-Key")
     let (responseBody, response) = try await URLSession.shared.data(for: request)
     #expect((response as? HTTPURLResponse)?.statusCode == 201)
     let json = try #require(JSONSerialization.jsonObject(with: responseBody) as? [String: Any])
@@ -115,7 +113,7 @@ func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     #expect(Set(saved.map(\.kind)) == Set([.image, .text, .file]))
     let partialResponse = try await Task.detached {
       let header =
-        "POST /upload HTTP/1.1\r\nContent-Length: 100\r\nX-SnapDock-Key: test-key\r\n"
+        "POST /upload HTTP/1.1\r\nContent-Length: 100\r\nX-AnyDock-Key: test-key\r\n"
         + "X-AnyDock-Type: file\r\nX-AnyDock-Filename: partial.bin\r\n\r\nabc"
       return try sendRawRequest(port: port, data: Data(header.utf8))
     }.value
@@ -123,7 +121,7 @@ func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     let oversizedResponse = try await Task.detached {
       let header =
         "POST /upload HTTP/1.1\r\nContent-Length: 50000001\r\n"
-        + "X-SnapDock-Key: test-key\r\n\r\n"
+        + "X-AnyDock-Key: test-key\r\n\r\n"
       return try sendRawRequest(port: port, data: Data(header.utf8))
     }.value
     #expect(oversizedResponse.hasPrefix("HTTP/1.1 413"))

@@ -20,7 +20,7 @@ struct TrayEntry {
 
   var displayName: String {
     let name = url.lastPathComponent
-    let pattern = #"^(AnyDock|SnapDock)-\d+-[0-9A-Fa-f-]{36}-"#
+    let pattern = #"^AnyDock-\d+-[0-9A-Fa-f-]{36}-"#
     guard let range = name.range(of: pattern, options: .regularExpression) else { return name }
     return String(name[range.upperBound...])
   }

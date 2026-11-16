@@ -99,11 +99,6 @@
 "filter_accessibility" = "%1$@：%2$d";
 "New %@: %@, %@" = "新%1$@：%2$@，%3$@";
 "%@: %@, %@" = "%1$@：%2$@，%3$@";
-"migration.failed" = "旧配置迁移失败，iPhone 快捷指令暂时不可用。%@ 请重启随手坞重试。";
-"migration.supportUnavailable" = "无法访问 Application Support。";
-"migration.readFailed" = "无法读取旧配置文件。";
-"migration.invalidConfiguration" = "旧配置文件无效。";
-"migration.copyFailed" = "无法将旧配置复制到新位置。";
 "meta_separator" = "%1$@ · %2$@";
 "Clipboard" = "剪贴板";
 "settings.clipboardHistory.note" = "仅存在内存中，退出即清空。";

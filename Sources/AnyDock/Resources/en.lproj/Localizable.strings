@@ -99,11 +99,6 @@
 "filter_accessibility" = "%1$@: %2$d";
 "New %@: %@, %@" = "New %1$@: %2$@, %3$@";
 "%@: %@, %@" = "%1$@: %2$@, %3$@";
-"migration.failed" = "Old configuration migration failed. The iPhone shortcut is temporarily unavailable. %@ Restart AnyDock to retry.";
-"migration.supportUnavailable" = "Application Support is unavailable.";
-"migration.readFailed" = "The old configuration could not be read.";
-"migration.invalidConfiguration" = "The old configuration is invalid.";
-"migration.copyFailed" = "The old configuration could not be copied to the new location.";
 "meta_separator" = "%1$@ · %2$@";
 "Clipboard" = "Clipboard";
 "settings.clipboardHistory.note" = "Kept in memory only and cleared when you quit.";
