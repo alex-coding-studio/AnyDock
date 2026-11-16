@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 import argparse
-import io
-import json
 import re
-import subprocess
 import sys
-import tarfile
 from collections import Counter
 from pathlib import Path
 
 ROOTS = ("Sources",)
-BASELINE = "scripts/native-layout-baseline.json"
 STRING_START = re.compile(r'(#+)?("""|")')
 CALL = re.compile(
     r"(?P<anchor>\.\s*constraint\s*\()"
@@ -132,60 +127,19 @@ def current_counts(root):
                   for directory in ROOTS for path in sorted((root / directory).rglob("*.swift")))
 
 
-def differences(actual, expected):
-    return [f"{name} [{category}]: actual {actual.get(name, {}).get(category, 0)}, baseline {expected.get(name, {}).get(category, 0)}"
-            for name in sorted(actual.keys() | expected.keys())
-            for category in sorted(actual.get(name, {}).keys() | expected.get(name, {}).keys())
-            if actual.get(name, {}).get(category, 0) != expected.get(name, {}).get(category, 0)]
-
-
-def ratchet(current, previous):
-    errors = []
-    if current["requirements"]:
-        errors.append("Native layout exceptions are not supported.")
-    for name, categories in current["counts"].items():
-        for category, count in categories.items():
-            if count > previous["counts"].get(name, {}).get(category, 0):
-                errors.append(f"{name} [{category}]: baseline may only decrease.")
-    return errors
-
-
-def git(root, *args):
-    return subprocess.check_output(["git", "-C", str(root), *args])
-
-
-def previous_baseline(root, ref):
-    git(root, "rev-parse", "--verify", f"{ref}^{{commit}}")
-    if git(root, "ls-tree", "--name-only", ref, BASELINE).strip():
-        return json.loads(git(root, "show", f"{ref}:{BASELINE}"))
-    archive = git(root, "archive", ref, *ROOTS)
-    with tarfile.open(fileobj=io.BytesIO(archive)) as tree:
-        initial = counts((entry.name, tree.extractfile(entry).read().decode())
-                         for entry in tree if entry.isfile() and entry.name.endswith(".swift"))
-    return {"requirements": {}, "counts": initial}
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--base-ref", default="origin/main")
-    parser.add_argument("--write-baseline", action="store_true")
     args = parser.parse_args()
     root = args.root.resolve()
-    path = root / BASELINE
-    baseline = json.loads(path.read_text())
     actual = current_counts(root)
-    if args.write_baseline:
-        baseline["counts"] = actual
-        path.write_text(json.dumps(baseline, indent=2, ensure_ascii=False) + "\n")
-    errors = differences(actual, baseline["counts"])
-    previous = previous_baseline(root, args.base_ref)
-    errors += ratchet(baseline, previous)
-    if errors:
-        print("Native Auto Layout must migrate to SnapKit:", file=sys.stderr)
-        print("\n".join(f"  {error}" for error in errors), file=sys.stderr)
+    if actual:
+        print("Native Auto Layout construction is forbidden; use SnapKit:", file=sys.stderr)
+        for name, categories in actual.items():
+            for category, count in categories.items():
+                print(f"  {name} [{category}]: {count}", file=sys.stderr)
         return 1
-    print(f"Native layout baseline matches ({sum(sum(v.values()) for v in actual.values())} calls).")
+    print("Native layout check passed: no native construction in production.")
     return 0
 
 

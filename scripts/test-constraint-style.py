@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import importlib.util
-import json
 import os
 import subprocess
 import sys
@@ -9,7 +8,6 @@ import unittest
 from pathlib import Path
 
 CLEAN_ENV = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
-
 SPEC = importlib.util.spec_from_file_location(
     "constraint_style", Path(__file__).resolve().parent / "check-constraint-style.py",
 )
@@ -19,26 +17,37 @@ SPEC.loader.exec_module(STYLE)
 
 class ConstraintStyleTests(unittest.TestCase):
     def test_counts_code_but_not_comments_or_strings(self):
-        code = """
+        code = '''
         NSLayoutConstraint.activate([c])
         NSLayoutConstraint.deactivate([c])
         buildLayout(activate:
             false)
-        // NSLayoutConstraint.activate([c])
-        /* outer /* activate: false */ comment */
+        let gap = PKYLayout.Space.s4
+        // NSLayoutConstraint.activate([c]); PKYLayout.Space.s4
+        /* outer /* activate: false; PKYLayout.Space.s4 */ comment */
         let s = "NSLayoutConstraint.activate("
-        let raw = #"activate: false"#
-        view.snp.makeConstraints { $0.edges.equalToSuperview() }
+        let raw = #"PKYLayout.Space.s4"#
+        let multiline = """
+        activate: false
+        PKYLayout.Space.s4
         """
-        self.assertEqual(STYLE.file_counts(code), {"activate-false": 1, "activate-block": 1})
+        view.snp.makeConstraints { $0.edges.equalToSuperview() }
+        '''
+        self.assertEqual(STYLE.file_counts("Sources/AnyDock/View.swift", code), {
+            "primitive-space": 1, "activate-false": 1, "activate-block": 1,
+        })
 
-    def test_counts_may_only_decrease(self):
-        base = {"a.swift": {"activate-block": 2}}
-        self.assertEqual(STYLE.increases({"a.swift": {"activate-block": 1}}, base), [])
-        for counts in ({"a.swift": {"activate-block": 3}}, {"b.swift": {"activate-block": 2}},
-                       {"a.swift": {"activate-block": 2, "activate-false": 1}}):
-            with self.subTest(counts=counts):
-                self.assertTrue(STYLE.increases(counts, base))
+    def test_primitive_spacing_scope(self):
+        code = "let gap = PKYLayout \n . Space \n .s4"
+        for name in ("Sources/AnyDock/Tray/View.swift", "Sources/AnyDock/Metrics/View.swift",
+                     "Sources/AnyDock/ViewMetricsHelper.swift"):
+            with self.subTest(name=name):
+                self.assertEqual(STYLE.counts([(name, code)]), {name: {"primitive-space": 1}})
+        for name in ("Sources/AnyDock/Tray/TrayMetrics.swift", "Sources/AnyDock/OtherMetrics.swift",
+                     "Sources/AnyDockCore/Value.swift", "Tests/AnyDockTests/Fixture.swift",
+                     "Sources/AnyDockExtra/Value.swift"):
+            with self.subTest(name=name):
+                self.assertEqual(STYLE.counts([(name, code)]), {})
 
     def test_scans_production_and_test_targets(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -52,42 +61,48 @@ class ConstraintStyleTests(unittest.TestCase):
                 "Tests/AnyDockTests/Fixture.swift",
             })
 
-    def test_cli_initial_base_decrease_mismatch_and_growth(self):
+    def test_cli_checks_sources_without_git(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            source = root / "Sources/Fixture.swift"
-            source.parent.mkdir()
-            source.write_text("NSLayoutConstraint.activate([])")
-            test = root / "Tests/Fixture.swift"
-            test.parent.mkdir()
+            source = root / "Sources/AnyDock/Fixture.swift"
+            source.parent.mkdir(parents=True)
+            source.write_text("view.snp.makeConstraints { $0.edges.equalToSuperview() }")
+            test = root / "Tests/AnyDockTests/Fixture.swift"
+            test.parent.mkdir(parents=True)
             test.write_text("view.snp.makeConstraints { $0.edges.equalToSuperview() }")
-            self.git(root, "init", "-q", "--initial-branch=main")
-            self.git(root, "add", "Sources", "Tests")
-            self.git(root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
-                     "commit", "-qm", "fixture")
-            baseline = root / STYLE.BASELINE
-            baseline.parent.mkdir()
-            baseline.write_text(json.dumps(STYLE.current_counts(root)))
+            metrics = source.with_name("ViewMetrics.swift")
+            metrics.write_text("let geometry = PKYLayout.Space.s4")
             result = self.run_check(root)
             self.assertEqual(result.returncode, 0, result.stderr)
-            test.write_text("buildLayout(activate: false)")
-            self.assertNotEqual(self.run_check(root).returncode, 0)
-            self.assertNotEqual(self.run_check(root, "--write-baseline").returncode, 0)
+            self.assertFalse((root / ".git").exists())
+            self.assertFalse((root / "scripts/constraint-style-baseline.json").exists())
+            source.write_text("let gap = PKYLayout.Space.s4")
+            result = self.run_check(root)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn("primitive-space", result.stderr)
             source.write_text("")
-            test.write_text("")
-            result = self.run_check(root, "--write-baseline")
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(json.loads(baseline.read_text()), {})
+            test.write_text("NSLayoutConstraint.activate([])")
+            result = self.run_check(root)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn("Tests/AnyDockTests/Fixture.swift [activate-block]", result.stderr)
+            test.write_text("buildLayout(activate: false)")
+            result = self.run_check(root)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn("activate-false", result.stderr)
+
+    def test_rejects_retired_options(self):
+        with tempfile.TemporaryDirectory() as temp:
+            for option in ("--write-baseline", "--base-ref=HEAD"):
+                with self.subTest(option=option):
+                    result = self.run_check(Path(temp), option)
+                    self.assertEqual(result.returncode, 2, result.stderr)
 
     def run_check(self, root, *args):
         return subprocess.run(
             [sys.executable, "-B", str(STYLE.SCRIPTS / "check-constraint-style.py"),
-             "--root", str(root), "--base-ref", "HEAD", *args],
+             "--root", str(root), *args],
             capture_output=True, text=True, env=CLEAN_ENV,
         )
-
-    def git(self, root, *args):
-        return subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True, env=CLEAN_ENV)
 
 
 if __name__ == "__main__":
