@@ -20,7 +20,7 @@ A pull request that does not change product behaviour, commands, dependencies or
 
 ## Protect user data
 
-- Never overwrite, move or automatically delete received originals; changing receive folders leaves existing files in place.
+- Never overwrite or automatically delete received originals; receive-folder changes follow the receive-folder safety rules in `docs/PROJECT.md`.
 - User-requested recycling stays within the recycling boundary in `docs/PROJECT.md`. Never permanently delete inbox files.
 - Keep receive credentials and personalized shortcuts out of source files, bundled resources, logs and shared test output. Personalized shortcuts belong in temporary storage and must be cleaned up after sharing or failure.
 - Tests use temporary directories, fixture credentials, separate ports and private localhost listeners, private pasteboards (never the general pasteboard) and isolated preference suites. Do not use real user configuration, preferences or received images as fixtures.
