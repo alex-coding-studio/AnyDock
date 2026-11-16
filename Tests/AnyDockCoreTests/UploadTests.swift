@@ -75,7 +75,11 @@ func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     let server = HTTPServer(store: store)
     let conflicting = HTTPServer(store: store)
     let port = UInt16.random(in: 20000 ... 45000)
-    let configuration = ReceiverConfiguration(port: port, directory: directory, token: "test-key")
+    let configuration = ConnectionConfiguration.Receiver(
+        port: port,
+        directory: directory,
+        token: "test-key"
+    )
     do {
         try await server.start(
             configuration: configuration,

@@ -18,6 +18,7 @@ enum AnyDockApp {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var statusItem: NSStatusItem?
+
     private var popoverAppearance: NSKeyValueObservation?
     private lazy var popover: NSPopover = {
         let popover = NSPopover()
@@ -29,13 +30,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         return popover
     }()
 
+    private let configurationStore = ConnectionConfigurationStore()
+
     private let tray = ImageTrayController()
     private let store = ImageStore()
     private let clipboard = ClipboardMonitor()
     private let hotKeys = HotKeyCenter()
     private var server: HTTPServer?
-    private var configurationStore: ConfigurationStore?
-    private var configuration: ReceiverConfiguration?
+
+    private var configuration: ConnectionConfiguration?
     private var settings: SettingsController?
     private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
 
@@ -55,9 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         clipboard.onChange = { [weak self] clips in self?.tray.replaceClips(clips) }
         clipboard.setEnabled(Preferences.keepsClipboardHistory)
         do {
-            let storage = try ConfigurationStore()
-            configurationStore = storage
-            let current = try storage.load()
+            let current = try configurationStore.load()
             configuration = current
             let preferences = SettingsController(configuration: current)
             preferences.apply = { [weak self] next in try await self?.apply(next) }
@@ -72,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             settings = preferences
             server = HTTPServer(store: store)
             Task {
-                await startReceiver(current)
+                await startReceiver(current.receiver)
                 await reloadImages()
             }
             if CommandLine.arguments.contains("--settings") {
@@ -121,7 +122,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         statusItem = item
     }
 
-    private func startReceiver(_ next: ReceiverConfiguration) async {
+    private func startReceiver(_ next: ConnectionConfiguration.Receiver) async {
         guard let server else {
             return
         }
@@ -166,7 +167,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     private func received(_ item: ReceivedItem, directory: URL) {
-        guard directory == configuration?.directory else {
+        guard directory == configuration?.receiver.directory else {
             return
         }
         tray.append(item)
@@ -180,12 +181,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     private func reloadImages() async {
-        guard let directory = configuration?.directory else {
+        guard let directory = configuration?.receiver.directory else {
             return
         }
         do {
             let items = try await store.list(in: directory)
-            guard directory == configuration?.directory else {
+            guard directory == configuration?.receiver.directory else {
                 return
             }
             tray.replaceItems(items)
@@ -198,11 +199,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     private func currentItems() async throws -> [ReceivedItem] {
-        guard let directory = configuration?.directory else {
+        guard let directory = configuration?.receiver.directory else {
             return []
         }
         let items = try await store.list(in: directory)
-        guard directory == configuration?.directory else {
+        guard directory == configuration?.receiver.directory else {
             throw CocoaError(.userCancelled)
         }
         return items
@@ -225,21 +226,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         }
     }
 
-    private func apply(_ next: ReceiverConfiguration) async throws {
-        guard let configurationStore else {
-            throw CocoaError(.fileWriteUnknown)
-        }
-        try FileManager.default.createDirectory(
-            at: next.directory,
-            withIntermediateDirectories: true
-        )
-        guard FileManager.default.isWritableFile(atPath: next.directory.path) else {
-            throw CocoaError(.fileWriteNoPermission)
+    private func apply(_ next: ConnectionConfiguration) async throws {
+        let receiverChanged = next.receiver != configuration?.receiver
+        if receiverChanged {
+            try FileManager.default.createDirectory(
+                at: next.receiver.directory,
+                withIntermediateDirectories: true
+            )
+            guard FileManager.default.isWritableFile(atPath: next.receiver.directory.path) else {
+                throw CocoaError(.fileWriteNoPermission)
+            }
         }
         try configurationStore.save(next)
         configuration = next
+        guard receiverChanged else {
+            return
+        }
         await reloadImages()
-        await startReceiver(next)
+        await startReceiver(next.receiver)
     }
 
     @objc private func togglePopover() {
@@ -278,7 +282,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     private func openFolder() {
-        guard let directory = configuration?.directory else {
+        guard let directory = configuration?.receiver.directory else {
             return
         }
         do {

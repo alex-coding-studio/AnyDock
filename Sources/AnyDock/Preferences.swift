@@ -9,7 +9,6 @@ enum Preferences {
         case copyNewItems = "copyNewItems"
         case keepClipboardHistory = "keepClipboardHistory"
         case wakeHotKey = "wakeHotKey"
-        case personalizedShortcutName = "personalizedShortcutName"
     }
 
     static var copiesNewItems: Bool {
@@ -33,11 +32,6 @@ enum Preferences {
     static var wakeHotKey: HotKey? {
         get { HotKey(preference: defaults.object(forKey: Key.wakeHotKey.rawValue)) }
         set { defaults.set(newValue?.preference, forKey: Key.wakeHotKey.rawValue) }
-    }
-
-    static var shortcutName: String? {
-        get { defaults.string(forKey: Key.personalizedShortcutName.rawValue) }
-        set { defaults.set(newValue, forKey: Key.personalizedShortcutName.rawValue) }
     }
 
     private static var defaults: UserDefaults {

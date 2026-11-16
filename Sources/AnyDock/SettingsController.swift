@@ -13,11 +13,11 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     )
     let hotKeyRecorder = HotKeyRecorder()
     let hotKeyStatus = NSTextField(wrappingLabelWithString: "")
-    var apply: ((ReceiverConfiguration) async throws -> Void)?
+    var apply: ((ConnectionConfiguration) async throws -> Void)?
     var clipboardHistoryChanged: ((Bool) -> Void)?
     var registerHotKey: ((HotKey?) -> Bool)?
 
-    private var configuration: ReceiverConfiguration
+    private var configuration: ConnectionConfiguration
     private var selectedDirectory: URL
     private let appearance = NSPopUpButton(frame: .zero, pullsDown: false)
     private let language = NSPopUpButton(frame: .zero, pullsDown: false)
@@ -50,9 +50,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
     private let send = NSButton(title: L10n.text("Send to iPhone…"), target: nil, action: nil)
 
-    init(configuration: ReceiverConfiguration) {
+    init(configuration: ConnectionConfiguration) {
         self.configuration = configuration
-        selectedDirectory = configuration.directory
+        selectedDirectory = configuration.receiver.directory
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),
             styleMask: [
@@ -67,7 +67,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         window.center()
         super.init(window: window)
         statusIcon.contentTintColor = .tertiaryLabelColor
-        if let savedName = Preferences.shortcutName {
+        if let savedName = configuration.sender.shortcutName {
             shortcutName.stringValue = savedName
         } else if let computerName = LocalHost.computerName()?
             .trimmingCharacters(in: .whitespacesAndNewlines), !computerName.isEmpty {
@@ -170,6 +170,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     func sharingService(_: NSSharingService, didShareItems _: [Any]) {
         sharingService = nil
+        saveShortcutName(shortcutName.stringValue)
         setSending(false)
         if cleanUpSharedFile() {
             showConnectionMessage(L10n.text("shortcut.airdrop.sent"), isError: false)
@@ -415,8 +416,8 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func receivingTab() -> NSTabViewItem {
         refreshFolder()
         folder.lineBreakMode = .byTruncatingMiddle
-        port.stringValue = String(configuration.port)
-        port.placeholderString = "8765"
+        port.stringValue = String(configuration.receiver.port)
+        port.placeholderString = String(ConnectionConfiguration.Receiver.defaultPort)
         port.alignment = .right
         port.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         port.widthAnchor.constraint(equalToConstant: 76).isActive = true
@@ -611,7 +612,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
 
     private func refreshAddress() {
-        address.stringValue = LocalHost.receiveAddress(port: configuration.port)
+        address.stringValue = LocalHost.receiveAddress(port: configuration.receiver.port)
     }
 
     private func refreshFolder() {
@@ -621,7 +622,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     private func updatePending() {
         let enteredPort = UInt16(port.stringValue.trimmingCharacters(in: .whitespaces))
-        let changed = selectedDirectory != configuration.directory || enteredPort != configuration.port
+        let changed = selectedDirectory != configuration.receiver.directory || enteredPort != configuration.receiver.port
         pending.stringValue = changed ? L10n.text("Unapplied changes") : ""
         save.isEnabled = changed && !isApplying
     }
@@ -629,13 +630,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func updateShortcutName() {
         do {
             let name = try ShortcutInstaller.normalizedName(shortcutName.stringValue)
-            if !configuration.token.isEmpty {
-                Preferences.shortcutName = name
-            }
             shortcutNameStatus.stringValue = L10n.text("shortcut.name.normalized", name)
             shortcutNameStatus.textColor = .secondaryLabelColor
             shortcutNameStatus.isHidden = name == shortcutName.stringValue
-            send.isEnabled = !isSending && !configuration.token.isEmpty
+            send.isEnabled = !isSending && !configuration.receiver.token.isEmpty
         } catch {
             shortcutNameStatus.stringValue = error.localizedDescription
             shortcutNameStatus.textColor = .systemRed
@@ -679,8 +677,8 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             return
         }
         var next = configuration
-        next.port = value
-        next.directory = selectedDirectory
+        next.receiver.port = value
+        next.receiver.directory = selectedDirectory
         isApplying = true
         receivingError.isHidden = true
         updatePending()
@@ -802,7 +800,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
 
     @objc private func copyToken() {
-        copy(configuration.token, concealed: true)
+        copy(configuration.receiver.token, concealed: true)
     }
 
     private func copy(_ value: String, concealed: Bool = false) {
@@ -846,7 +844,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         }
         shortcutName.stringValue = name
         let receiveAddress = address.stringValue
-        let key = configuration.token
+        let key = configuration.receiver.token
         setSending(true)
         showConnectionMessage(L10n.text("Creating and signing the shortcut…"), isError: false)
         Task {
@@ -876,6 +874,19 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
                     L10n.text("Unable to send the shortcut: %@", error.localizedDescription)
                 )
                 setSending(false)
+            }
+        }
+    }
+
+    private func saveShortcutName(_ name: String) {
+        var next = configuration
+        next.sender.shortcutName = name
+        Task {
+            do {
+                try await apply?(next)
+                configuration = next
+            } catch {
+                showConnectionMessage(error.localizedDescription)
             }
         }
     }
