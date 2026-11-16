@@ -80,7 +80,7 @@ public actor ImageStore {
                   ] as CFDictionary
               )
         else {
-            throw HTTPFailure(415, "Unsupported Image")
+            throw UploadError.unsupportedImage
         }
         let output = NSMutableData()
         guard
@@ -91,11 +91,11 @@ public actor ImageStore {
                 nil
             )
         else {
-            throw HTTPFailure(500, "Image Processing Failed")
+            throw UploadError.imageProcessingFailed
         }
         CGImageDestinationAddImage(destination, image, nil)
         guard CGImageDestinationFinalize(destination) else {
-            throw HTTPFailure(500, "Image Processing Failed")
+            throw UploadError.imageProcessingFailed
         }
         return (output as Data, fileExtension)
     }
@@ -103,7 +103,7 @@ public actor ImageStore {
     public func save(_ data: Data, in directory: URL) throws -> ReceivedImage {
         let item = try save(UploadRequest(body: data, kind: .image), in: directory)
         guard let image = item.image else {
-            throw HTTPFailure(415, "Unsupported Image")
+            throw UploadError.unsupportedImage
         }
         return image
     }
@@ -125,7 +125,7 @@ public actor ImageStore {
             suffix = "." + inspected.1
         } else {
             switch kind {
-            case .image: throw HTTPFailure(415, "Unsupported Image")
+            case .image: throw UploadError.unsupportedImage
             case .text: suffix = ".txt"
             case .link:
                 let address = String(decoding: data, as: UTF8.self)
@@ -137,19 +137,16 @@ public actor ImageStore {
                 suffix = ".webloc"
             case .file:
                 guard let filename = request.filename else {
-                    throw HTTPFailure(
-                        400,
-                        "Filename Required"
-                    )
+                    throw UploadError.filenameRequired
                 }
                 guard request.contentType?.hasPrefix("image/") != true else {
-                    throw HTTPFailure(415, "Unsupported Image")
+                    throw UploadError.unsupportedImage
                 }
                 suffix = "-" + Self.nameMatchingContent(filename, data: data)
             }
         }
         guard data.count <= HTTPRequestDecoder.maximumBodySize else {
-            throw HTTPFailure(413, "Payload Too Large")
+            throw UploadError.payloadTooLarge
         }
         let writer = try ItemWriter(in: directory, kind: kind)
         let stem = "AnyDock-\(Int(Date().timeIntervalSince1970 * 1000))-\(UUID().uuidString)"

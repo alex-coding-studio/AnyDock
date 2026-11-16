@@ -1,5 +1,6 @@
 import AnyDockCore
 import AppKit
+import Combine
 import OSLog
 
 @main
@@ -17,7 +18,8 @@ enum AnyDockApp {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
-    private var statusItem: NSStatusItem?
+    private lazy var statusItem = StatusItemController()
+    private var subscriptions = Set<AnyCancellable>()
 
     private var popoverAppearance: NSKeyValueObservation?
     private lazy var popover: NSPopover = {
@@ -43,7 +45,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
 
     func applicationDidFinishLaunching(_: Notification) {
-        setUpStatusItem()
+        statusItem.clicks
+            .sink { [weak self] in self?.togglePopover() }
+            .store(in: &subscriptions)
+
+        guard let current = loadConfiguration() else {
+            return
+        }
+        configuration = current
+
+        // Start http servers
+
         tray.openSettings = { [weak self] in self?.showSettings() }
         tray.openFolder = { [weak self] in self?.openFolder() }
         tray.didFinishDragging = { [weak self] in self?.popover.performClose(nil) }
@@ -57,40 +69,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         tray.clipsCopied = { [weak self] in self?.clipboard.ignoreCurrentContents() }
         clipboard.onChange = { [weak self] clips in self?.tray.replaceClips(clips) }
         clipboard.setEnabled(Preferences.keepsClipboardHistory)
-        do {
-            let current = try configurationStore.load()
-            configuration = current
-            let preferences = SettingsController(configuration: current)
-            preferences.apply = { [weak self] next in try await self?.apply(next) }
-            preferences.clipboardHistoryChanged = { [weak self] enabled in
-                self?.clipboard.setEnabled(enabled)
-            }
-            hotKeys.onPress = { [weak self] in self?.togglePopover() }
-            preferences.registerHotKey = { [weak self] hotKey in self?.hotKeys.register(
-                hotKey
-            ) ?? false }
-            preferences.registerSavedHotKey()
-            settings = preferences
-            server = HTTPServer(store: store)
-            Task {
-                await startReceiver(current.receiver)
-                await reloadImages()
-            }
-            if CommandLine.arguments.contains("--settings") {
-                showSettings()
-            }
-            if CommandLine.arguments.contains("--tray") {
-                togglePopover()
-            }
-        } catch {
-            logger.error(
-                "Configuration could not be loaded: \(error.localizedDescription, privacy: .public)"
-            )
-            let alert = NSAlert(error: error)
-            alert.messageText = L10n.text("Unable to Read AnyDock Configuration")
-            alert.informativeText = L10n.text("configuration.recovery")
-            alert.runModal()
-            NSApp.terminate(nil)
+        let preferences = SettingsController(configuration: current)
+        preferences.apply = { [weak self] next in try await self?.apply(next) }
+        preferences.clipboardHistoryChanged = { [weak self] enabled in
+            self?.clipboard.setEnabled(enabled)
+        }
+        hotKeys.onPress = { [weak self] in self?.togglePopover() }
+        preferences.registerHotKey = { [weak self] hotKey in self?.hotKeys.register(
+            hotKey
+        ) ?? false }
+        preferences.registerSavedHotKey()
+        settings = preferences
+        server = HTTPServer(store: store)
+        Task {
+            await startReceiver(current.receiver)
+            await reloadImages()
+        }
+        if CommandLine.arguments.contains("--settings") {
+            showSettings()
+        }
+        if CommandLine.arguments.contains("--tray") {
+            togglePopover()
         }
     }
 
@@ -111,15 +110,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         tray.trayDidClose()
     }
 
-    private func setUpStatusItem() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = BrandIcon.menuBar()
-        item.button?.setAccessibilityLabel(L10n.text("AnyDock"))
-        item.button?.image?.isTemplate = true
-        item.button?.target = self
-        item.button?.action = #selector(togglePopover)
-        item.button?.toolTip = L10n.text("AnyDock")
-        statusItem = item
+    private func loadConfiguration() -> ConnectionConfiguration? {
+        do {
+            return try configurationStore.load()
+        } catch {
+            logger.error(
+                "Configuration could not be loaded: \(error.localizedDescription, privacy: .public)"
+            )
+            let alert = NSAlert(error: error)
+            alert.messageText = L10n.text("Unable to Read AnyDock Configuration")
+            alert.informativeText = L10n.text("configuration.recovery")
+            alert.runModal()
+            NSApp.terminate(nil)
+            return nil
+        }
     }
 
     private func startReceiver(_ next: ConnectionConfiguration.Receiver) async {
@@ -137,7 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
                 }
             )
             settings?.setStatus(L10n.text("Listening · %d", Int(next.port)), isError: false)
-            setErrorIcon(false)
+            statusItem.showFailure(false)
         } catch {
             receiverFailed(
                 L10n.text(
@@ -152,18 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private func receiverFailed(_ message: String) {
         logger.error("Listener failed: \(message, privacy: .public)")
         settings?.setStatus(message, isError: true)
-        setErrorIcon(true)
-    }
-
-    private func setErrorIcon(_ failed: Bool) {
-        statusItem?.button?.image =
-            failed
-                ? NSImage(
-                    systemSymbolName: "exclamationmark.triangle",
-                    accessibilityDescription: L10n.text("AnyDock receiver failed. Open Settings.")
-                )
-                : BrandIcon.menuBar()
-        statusItem?.button?.image?.isTemplate = true
+        statusItem.showFailure(true)
     }
 
     private func received(_ item: ReceivedItem, directory: URL) {
@@ -246,7 +239,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         await startReceiver(next.receiver)
     }
 
-    @objc private func togglePopover() {
+    private func togglePopover() {
         if tray.holdsPresentation {
             tray.closePreview()
             return
@@ -262,7 +255,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         guard !popover.isShown else {
             return
         }
-        guard let button = statusItem?.button else {
+        guard let button = statusItem.button else {
             return
         }
         NSApp.activate(ignoringOtherApps: true)

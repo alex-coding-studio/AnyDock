@@ -30,7 +30,7 @@ func rejectsUnsafeRequests() throws {
         do {
             _ = try decoder.append(Data("POST /upload HTTP/1.1\r\n\(headers)\r\n".utf8))
             Issue.record("Unsafe request was accepted")
-        } catch let error as HTTPFailure {
+        } catch let error as UploadError {
             #expect(error.status == status)
         }
     }
@@ -47,7 +47,7 @@ func storesOriginalsWithoutOverwriting() async throws {
     #expect(first.url != second.url)
     #expect(try Data(contentsOf: first.url) == image)
     #expect(try Data(contentsOf: second.url) == image)
-    await #expect(throws: HTTPFailure.self) {
+    await #expect(throws: UploadError.self) {
         try await store.save(Data("not an image".utf8), in: directory)
     }
     #expect(try await store.list(in: directory).count == 2)

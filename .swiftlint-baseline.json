@@ -1006,36 +1006,6 @@
   },
   {
     "violation": {
-      "ruleName": "Cyclomatic Complexity",
-      "ruleDescription": "Complexity of function bodies should be limited.",
-      "location": {
-        "line": 19,
-        "character": 12,
-        "file": "Sources/AnyDockCore/HTTPProtocol.swift"
-      },
-      "ruleIdentifier": "cyclomatic_complexity",
-      "severity": "warning",
-      "reason": "Function should have complexity 10 or less; currently complexity is 13"
-    },
-    "text": "    public init("
-  },
-  {
-    "violation": {
-      "ruleName": "Cyclomatic Complexity",
-      "severity": "warning",
-      "reason": "Function should have complexity 10 or less; currently complexity is 17",
-      "location": {
-        "character": 22,
-        "line": 165,
-        "file": "Sources/AnyDockCore/HTTPProtocol.swift"
-      },
-      "ruleDescription": "Complexity of function bodies should be limited.",
-      "ruleIdentifier": "cyclomatic_complexity"
-    },
-    "text": "    private mutating func parseHeader(_ header: String) throws {"
-  },
-  {
-    "violation": {
       "ruleIdentifier": "cyclomatic_complexity",
       "reason": "Function should have complexity 10 or less; currently complexity is 15",
       "ruleDescription": "Complexity of function bodies should be limited.",

@@ -30,14 +30,14 @@ func decodesContentAndRejectsUnsafeInputs() throws {
         do {
             _ = try decodeContent(kind: kind, name: name, body: body, key: key)
             Issue.record("Unsafe content was accepted")
-        } catch let error as HTTPFailure {
+        } catch let error as UploadError {
             #expect(error.status == status)
         }
     }
     var decoder = HTTPRequestDecoder(token: "test-key")
     let header =
         "POST /upload HTTP/1.1\r\nX-AnyDock-Key: test-key\r\nContent-Length: 50000001\r\n\r\n"
-    #expect(throws: HTTPFailure.self) { try decoder.append(Data(header.utf8)) }
+    #expect(throws: UploadError.self) { try decoder.append(Data(header.utf8)) }
     var partial = HTTPRequestDecoder(token: "test-key")
     let incomplete =
         "POST /upload HTTP/1.1\r\nX-AnyDock-Key: test-key\r\nContent-Length: 10\r\n"
@@ -123,7 +123,7 @@ func classifiesImagesByContentAndDeclaration() async throws {
         filename: "fake.png",
         contentType: "image/png"
     )
-    await #expect(throws: HTTPFailure.self) {
+    await #expect(throws: UploadError.self) {
         try await store.save(invalid, in: directory)
     }
     #expect(try await store.list(in: directory).count == 2)
