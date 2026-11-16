@@ -56,10 +56,6 @@ final class ClipboardCell: NSView, NSDraggingSource {
         copySubject.eraseToAnyPublisher()
     }
 
-    private var resolvedTrayAppearance: NSAppearance {
-        window?.contentView?.effectiveAppearance ?? effectiveAppearance
-    }
-
     override init(frame: NSRect) {
         super.init(frame: frame)
         configure()
@@ -83,19 +79,16 @@ final class ClipboardCell: NSView, NSDraggingSource {
         nil
     }
 
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        updateColors()
-    }
-
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        updateColors()
         needsDisplay = true
     }
 
     override func updateLayer() {
-        applyLayerColors()
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.cornerRadius = PKYShape.Radius.tile
+            layer?.backgroundColor = NSColor.pkyBackground(.standard(.secondary)).cgColor
+        }
     }
 
     override func accessibilityPerformPress() -> Bool {
@@ -147,42 +140,10 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private func configure() {
         wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
         setAccessibilityElement(true)
         setAccessibilityRole(.button)
         setAccessibilityHelp(L10n.text("Double-click to copy"))
-        updateColors()
-    }
-
-    private func updateColors() {
-        applyLayerColors()
-        let appearance = resolvedTrayAppearance
-        if appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {
-            text.textColor = .pkyContent(.primary)
-            time.textColor = .pkyContent(.secondary)
-        } else {
-            appearance.performAsCurrentDrawingAppearance {
-                text.textColor = NSColor(cgColor: NSColor.pkyContent(.primary).cgColor)
-                    ?? .pkyContent(.primary)
-                time.textColor = NSColor(cgColor: NSColor.pkyContent(.secondary).cgColor)
-                    ?? .pkyContent(.secondary)
-            }
-        }
-    }
-
-    private func applyLayerColors() {
-        let appearance = resolvedTrayAppearance
-        let dark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        appearance.performAsCurrentDrawingAppearance {
-            layer?.cornerRadius = PKYShape.Radius.tile
-            layer?.backgroundColor =
-                (dark ? NSColor.pkyBackground(.standard(.secondary)) : .white).cgColor
-            layer?.borderWidth = dark ? 0 : PKYShape.Stroke.standard
-            layer?.borderColor = dark ? nil : NSColor.pkySeparator(.standard).cgColor
-            if dark {
-                layer?.pkyRemoveElevation()
-            } else {
-                layer?.pkyApplyElevation(.subtle, color: CGColor.black, appearance: .light)
-            }
-        }
+        updateLayer()
     }
 }

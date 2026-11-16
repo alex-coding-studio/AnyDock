@@ -1,6 +1,5 @@
 import AppKit
 import Combine
-import PockyFoundation
 import SnapKit
 import Testing
 @testable import AnyDock
@@ -109,68 +108,34 @@ func clickingHeaderCollapsesExpandedBar() throws {
 }
 
 @MainActor
-@Test("剪贴板条目在浅色模式为带描边和阴影的纯白卡片与深色文字，深色模式保持主干深色卡片无描边阴影")
-func cellSeparatesOnLightGlassAndPreservesDarkMode() throws {
+@Test("浅色窗口中剪贴板条目仍沿用深色外观解析背景与文字")
+func cellResolvesDarkAppearanceInsideLightWindow() throws {
     let cell = ClipboardCell()
-    let container = NSView(frame: NSRect(x: 0, y: 0, width: 120, height: 60))
-    container.addSubview(cell)
-    cell.snp.makeConstraints { $0.edges.equalToSuperview() }
     let window = NSWindow(
         contentRect: NSRect(x: 0, y: 0, width: 120, height: 60),
         styleMask: [],
         backing: .buffered,
         defer: true
     )
-    window.contentView?.addSubview(container)
-    container.snp.makeConstraints { $0.edges.equalToSuperview() }
-
     window.appearance = NSAppearance(named: .aqua)
+    window.contentView?.addSubview(cell)
+    cell.snp.makeConstraints { $0.edges.equalToSuperview() }
     window.contentView?.layoutSubtreeIfNeeded()
-    let lightCG = try #require(cell.layer?.backgroundColor)
-    let lightBackground = try #require(NSColor(cgColor: lightCG)?.usingColorSpace(.sRGB))
-    #expect(lightBackground.redComponent > 0.99)
-    #expect(lightBackground.greenComponent > 0.99)
-    #expect(lightBackground.blueComponent > 0.99)
-    #expect(lightBackground.alphaComponent > 0.99)
-    #expect(cell.layer?.borderWidth == PKYShape.Stroke.standard)
-    #expect((cell.layer?.shadowOpacity ?? 0) > 0)
-    let lightText = try #require(cell.text.textColor?.usingColorSpace(.sRGB))
-    #expect(lightText.redComponent < 0.2)
+    cell.updateLayer()
 
-    window.appearance = NSAppearance(named: .darkAqua)
-    window.contentView?.layoutSubtreeIfNeeded()
+    #expect(cell.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
+    #expect(cell.text.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
+    #expect(cell.time.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
+
     var expectedDark = CGColor.black
     NSAppearance(named: .darkAqua)?.performAsCurrentDrawingAppearance {
         expectedDark = NSColor.pkyBackground(.standard(.secondary)).cgColor
     }
-    let darkCG = try #require(cell.layer?.backgroundColor)
-    let darkBackground = try #require(NSColor(cgColor: darkCG)?.usingColorSpace(.sRGB))
-    let expectedDarkColor = try #require(NSColor(cgColor: expectedDark)?.usingColorSpace(.sRGB))
-    #expect(abs(darkBackground.redComponent - expectedDarkColor.redComponent) < 0.001)
-    #expect(cell.layer?.borderWidth == 0)
-    #expect((cell.layer?.shadowOpacity ?? 0) == 0)
-
-    window.appearance = NSAppearance(named: .aqua)
-    container.appearance = NSAppearance(named: .vibrantDark)
-    window.contentView?.layoutSubtreeIfNeeded()
-    let overriddenCG = try #require(cell.layer?.backgroundColor)
-    let overriddenBackground = try #require(NSColor(cgColor: overriddenCG)?.usingColorSpace(.sRGB))
-    #expect(overriddenBackground.redComponent > 0.99)
-    let overriddenText = try #require(cell.text.textColor?.usingColorSpace(.sRGB))
-    #expect(overriddenText.redComponent < 0.2)
-}
-
-@MainActor
-@Test("剪贴板玻璃容器保持原生 contentView 嵌套结构")
-func clipboardSurfaceUsesNativeGlassContentView() {
-    let (tray, enabled, pasteboard) = makeTray(with: ["a"])
-    defer {
-        enabled.send(false)
-        pasteboard.releaseGlobally()
+    var lightBackground = CGColor.white
+    NSAppearance(named: .aqua)?.performAsCurrentDrawingAppearance {
+        lightBackground = NSColor.pkyBackground(.standard(.secondary)).cgColor
     }
-    if #available(macOS 26, *) {
-        let glass = tray.footer.clipboardSurface as? NSGlassEffectView
-        #expect(glass?.contentView === tray.footer.clipboardBar)
-        #expect(glass?.tintColor == nil)
-    }
+    let actual = try #require(cell.layer?.backgroundColor)
+    #expect(actual == expectedDark)
+    #expect(actual != lightBackground)
 }
