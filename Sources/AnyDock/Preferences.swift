@@ -41,6 +41,7 @@ enum Preferences {
         ) as? Bool ?? true }
         return NotificationCenter.default
             .publisher(for: UserDefaults.didChangeNotification, object: UserDefaults.standard)
+            .receive(on: DispatchQueue.main)
             .map { _ in read() }
             .prepend(read())
             .removeDuplicates()
