@@ -36,8 +36,8 @@ public struct TrayContents: Sendable {
         select(filter)
     }
 
-    public mutating func receive(_ item: ReceivedItem, limit: Int = 120) {
-        items = Array(([item] + items.filter { $0.url != item.url }).prefix(limit))
+    public mutating func receive(_ item: ReceivedItem) {
+        items = [item] + items.filter { $0.url != item.url }
         if !filter.includes(item.kind) {
             filter = .all
         }

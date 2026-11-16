@@ -38,3 +38,11 @@ func arrivalOutsideFilterSwitchesToAll() {
     #expect(contents.filter == .all)
     #expect(contents.items.first?.url.lastPathComponent == "d")
 }
+
+@Test("收到新内容时保留已列出的全部项目，不再截断")
+func arrivalKeepsEveryListedItem() {
+    var contents = TrayContents()
+    contents.replace((0 ..< 600).map { item("\($0)", .text) })
+    contents.receive(item("new", .text))
+    #expect(contents.items.count == 601)
+}
