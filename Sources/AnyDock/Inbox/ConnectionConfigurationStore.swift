@@ -5,9 +5,6 @@ import Security
 @MainActor
 final class ConnectionConfigurationStore {
     private enum Constants {
-        static let configurationFile = URL.applicationSupportDirectory.appending(
-            path: "AnyDock/configuration.json"
-        )
         static let defaultReceiveDirectory = URL.downloadsDirectory.appending(
             path: "AnyDock",
             directoryHint: .isDirectory
@@ -19,6 +16,16 @@ final class ConnectionConfigurationStore {
         static let configurationFilePermissions = 0o600
     }
 
+    static let defaultFile = URL.applicationSupportDirectory.appending(
+        path: "AnyDock/configuration.json"
+    )
+
+    private let configurationFile: URL
+
+    init(file: URL = defaultFile) {
+        configurationFile = file
+    }
+
     private static func makeToken() throws -> String {
         var bytes = [UInt8](repeating: 0, count: Constants.generatedTokenByteCount)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
@@ -28,10 +35,10 @@ final class ConnectionConfigurationStore {
     }
 
     func load() throws -> ConnectionConfiguration {
-        if FileManager.default.fileExists(atPath: Constants.configurationFile.path) {
+        if FileManager.default.fileExists(atPath: configurationFile.path) {
             let result = try JSONDecoder().decode(
                 ConnectionConfiguration.self,
-                from: Data(contentsOf: Constants.configurationFile)
+                from: Data(contentsOf: configurationFile)
             )
             guard result.receiver.port >= Constants.minimumPort,
                   result.receiver.token.utf8.count >= Constants.minimumTokenLength,
@@ -50,17 +57,17 @@ final class ConnectionConfigurationStore {
 
     func save(_ configuration: ConnectionConfiguration) throws {
         try FileManager.default.createDirectory(
-            at: Constants.configurationFile.deletingLastPathComponent(),
+            at: configurationFile.deletingLastPathComponent(),
             withIntermediateDirectories: true,
             attributes: [.posixPermissions: Constants.configurationFolderPermissions]
         )
         try JSONEncoder().encode(configuration).write(
-            to: Constants.configurationFile,
+            to: configurationFile,
             options: .atomic
         )
         try FileManager.default.setAttributes(
             [.posixPermissions: Constants.configurationFilePermissions],
-            ofItemAtPath: Constants.configurationFile.path
+            ofItemAtPath: configurationFile.path
         )
     }
 }

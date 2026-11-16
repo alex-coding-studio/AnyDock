@@ -27,6 +27,7 @@ final class TrayViewModel {
     private let recycleStartSubject = PassthroughSubject<Void, Never>()
     private let dragFinishedSubject = PassthroughSubject<Void, Never>()
     private let errorSubject = PassthroughSubject<any Error, Never>()
+    private let arrivalSubject = PassthroughSubject<ReceivedItem, Never>()
     private var droppedOnTrash = false
     private var subscriptions = Set<AnyCancellable>()
 
@@ -56,6 +57,10 @@ final class TrayViewModel {
 
     var errors: AnyPublisher<any Error, Never> {
         errorSubject.eraseToAnyPublisher()
+    }
+
+    var arrivals: AnyPublisher<ReceivedItem, Never> {
+        arrivalSubject.eraseToAnyPublisher()
     }
 
     var contents: TrayContents {
@@ -182,11 +187,16 @@ final class TrayViewModel {
 
     private func subscribeEvents() {
         inbox.received
-            .sink { [weak self] in self?.receive($0) }
+            .sink { [weak self] in self?.arrive($0) }
             .store(in: &subscriptions)
         inbox.items
             .sink { [weak self] in self?.replace($0) }
             .store(in: &subscriptions)
+    }
+
+    private func arrive(_ item: ReceivedItem) {
+        receive(item)
+        arrivalSubject.send(item)
     }
 
     private func performRecycle(_ targets: [URL]) async {

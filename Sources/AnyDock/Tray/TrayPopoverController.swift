@@ -4,10 +4,7 @@ import Combine
 
 @MainActor
 final class TrayPopoverController: NSObject, NSPopoverDelegate {
-    private(set) lazy var tray = TrayViewController(
-        viewModel: TrayViewModel(inbox: inbox),
-        clipboard: clipboard
-    )
+    private(set) lazy var tray = TrayViewController(viewModel: viewModel, clipboard: clipboard)
 
     private(set) lazy var popover: NSPopover = {
         let popover = NSPopover()
@@ -24,6 +21,8 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
     private let statusItem: StatusItemController
     private var appearance: NSKeyValueObservation?
     private var subscriptions = Set<AnyCancellable>()
+
+    private lazy var viewModel = TrayViewModel(inbox: inbox)
 
     var settingsRequests: AnyPublisher<Void, Never> {
         tray.settingsRequests
@@ -85,7 +84,7 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         tray.folderRequests
             .sink { [weak self] in self?.inbox.openFolder() }
             .store(in: &subscriptions)
-        inbox.received
+        viewModel.arrivals
             .sink { [weak self] in self?.showArrival($0) }
             .store(in: &subscriptions)
     }

@@ -10,7 +10,9 @@ func receiverStatusSurvivesDeferredSettingsBuild() {
         configuration: ConnectionConfiguration(
             receiver: .init(directory: FileManager.default.temporaryDirectory, token: "test-token")
         ),
-        store: ConnectionConfigurationStore()
+        store: ConnectionConfigurationStore(
+            file: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        )
     )
     let settings = SettingsController(inbox: inbox, hotKeys: HotKeyCenter())
     settings.setStatus("failed", isError: true)
