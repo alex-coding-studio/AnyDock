@@ -36,6 +36,10 @@ esac
 swiftformat Sources Tests Package.swift --lint
 baseline_path="$(python3 scripts/portable-swiftlint-baseline.py --root "$PWD" --config .swiftlint.yml --output "$baseline_cache/baseline.json")"
 swiftlint lint --strict --quiet ${baseline_path:+--baseline "$baseline_path"}
+python3 -B scripts/test-native-layout.py
+python3 -B scripts/check-native-layout.py --base-ref "${LAYOUT_BASE_REF:-origin/main}"
+python3 -B scripts/test-constraint-style.py
+python3 -B scripts/check-constraint-style.py --base-ref "${LAYOUT_BASE_REF:-origin/main}"
 python3 -m compileall -q scripts Tests/ShortcutTests
 for script in scripts/*.sh; do bash -n "$script"; done
 plutil -lint Resources/Info.plist

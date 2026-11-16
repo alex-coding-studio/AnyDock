@@ -1,0 +1,38 @@
+view.topAnchor
+    .constraint(equalTo: guide.bottomAnchor)
+width.constraint(greaterThanOrEqualToConstant: minimum)
+view.rightAnchor.constraint(equalTo: guide.leftAnchor)
+label.firstBaselineAnchor.constraint(equalTo: title.lastBaselineAnchor)
+row.bottomAnchor.constraint(equalTo: title.lastBaselineAnchor)
+view.widthAnchor.constraint(
+    lessThanOrEqualTo: guide.heightAnchor, multiplier: scale, constant: inset
+)
+NSLayoutConstraint(
+    item: view, attribute: .centerX, relatedBy: .equal,
+    toItem: host, attribute: .centerX, multiplier: scale, constant: inset
+)
+NSLayoutConstraint.constraints(withVisualFormat: "H:|[view]|", metrics: nil, views: views)
+host.addConstraint(constraint)
+addConstraints(constraints)
+view.heightAnchor.constraint(equalTo: view.widthAnchor)
+self.view.heightAnchor.constraint(equalTo: view.widthAnchor)
+let edge = view.leftAnchor
+edge.constraint(equalTo: other.rightAnchor)
+view.leftAnchor.constraint(equalTo: edge)
+NSLayoutConstraint.init(
+    item: view, attribute: .width, relatedBy: .equal,
+    toItem: host, attribute: .height, multiplier: scale, constant: inset
+)
+let constraint: NSLayoutConstraint = .init(
+    item: view, attribute: .width, relatedBy: .equal,
+    toItem: host, attribute: .height, multiplier: scale, constant: inset
+)
+let nested: NSLayoutConstraint = .init(
+    item: makeView(frame: frame), attribute: .width, relatedBy: .equal,
+    toItem: makeView(frame: frame), attribute: .height, multiplier: scale, constant: inset
+)
+let conditional: NSLayoutConstraint = .init(
+    item: view, attribute: .width, relatedBy: .equal,
+    toItem: aligned ? host : alternateHost, attribute: .height,
+    multiplier: scale, constant: inset
+)

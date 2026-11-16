@@ -18,6 +18,16 @@ A pull request that does not change product behaviour, commands, dependencies or
 - Components publish events with Combine: keep a private `PassthroughSubject` (or `CurrentValueSubject` for state) and expose it as `AnyPublisher`; subscribers store the `AnyCancellable`. Closure callback properties are being replaced with publishers file by file; new component communication uses publishers, not closures.
 - Use native AppKit controls and system colors. Guard Liquid Glass APIs with macOS 26 availability checks and retain the material fallback for macOS 14–25. Keep magic values in local Metrics roles such as `TrayMetrics`.
 
+## Auto Layout
+
+- Use SnapKit's standard DSL for Auto Layout. Each target using it declares the product directly. Keep one view's constraints in one `snp.makeConstraints` closure per assembly phase, and put priorities in the chain. Preserve existing numeric priorities; AppKit's `ConstraintPriority.medium` is 501, unlike UIKit's 500. Pass native priority `rawValue` when needed.
+- Keep one current `Constraint?` for a switched relationship, deactivate it before replacement, and use `snp.remakeConstraints` only when replacing that view's complete SnapKit placement. Preserve independently owned sizing constraints and explicit activation phases; use `prepareConstraints` for deferred activation.
+- Remove redundant `translatesAutoresizingMaskIntoConstraints = false` only when SnapKit owns placement. A size-only constraint must not take placement ownership from a frame-managed host; preserve its original autoresizing setting.
+- Views used as `NSScrollView.documentView`, such as `NSCollectionView`, are sized by their layout or content and retain width-following `autoresizingMask`; do not add constraints to them. The collection view manages each `NSCollectionViewItem` root view's frame; constrain only its internal subviews.
+- Use leading/trailing relationships and directional edges for nonzero insets; `edges` is suitable for zero edge pinning. Preserve AppKit clip-view relationships, flipped-coordinate behavior, native stack visibility/detachment rules, glass `contentView` ownership and availability fallbacks.
+- Animated height and visibility regions retain constraint-based outer geometry without changing the existing native stack hierarchy or timing. Preserve AppKit `NSAnimationContext` and `NSLayoutConstraint.animator()` behavior; a synchronous SnapKit constant update is not equivalent to an animator update.
+- During migration, `scripts/native-layout-baseline.json` and `scripts/constraint-style-baseline.json` must exactly match scanned source and may only decrease per file/category relative to the PR base. New native construction, `NSLayoutConstraint.activate` and `activate: false` calls are forbidden. The native check scans `Sources`; the style check also scans `Tests`. No Pocky API rules or temporary exceptions apply. Run the corresponding fixture tests after checker changes. Never increase a baseline to accept a new call.
+
 ## Protect user data
 
 - Never overwrite or automatically delete received originals; receive-folder changes follow the receive-folder safety rules in `docs/PROJECT.md`.

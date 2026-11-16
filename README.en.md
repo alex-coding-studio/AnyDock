@@ -42,3 +42,5 @@ Use only on a trusted local network: traffic is unencrypted, so never expose the
 ```
 
 Personally maintained; external issues and pull requests are not accepted. Forks welcome. MIT License, see [LICENSE](LICENSE).
+
+Auto Layout uses [SnapKit](https://github.com/SnapKit/SnapKit) (MIT); its full license is included in the app resources.

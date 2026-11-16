@@ -42,3 +42,5 @@
 ```
 
 个人维护，不接受外部 issue 和 PR，欢迎 fork。MIT 许可证，见 [LICENSE](LICENSE)。
+
+布局使用 [SnapKit](https://github.com/SnapKit/SnapKit)（MIT）；完整第三方许可证随应用资源分发。

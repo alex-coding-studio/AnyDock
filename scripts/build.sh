@@ -8,6 +8,7 @@ anydock_app="$PWD/dist/AnyDock.app"
 mkdir -p "$anydock_app/Contents/MacOS" "$anydock_app/Contents/Resources"
 cp "$anydock_bin/AnyDock" "$anydock_app/Contents/MacOS/AnyDock"
 ditto "$anydock_bin/AnyDock_AnyDock.bundle" "$anydock_app/Contents/Resources/AnyDock_AnyDock.bundle"
+ditto "$anydock_bin/SnapKit_SnapKit.bundle" "$anydock_app/Contents/Resources/SnapKit_SnapKit.bundle"
 for anydock_language in en zh-Hans; do
   mkdir -p "$anydock_app/Contents/Resources/$anydock_language.lproj"
   cp "Sources/AnyDock/Resources/$anydock_language.lproj/InfoPlist.strings" \
