@@ -16,7 +16,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     let hotKeyStatus = NSTextField(wrappingLabelWithString: "")
 
     private let inbox: Inbox
-    private let hotKeys: HotKeyCenter
+    private let hotKeys: GlobalHotKeyCenter
     private var subscriptions = Set<AnyCancellable>()
     private var selectedDirectory: URL
     private let appearance = NSPopUpButton(frame: .zero, pullsDown: false)
@@ -54,7 +54,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         inbox.configuration
     }
 
-    init(inbox: Inbox, hotKeys: HotKeyCenter) {
+    init(inbox: Inbox, hotKeys: GlobalHotKeyCenter) {
         self.inbox = inbox
         self.hotKeys = hotKeys
         selectedDirectory = inbox.configuration.receiver.directory
@@ -137,7 +137,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         }
     }
 
-    func recordHotKey(_ candidate: HotKey) {
+    func recordHotKey(_ candidate: KeyCombination) {
         guard hotKeys.register(candidate) else {
             registerSavedHotKey()
             showHotKeyMessage(L10n.text("hotkey.unavailable", candidate.displayString))

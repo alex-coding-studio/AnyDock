@@ -14,7 +14,7 @@ func receiverStatusSurvivesDeferredSettingsBuild() {
             file: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         )
     )
-    let settings = SettingsController(inbox: inbox, hotKeys: HotKeyCenter())
+    let settings = SettingsController(inbox: inbox, hotKeys: GlobalHotKeyCenter())
     settings.setStatus("failed", isError: true)
     settings.prepareInterface()
     #expect(settings.window?.contentViewController != nil)

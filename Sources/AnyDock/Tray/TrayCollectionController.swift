@@ -51,7 +51,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
     private var isApplyingSelection = false
     private var subscriptions = Set<AnyCancellable>()
 
-    var commands: AnyPublisher<TrayCollectionView.Command, Never> {
+    var commands: AnyPublisher<TrayCommand, Never> {
         collection.commands
     }
 
@@ -182,8 +182,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         collection.publisher(for: \.selectionIndexPaths)
             .sink { [weak self] _ in self?.syncSelection() }
             .store(in: &subscriptions)
-        collection.commands
-            .filter { $0 == .selectionChanged }
+        collection.selectionChanges
             .sink { [weak self] _ in self?.syncSelection() }
             .store(in: &subscriptions)
         viewModel.list
