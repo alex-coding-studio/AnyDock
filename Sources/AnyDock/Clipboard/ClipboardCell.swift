@@ -31,7 +31,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
     private lazy var time: NSTextField = {
         let time = NSTextField(labelWithString: "")
         time.font = PKYTypographyRole.caption.monospacedDigits.nsFont(in: PKYThemeFallback.system)
-        time.textColor = .secondaryLabelColor
+        time.textColor = .pkyContent(.secondary)
         time.lineBreakMode = .byTruncatingTail
         time.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return time
@@ -86,7 +86,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     override func updateLayer() {
         layer?.cornerRadius = PKYShape.Radius.tile
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        layer?.backgroundColor = NSColor.pkyBackground(.standard(.secondary)).cgColor
     }
 
     override func accessibilityPerformPress() -> Bool {

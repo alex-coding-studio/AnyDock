@@ -57,7 +57,7 @@ class PolaroidCardItem: TrayCardItem {
 
     func showTime(_ time: String) {
         caption.font = TrayCardSizing.timeFont
-        caption.textColor = .secondaryLabelColor
+        caption.textColor = .pkyContent(.secondary)
         caption.lineBreakMode = .byTruncatingTail
         caption.stringValue = time
     }
@@ -104,7 +104,7 @@ final class LinkCardItem: PolaroidCardItem {
 
     private(set) lazy var address: NSTextField = {
         let address = label(font: TrayCardSizing.addressFont, lines: 0)
-        address.textColor = .secondaryLabelColor
+        address.textColor = .pkyContent(.secondary)
         return address
     }()
 
@@ -133,7 +133,7 @@ final class FileCardItem: PolaroidCardItem {
 
     private lazy var lines: NSTextField = {
         let lines = label(font: TrayCardSizing.fileLinesFont, lines: 0)
-        lines.textColor = .secondaryLabelColor
+        lines.textColor = .pkyContent(.secondary)
         return lines
     }()
 
@@ -151,7 +151,7 @@ final class FileCardItem: PolaroidCardItem {
         preview.image = plainText ? nil : entry.thumbnail
         lines.stringValue = plainText ? entry.text ?? "" : ""
         caption.font = TrayCardSizing.captionFont
-        caption.textColor = .labelColor
+        caption.textColor = .pkyContent(.primary)
         caption.lineBreakMode = .byTruncatingMiddle
         caption.stringValue = entry.displayName
     }

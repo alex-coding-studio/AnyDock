@@ -66,8 +66,8 @@ final class BadgeView: NSView {
                 layer?.backgroundColor = color.cgColor
                 label.textColor = .white
             case .neutral:
-                layer?.backgroundColor = NSColor.quaternaryLabelColor.cgColor
-                label.textColor = .secondaryLabelColor
+                layer?.backgroundColor = NSColor.pkyContent(.quaternary).cgColor
+                label.textColor = .pkyContent(.secondary)
             case .media:
                 layer?.backgroundColor = Self.mediaBackground.cgColor
                 label.textColor = PKYThemeFallback.system.color.media.content
@@ -195,7 +195,7 @@ final class ThumbnailView: NSView {
             layer?.borderWidth =
                 selected ? PKYShape.Stroke.strong : (polaroid ? PKYShape.Stroke.standard : 0)
             layer?.borderColor =
-                (selected ? NSColor.pkyAccent(.primary) : NSColor.separatorColor).cgColor
+                (selected ? NSColor.pkyAccent(.primary) : NSColor.pkySeparator(.standard)).cgColor
             layer?.pkyApplyElevation(
                 polaroid ? .subtle : .none,
                 color: CGColor.black,

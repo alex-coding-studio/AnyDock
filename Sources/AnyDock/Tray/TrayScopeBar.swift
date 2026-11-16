@@ -342,7 +342,9 @@ private final class ScopeSegmentButton: NSButton {
             string: plainTitle,
             attributes: [
                 .font: PKYTypographyRole.action.nsFont(in: PKYThemeFallback.system),
-                .foregroundColor: isChosen ? NSColor.labelColor : NSColor.secondaryLabelColor,
+                .foregroundColor: isChosen ? NSColor.pkyContent(.primary) : NSColor.pkyContent(
+                    .secondary
+                ),
             ]
         )
         setAccessibilitySelected(isChosen)

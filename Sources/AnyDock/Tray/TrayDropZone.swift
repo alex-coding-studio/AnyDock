@@ -121,7 +121,7 @@ final class TrayDropZone: NSView {
         for field in [label, suffix] {
             field.textColor = isTargeted ? .pkyOnStatus(.destructive) : isArmed ? .pkyStatus(
                 .destructive
-            ) : .labelColor
+            ) : .pkyContent(.primary)
             field.font = font
         }
         needsDisplay = true

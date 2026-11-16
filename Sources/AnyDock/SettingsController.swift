@@ -80,7 +80,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         window.toolbarStyle = .preference
         window.center()
         super.init(window: window)
-        statusIcon.contentTintColor = .tertiaryLabelColor
+        statusIcon.contentTintColor = .pkyContent(.tertiary)
         if let savedName = inbox.configuration.sender.shortcutName {
             shortcutName.stringValue = savedName
         } else if let computerName = LocalHost.computerName()?
@@ -156,7 +156,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     func setStatus(_ text: String, isError: Bool) {
         receiverStatus.stringValue = text
-        receiverStatus.textColor = isError ? .pkyStatus(.destructive) : .labelColor
+        receiverStatus.textColor = isError ? .pkyStatus(.destructive) : .pkyContent(.primary)
         statusIcon.contentTintColor = isError ? .pkyStatus(.destructive) : .pkyStatus(.success)
         statusIcon.image = NSImage(
             systemSymbolName: isError ? "exclamationmark.circle.fill" : "circle.fill",
@@ -286,7 +286,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         language.action = #selector(changeLanguage)
         language.setAccessibilityLabel(L10n.text("Language"))
         languageNotice.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
-        languageNotice.textColor = .secondaryLabelColor
+        languageNotice.textColor = .pkyContent(.secondary)
         languageNotice.isHidden = true
         languageNotice.setContentCompressionResistancePriority(.required, for: .vertical)
         restart.target = self
@@ -413,7 +413,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         refreshAddress()
         let key = NSTextField(labelWithString: "•••• •••• •••• ••••")
         key.font = .monospacedSystemFont(ofSize: detailFontSize, weight: .regular)
-        key.textColor = .secondaryLabelColor
+        key.textColor = .pkyContent(.secondary)
         send.target = self
         send.action = #selector(sendToPhone)
         send.bezelStyle = .rounded
@@ -478,7 +478,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         }
         configureMessage(receivingError)
         pending.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
-        pending.textColor = .secondaryLabelColor
+        pending.textColor = .pkyContent(.secondary)
         save.target = self
         save.action = #selector(saveSettings)
         save.keyEquivalent = "\r"
@@ -607,7 +607,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func footnote(_ text: String) -> NSTextField {
         let label = NSTextField(wrappingLabelWithString: text)
         label.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
-        label.textColor = .secondaryLabelColor
+        label.textColor = .pkyContent(.secondary)
         label.setContentCompressionResistancePriority(.required, for: .vertical)
         return label
     }
@@ -622,7 +622,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func section(_ title: String, rows: [NSView], note: String? = nil) -> NSStackView {
         let label = NSTextField(labelWithString: title)
         label.font = PKYTypographyRole.supporting.semibold.nsFont(in: PKYThemeFallback.system)
-        label.textColor = .secondaryLabelColor
+        label.textColor = .pkyContent(.secondary)
         let stack = NSStackView(
             views: [label, group(rows: rows)] + (note.map { [footnote($0)] } ?? [])
         )
@@ -679,7 +679,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         do {
             let name = try ShortcutInstaller.normalizedName(shortcutName.stringValue)
             shortcutNameStatus.stringValue = L10n.text("shortcut.name.normalized", name)
-            shortcutNameStatus.textColor = .secondaryLabelColor
+            shortcutNameStatus.textColor = .pkyContent(.secondary)
             shortcutNameStatus.isHidden = name == shortcutName.stringValue
             send.isEnabled = !isSending && !inbox.configuration.receiver.token.isEmpty
         } catch {
@@ -859,7 +859,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     private func showConnectionMessage(_ text: String, isError: Bool = true) {
         connectionStatus.stringValue = text
-        connectionStatus.textColor = isError ? .pkyStatus(.destructive) : .secondaryLabelColor
+        connectionStatus.textColor = isError ? .pkyStatus(.destructive) : .pkyContent(.secondary)
         connectionStatus.isHidden = false
     }
 
@@ -981,9 +981,9 @@ private final class SettingsGroup: NSView {
             xRadius: 10,
             yRadius: 10
         )
-        NSColor.controlBackgroundColor.setFill()
+        NSColor.pkyBackground(.standard(.secondary)).setFill()
         shape.fill()
-        NSColor.separatorColor.withAlphaComponent(0.5).setStroke()
+        NSColor.pkySeparator(.standard).withAlphaComponent(PKYOpacity.dimmed).setStroke()
         shape.lineWidth = 0.5
         shape.stroke()
     }

@@ -16,7 +16,7 @@ final class TrayEmptyStateView: NSStackView {
         let icon = NSImageView(
             image: NSImage(systemSymbolName: "tray", accessibilityDescription: nil) ?? NSImage()
         )
-        icon.contentTintColor = .secondaryLabelColor
+        icon.contentTintColor = .pkyContent(.secondary)
         return icon
     }()
 
@@ -33,7 +33,7 @@ final class TrayEmptyStateView: NSStackView {
             )
         )
         detail.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
-        detail.textColor = .secondaryLabelColor
+        detail.textColor = .pkyContent(.secondary)
         detail.alignment = .center
         return detail
     }()

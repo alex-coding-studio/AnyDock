@@ -19,7 +19,7 @@ final class ClipboardBar: NSView {
     private(set) lazy var title: NSTextField = {
         let title = NSTextField(labelWithString: "")
         title.font = PKYTypographyRole.supporting.semibold.nsFont(in: PKYThemeFallback.system)
-        title.textColor = .secondaryLabelColor
+        title.textColor = .pkyContent(.secondary)
         title.lineBreakMode = .byTruncatingTail
         title.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return title
@@ -67,7 +67,7 @@ final class ClipboardBar: NSView {
             pointSize: Self.iconPointSize,
             weight: .medium
         )
-        icon.contentTintColor = .secondaryLabelColor
+        icon.contentTintColor = .pkyContent(.secondary)
         return icon
     }()
 
