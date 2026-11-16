@@ -41,7 +41,7 @@ func storesOriginalsWithoutOverwriting() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
     let image = try makeImage()
-    let store = ImageStore()
+    let store = InboxStore()
     let first = try await store.save(UploadRequest(body: image, kind: .image), in: directory)
     let second = try await store.save(UploadRequest(body: image, kind: .image), in: directory)
     #expect(first.url != second.url)
@@ -59,7 +59,7 @@ func listsOnlyAnyDockOriginals() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
     let data = try makeImage()
-    let store = ImageStore()
+    let store = InboxStore()
     let received = try await store.save(UploadRequest(body: data, kind: .image), in: directory)
     try data.write(to: directory.appendingPathComponent("holiday.png"))
     #expect(received.url.lastPathComponent.hasPrefix("AnyDock-"))
@@ -72,7 +72,7 @@ func listsOnlyAnyDockOriginals() async throws {
 func receivesAuthenticatedHTTPAndRejectsPortConflict() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let server = HTTPServer(store: store)
     let conflicting = HTTPServer(store: store)
     let port = UInt16.random(in: 20000 ... 45000)

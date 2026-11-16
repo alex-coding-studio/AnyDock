@@ -1,5 +1,3 @@
-import Foundation
-
 public enum ReceivedKind: String, CaseIterable, Sendable {
     case image
     case text
@@ -14,12 +12,4 @@ public enum ReceivedKind: String, CaseIterable, Sendable {
         case .file: "Files"
         }
     }
-}
-
-public struct ReceivedItem: Sendable {
-    public let url: URL
-    public let kind: ReceivedKind
-    public let thumbnail: Data?
-    public let receivedAt: Date
-    public let isPlainText: Bool
 }

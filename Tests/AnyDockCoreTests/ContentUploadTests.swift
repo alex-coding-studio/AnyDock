@@ -49,7 +49,7 @@ func decodesContentAndRejectsUnsafeInputs() throws {
 func storesTypedContentWithQuarantine() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let text = try await store.save(
         decodeContent(kind: "text", body: Data("hello".utf8)),
         in: directory
@@ -104,7 +104,7 @@ func storesTypedContentWithQuarantine() async throws {
 func classifiesImagesByContentAndDeclaration() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let image = try await store.save(
         decodeContent(kind: "file", name: "document.pdf", body: makeImage()),
         in: directory
@@ -133,7 +133,7 @@ func classifiesImagesByContentAndDeclaration() async throws {
 func appendsExtensionFromContentSignature() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ImageStore()
+    let store = InboxStore()
     let pdf = Data("%PDF-1.7\n".utf8)
     let cases: [(String, Data, String)] = [
         ("SECRETARY OF STATE", pdf, "-SECRETARY OF STATE.pdf"),
@@ -176,7 +176,7 @@ func listsLegacyImagesAndRejectsDirectoryEscape() async throws {
         at: root.appendingPathComponent("Files"),
         withDestinationURL: outside
     )
-    let store = ImageStore()
+    let store = InboxStore()
     await #expect(throws: (any Error).self) {
         try await store.save(
             decodeContent(kind: "file", name: "notes.txt", body: Data("hi".utf8)),

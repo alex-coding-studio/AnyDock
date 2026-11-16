@@ -6,9 +6,9 @@ public actor HTTPServer {
     private var startup: CheckedContinuation<Void, any Error>?
     private var generation = UUID()
     private var connections = [UUID: NWConnection]()
-    private let store: ImageStore
+    private let store: InboxStore
 
-    public init(store: ImageStore) {
+    public init(store: InboxStore) {
         self.store = store
     }
 

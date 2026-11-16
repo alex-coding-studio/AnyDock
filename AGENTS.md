@@ -15,7 +15,7 @@ Read `ProjectContext.md` and `docs/PROJECT.md` before changing the project. Thes
 ## Protect user data
 
 - Never overwrite or automatically delete received originals. Changing receive folders must not move or delete existing files.
-- User-requested recycling must be limited to the generated items returned by `ImageStore.list` in the current receive folder. Use `NSWorkspace.recycle`, report failures and keep remaining items visible. Never permanently delete inbox files.
+- User-requested recycling must be limited to the generated items returned by `InboxStore.list` in the current receive folder. Use `NSWorkspace.recycle`, report failures and keep remaining items visible. Never permanently delete inbox files.
 - Keep receive credentials and personalized shortcuts out of source files, bundled resources, logs and shared test output. Personalized shortcuts belong in temporary storage and must be cleaned up after sharing or failure.
 - Use temporary directories and separate ports for tests. Do not use real user configuration or received images as fixtures.
 - Do not launch, replace or terminate an installed running copy, or perform interactive UI/device checks, unless the task explicitly requests it.
@@ -35,4 +35,4 @@ Choose checks appropriate to the change and follow any narrower task instruction
 
 ## Naming
 
-Use `com.cuxiao.mac.anydock` for the bundle identifier, Logger subsystem and preferences domain. Preserve existing preference keys, including copyNewItems. The connection configuration file (`Application Support/AnyDock/configuration.json`) holds `ConnectionConfiguration`: `receiver` (port, token, receive folder) and `sender` (personalized shortcut name, saved only after a successful send). Keep configured receive paths unchanged; fresh installations use ~/Downloads/AnyDock. Never log configuration bytes or keys. Received files use the `AnyDock-` prefix; `ImageStore.list` includes only `AnyDock-` items, and recycling uses that same set. Uploads authenticate with the `X-AnyDock-Key` header. Product names are localized as AnyDock in English and 随手坞 in Simplified Chinese.
+Use `com.cuxiao.mac.anydock` for the bundle identifier, Logger subsystem and preferences domain. Preserve existing preference keys, including copyNewItems. The connection configuration file (`Application Support/AnyDock/configuration.json`) holds `ConnectionConfiguration`: `receiver` (port, token, receive folder) and `sender` (personalized shortcut name, saved only after a successful send). Keep configured receive paths unchanged; fresh installations use ~/Downloads/AnyDock. Never log configuration bytes or keys. Received files use the `AnyDock-` prefix; `InboxStore.list` includes only `AnyDock-` items, and recycling uses that same set. Uploads authenticate with the `X-AnyDock-Key` header. Product names are localized as AnyDock in English and 随手坞 in Simplified Chinese.

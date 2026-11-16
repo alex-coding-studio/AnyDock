@@ -35,7 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let configurationStore = ConnectionConfigurationStore()
 
     private let tray = ImageTrayController()
-    private let store = ImageStore()
+    private let store = InboxStore()
     private let clipboard = ClipboardMonitor()
     private let hotKeys = HotKeyCenter()
     private var server: HTTPServer?
