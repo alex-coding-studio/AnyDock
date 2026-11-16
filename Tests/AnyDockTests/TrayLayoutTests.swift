@@ -204,3 +204,19 @@ func lastCardClearsBottomControlsWhenScrolledToEnd() throws {
     #expect(lowest.minY >= pill.maxY)
     withExtendedLifetime(window) {}
 }
+
+@MainActor
+@Test("列表可滚动时切换筛选，回到顶部后第一排仍在筛选栏下方")
+func switchingFilterKeepsFirstRowBelowFilterBar() throws {
+    let long = String(repeating: "随手坞把手机上的文字发到 Mac。", count: 20)
+    let (tray, window) = try makeTray(texts: Array(repeating: long, count: 40))
+    settle(tray)
+    for filter in [TrayFilter.kind(.text), .all] {
+        tray.select(filter)
+        settle(tray)
+        let bar = tray.header.filterBar.convert(tray.header.filterBar.bounds, to: tray.view)
+        let topmost = cards(tray).map(\.1.maxY).max() ?? 0
+        #expect(topmost <= bar.minY - 1)
+    }
+    _ = window
+}

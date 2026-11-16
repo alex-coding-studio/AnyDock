@@ -75,7 +75,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         guard !entries.isEmpty else {
             return
         }
-        collection.scrollToItems(at: [IndexPath(item: 0, section: 0)], scrollPosition: .top)
+        collection.scroll(.zero)
     }
 
     func beginDrag(_ indexPaths: Set<IndexPath>) {
