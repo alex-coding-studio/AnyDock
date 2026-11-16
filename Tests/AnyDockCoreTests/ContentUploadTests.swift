@@ -37,11 +37,11 @@ func decodesContentAndRejectsUnsafeInputs() throws {
   }
   var decoder = HTTPRequestDecoder(token: "test-key")
   let header =
-    "POST /upload HTTP/1.1\r\nX-SnapDock-Key: test-key\r\nContent-Length: 50000001\r\n\r\n"
+    "POST /upload HTTP/1.1\r\nX-AnyDock-Key: test-key\r\nContent-Length: 50000001\r\n\r\n"
   #expect(throws: HTTPFailure.self) { try decoder.append(Data(header.utf8)) }
   var partial = HTTPRequestDecoder(token: "test-key")
   let incomplete =
-    "POST /upload HTTP/1.1\r\nX-SnapDock-Key: test-key\r\nContent-Length: 10\r\n"
+    "POST /upload HTTP/1.1\r\nX-AnyDock-Key: test-key\r\nContent-Length: 10\r\n"
     + "X-AnyDock-Type: text\r\n\r\nabc"
   #expect(try partial.append(Data(incomplete.utf8)) == nil)
 }
@@ -150,9 +150,7 @@ func listsLegacyImagesAndRejectsDirectoryEscape() async throws {
   try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
   try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
   let image = try makeImage()
-  let legacy = root.appendingPathComponent("SnapDock-legacy.png")
   let renamed = root.appendingPathComponent("AnyDock-flat.png")
-  try image.write(to: legacy)
   try image.write(to: renamed)
   try image.write(to: root.appendingPathComponent("holiday.png"))
   try FileManager.default.createSymbolicLink(
@@ -165,8 +163,8 @@ func listsLegacyImagesAndRejectsDirectoryEscape() async throws {
   #expect(try FileManager.default.contentsOfDirectory(atPath: outside.path).isEmpty)
   let listed = try await store.list(in: root)
   let paths = Set(listed.map { $0.url.resolvingSymlinksInPath().path })
-  #expect(paths == Set([legacy, renamed].map { $0.resolvingSymlinksInPath().path }))
-  #expect(FileManager.default.fileExists(atPath: legacy.path))
+  #expect(paths == [renamed.resolvingSymlinksInPath().path])
+  #expect(FileManager.default.fileExists(atPath: renamed.path))
 }
 
 @Test("分类目录验证后被替换为符号链接时，不能向外部目录写入")
@@ -194,7 +192,7 @@ func decodeContent(
 ) throws -> UploadRequest {
   var headers =
     "POST /upload HTTP/1.1\r\nContent-Length: \(body.count)\r\nX-AnyDock-Type: \(kind)\r\n"
-  if let key { headers += "X-SnapDock-Key: \(key)\r\n" }
+  if let key { headers += "X-AnyDock-Key: \(key)\r\n" }
   if let name {
     let encoded = try #require(name.addingPercentEncoding(withAllowedCharacters: .alphanumerics))
     headers += "X-AnyDock-Filename: \(encoded)\r\n"

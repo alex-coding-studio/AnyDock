@@ -130,7 +130,7 @@ public struct HTTPRequestDecoder: Sendable {
       else { throw HTTPFailure(400, "Bad Request") }
       headers[name] = value
     }
-    guard Self.matches(headers["x-snapdock-key"] ?? "", token), !token.isEmpty else {
+    guard Self.matches(headers["x-anydock-key"] ?? "", token), !token.isEmpty else {
       throw HTTPFailure(401, "Unauthorized")
     }
     contentType = headers["content-type"]?.lowercased()

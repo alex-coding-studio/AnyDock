@@ -129,7 +129,7 @@ def make_shortcut(url, key, name="发送到 Mac", questions=True):
         WFHTTPBodyType="File", WFFormValues=dictionary([]),
         WFRequestVariable=attachment(variable("Body")),
         WFHTTPHeaders=dictionary([
-            ("X-SnapDock-Key", text(reference=secret)),
+            ("X-AnyDock-Key", text(reference=secret)),
             ("X-AnyDock-Type", text(reference=variable("Kind"))),
             ("X-AnyDock-Filename", text(reference=variable("Filename"))),
             ("Content-Type", text(reference=variable("Mime"))),

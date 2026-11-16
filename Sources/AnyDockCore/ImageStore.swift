@@ -82,10 +82,7 @@ public actor ImageStore {
       let urls = try FileManager.default.contentsOfDirectory(
         at: folder, includingPropertiesForKeys: Array(keys), options: .skipsHiddenFiles)
       for url in urls {
-        guard
-          url.lastPathComponent.hasPrefix("AnyDock-")
-            || url.lastPathComponent.hasPrefix("SnapDock-")
-        else { continue }
+        guard url.lastPathComponent.hasPrefix("AnyDock-") else { continue }
         guard let values = try? url.resourceValues(forKeys: keys), values.isRegularFile == true,
           values.isSymbolicLink != true, let size = values.fileSize,
           size <= HTTPRequestDecoder.maximumBodySize

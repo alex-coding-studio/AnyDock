@@ -16,14 +16,6 @@ final class ConfigurationStore {
       .appendingPathComponent("AnyDock/configuration.json")
   }
 
-  static func migrate() -> ConfigurationMigration.Failure? {
-    guard let support = try? applicationSupportDirectory() else { return .supportUnavailable }
-    return ConfigurationMigration.migrate(
-      defaults: .standard, legacyDomain: "studio.alex.snapdock", domain: "com.cuxiao.mac.anydock",
-      legacyConfiguration: support.appendingPathComponent("SnapDock/configuration.json"),
-      configuration: support.appendingPathComponent("AnyDock/configuration.json"))
-  }
-
   private static func applicationSupportDirectory() throws -> URL {
     try FileManager.default.url(
       for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
@@ -53,6 +45,5 @@ final class ConfigurationStore {
       attributes: [.posixPermissions: 0o700])
     try JSONEncoder().encode(configuration).write(to: url, options: .atomic)
     try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
-    UserDefaults.standard.set(true, forKey: ConfigurationMigration.completionKey)
   }
 }
