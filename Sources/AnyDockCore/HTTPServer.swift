@@ -55,7 +55,7 @@ public actor HTTPServer {
     }
 
     public func start(
-        configuration: ReceiverConfiguration,
+        configuration: ConnectionConfiguration.Receiver,
         onReceive: @escaping @Sendable (ReceivedItem) async -> Void,
         onFailure: @escaping @Sendable (String) async -> Void
     ) async throws {
@@ -132,7 +132,7 @@ public actor HTTPServer {
     private func accept(
         _ connection: NWConnection,
         generation current: UUID,
-        configuration: ReceiverConfiguration,
+        configuration: ConnectionConfiguration.Receiver,
         onReceive: @escaping @Sendable (ReceivedItem) async -> Void
     ) {
         guard current == generation, connections.count < 4 else {
@@ -148,7 +148,7 @@ public actor HTTPServer {
     private func serve(
         _ connection: NWConnection,
         id: UUID,
-        configuration: ReceiverConfiguration,
+        configuration: ConnectionConfiguration.Receiver,
         onReceive: @Sendable (ReceivedItem) async -> Void
     ) async {
         let timeout = Task {
