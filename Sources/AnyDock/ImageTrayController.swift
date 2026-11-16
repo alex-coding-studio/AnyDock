@@ -1,7 +1,7 @@
 import AnyDockCore
 import AppKit
+import Combine
 import Quartz
-import QuickLookThumbnailing
 
 @MainActor
 final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
@@ -34,7 +34,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     private var contents = TrayContents()
     private var entries = [TrayEntry]()
     private var cache = [URL: TrayEntry]()
-    private var requestedThumbnails = Set<URL>()
+    private let previews = TrayPreviewCache()
+    private var subscriptions = Set<AnyCancellable>()
     private var latestReceivedURL: URL?
     private var previewSource: ImagePreviewSource?
     private var isTrashing = false
@@ -60,6 +61,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))
         view = content
         layout.aspectRatio = { [weak self] path in self?.aspectRatio(at: path.item) ?? 1 }
+        previews.loaded.sink { [weak self] url in self?.showPreview(for: url) }
+            .store(in: &subscriptions)
         collection.collectionViewLayout = layout
         collection.frame = content.bounds
         collection.autoresizingMask = [.width]
@@ -173,6 +176,9 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         loadViewIfNeeded()
         latestReceivedURL = item.url
         cache[item.url] = nil
+        if let thumbnail = item.thumbnail {
+            previews.store(thumbnail, for: item.url)
+        }
         contents.receive(item)
         reloadEntries()
     }
@@ -218,6 +224,13 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
             time: timeText(entry.item.receivedAt),
             latest: latest
         )
+        if entry.kind == .image || (entry.kind == .file && !entry.item.isPlainText) {
+            if let image = previews.image(for: entry.url) {
+                show(image, in: item)
+            } else {
+                previews.load(entry)
+            }
+        }
         let timestamp = entry.item.receivedAt.formatted(date: .complete, time: .standard)
         item.view.toolTip = timestamp
         item.view.setAccessibilityElement(true)
@@ -629,8 +642,8 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     private func reloadEntries() {
         let selected = Set(selectedEntries.map(\.url))
         let present = Set(contents.items.map(\.url))
+        previews.forget(cache.keys.filter { !present.contains($0) })
         cache = cache.filter { present.contains($0.key) }
-        requestedThumbnails.formIntersection(present)
         entries = contents.visibleItems.map { item in
             if let cached = cache[item.url] {
                 return cached
@@ -650,9 +663,6 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         )
         updateFilterBar()
         updateControls()
-        for entry in entries where entry.kind == .file && !entry.item.isPlainText {
-            requestThumbnail(for: entry)
-        }
     }
 
     private func aspectRatio(at index: Int) -> CGFloat {
@@ -662,10 +672,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         let entry = entries[index]
         switch entry.kind {
         case .image:
-            guard let size = entry.thumbnail?.size, size.width > 0, size.height > 0 else {
-                return 1
-            }
-            return size.height / size.width
+            return entry.item.aspectRatio.map { CGFloat($0) } ?? 1
         case .text:
             guard singleColumn else {
                 return 1.15
@@ -676,43 +683,21 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         }
     }
 
-    private func requestThumbnail(for entry: TrayEntry) {
-        let url = entry.url
-        guard !requestedThumbnails.contains(url) else {
+    private func showPreview(for url: URL) {
+        guard let index = entries.firstIndex(where: { $0.url == url }),
+              let image = previews.image(for: url)
+        else {
             return
         }
-        requestedThumbnails.insert(url)
-        let request = QLThumbnailGenerator.Request(
-            fileAt: url,
-            size: CGSize(width: 240, height: 240),
-            scale: NSScreen.main?.backingScaleFactor ?? 2,
-            representationTypes: .thumbnail
-        )
-        if url.pathExtension.isEmpty, let type = entry.contentType {
-            request.contentType = type
-        }
-        QLThumbnailGenerator.shared.generateBestRepresentation(for: request) {
-            [weak self] representation, _ in
-            guard let image = representation?.cgImage else {
-                return
-            }
-            Task { @MainActor in self?.applyThumbnail(image, for: url) }
-        }
+        show(image, in: collection.item(at: IndexPath(item: index, section: 0)))
     }
 
-    private func applyThumbnail(_ image: CGImage, for url: URL) {
-        guard var entry = cache[url] else {
-            return
+    private func show(_ image: NSImage, in item: NSCollectionViewItem?) {
+        switch item {
+        case let card as ImageCardItem: card.showThumbnail(image)
+        case let card as FileCardItem: card.showThumbnail(image)
+        default: break
         }
-        let thumbnail = NSImage(cgImage: image, size: .zero)
-        entry.thumbnail = thumbnail
-        cache[url] = entry
-        guard let index = entries.firstIndex(where: { $0.url == url }) else {
-            return
-        }
-        entries[index] = entry
-        (collection.item(at: IndexPath(item: index, section: 0)) as? FileCardItem)?
-            .showThumbnail(thumbnail)
     }
 
     private func kindName(_ kind: ReceivedKind) -> String {

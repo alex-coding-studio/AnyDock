@@ -6,4 +6,5 @@ public struct ReceivedItem: Sendable {
     public let thumbnail: Data?
     public let receivedAt: Date
     public let isPlainText: Bool
+    public var aspectRatio: Double?
 }

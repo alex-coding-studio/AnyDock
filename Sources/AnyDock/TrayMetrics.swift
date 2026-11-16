@@ -19,4 +19,5 @@ enum TrayMetrics {
     static let dot: CGFloat = 6
     static let cornerRadius: CGFloat = 6
     static let innerCornerRadius: CGFloat = 4
+    static let fileThumbnailSide: CGFloat = 240
 }
