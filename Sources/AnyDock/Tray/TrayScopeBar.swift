@@ -3,6 +3,7 @@ import AppKit
 import Combine
 import PockyFoundation
 import QuartzCore
+import SnapKit
 
 @MainActor
 final class TrayScopeBar: NSView {
@@ -37,29 +38,19 @@ final class TrayScopeBar: NSView {
         scroll.wantsLayer = true
         scroll.layer?.mask = fade
         scroll.contentView.postsBoundsChangedNotifications = true
-        scroll.translatesAutoresizingMaskIntoConstraints = false
         return scroll
     }()
 
-    private lazy var content: FlippedView = {
-        let content = FlippedView()
-        content.translatesAutoresizingMaskIntoConstraints = false
-        return content
-    }()
+    private lazy var content = FlippedView()
 
     private lazy var stack: NSStackView = {
         let stack = NSStackView()
         stack.orientation = .horizontal
         stack.spacing = 0
-        stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
 
-    private lazy var widthConstraint: NSLayoutConstraint = {
-        let width = widthAnchor.constraint(equalToConstant: 0)
-        width.priority = .defaultHigh
-        return width
-    }()
+    private var widthConstraint: Constraint?
 
     private var isAnimating = false
     private let selectionSubject = PassthroughSubject<TrayFilter, Never>()
@@ -92,26 +83,16 @@ final class TrayScopeBar: NSView {
         content.addSubview(indicator)
         content.addSubview(stack)
         addSubview(scroll)
-        let inset = PKYLayout.Gap.content(.compact)
-        NSLayoutConstraint.activate([
-            heightAnchor.constraint(equalToConstant: PKYLayout.Size.button(.compact)),
-            widthConstraint,
-            surface.leadingAnchor.constraint(equalTo: leadingAnchor),
-            surface.trailingAnchor.constraint(equalTo: trailingAnchor),
-            surface.topAnchor.constraint(equalTo: topAnchor),
-            surface.bottomAnchor.constraint(equalTo: bottomAnchor),
-            scroll.leadingAnchor.constraint(equalTo: leadingAnchor, constant: inset),
-            scroll.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -inset),
-            scroll.topAnchor.constraint(equalTo: topAnchor, constant: inset),
-            scroll.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -inset),
-            content.topAnchor.constraint(equalTo: scroll.contentView.topAnchor),
-            content.bottomAnchor.constraint(equalTo: scroll.contentView.bottomAnchor),
-            content.leadingAnchor.constraint(equalTo: scroll.contentView.leadingAnchor),
-            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: content.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-        ])
+        snp.makeConstraints { make in
+            make.height.equalTo(PKYLayout.Size.button(.compact))
+            widthConstraint = make.width.equalTo(0).priority(.high).constraint
+        }
+        surface.snp.makeConstraints { $0.edges.equalToSuperview() }
+        scroll.snp.makeConstraints {
+            $0.directionalEdges.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
+        }
+        content.snp.makeConstraints { $0.top.bottom.leading.equalTo(scroll.contentView) }
+        stack.snp.makeConstraints { $0.edges.equalToSuperview() }
         subscribeEvents()
     }
 
@@ -153,7 +134,9 @@ final class TrayScopeBar: NSView {
             button.isChosen = segment.filter == filter
         }
         layoutSubtreeIfNeeded()
-        widthConstraint.constant = stack.fittingSize.width + PKYLayout.Gap.content(.compact) * 2
+        widthConstraint?.update(
+            offset: stack.fittingSize.width + PKYLayout.Gap.content(.compact) * 2
+        )
         layoutSubtreeIfNeeded()
         moveIndicator(animated: animate)
         reveal(animated: animate)
@@ -200,7 +183,6 @@ final class TrayScopeBar: NSView {
     }
 
     private func configure() {
-        surface.translatesAutoresizingMaskIntoConstraints = false
         setAccessibilityRole(.tabGroup)
     }
 
@@ -325,7 +307,7 @@ private final class ScopeSegmentButton: NSButton {
     override var intrinsicContentSize: NSSize {
         let size = super.intrinsicContentSize
         return NSSize(
-            width: size.width + PKYLayout.Space.s12 * 2,
+            width: size.width + PKYLayout.Gap.content(.wide) * 2,
             height: PKYLayout.Size.button(.compact) - PKYLayout.Gap.content(.compact) * 2
         )
     }
