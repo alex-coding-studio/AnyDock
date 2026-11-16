@@ -76,6 +76,10 @@ final class TrayViewModel {
         contents.items.isEmpty
     }
 
+    var isSingleColumn: Bool {
+        contents.filter == .kind(.text)
+    }
+
     init(inbox: TrayInbox) {
         self.inbox = inbox
     }

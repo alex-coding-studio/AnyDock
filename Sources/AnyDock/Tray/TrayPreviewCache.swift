@@ -8,6 +8,7 @@ final class TrayPreviewCache {
     private static let countLimit = 200
     private static let costLimit = 200 * 1024 * 1024
     private static let bytesPerPixel = 4
+    private static let fallbackScale: CGFloat = 2
 
     private let loadedSubject = PassthroughSubject<URL, Never>()
     private let cache: NSCache<NSString, NSImage> = {
@@ -66,7 +67,7 @@ final class TrayPreviewCache {
                 width: TrayMetrics.fileThumbnailSide,
                 height: TrayMetrics.fileThumbnailSide
             ),
-            scale: NSScreen.main?.backingScaleFactor ?? 2,
+            scale: NSScreen.main?.backingScaleFactor ?? Self.fallbackScale,
             representationTypes: .thumbnail
         )
         if url.pathExtension.isEmpty, let type = entry.contentType {

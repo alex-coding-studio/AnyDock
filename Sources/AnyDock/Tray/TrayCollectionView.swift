@@ -1,14 +1,30 @@
 import AppKit
+import Combine
 
 @MainActor
 final class TrayCollectionView: NSCollectionView {
-    var copyItems: (() -> Void)?
-    var revealItems: (() -> Void)?
-    var previewItems: (() -> Void)?
-    var trashItems: (() -> Void)?
-    var selectionChanged: (() -> Void)?
-    var escapePressed: (() -> Bool)?
+    enum Command {
+        case copy
+        case reveal
+        case preview
+        case trash
+        case collapseClipboard
+        case selectionChanged
+    }
+
+    private static let deleteKeyCode: UInt16 = 51
+    private static let escapeKeyCode: UInt16 = 53
+    private static let backspaceKeyEquivalent = "\u{8}"
+    private static let previewClickCount = 2
+
+    var consumesEscape = false
     private(set) var dragStartedOnCard = false
+
+    private let commandSubject = PassthroughSubject<Command, Never>()
+
+    var commands: AnyPublisher<Command, Never> {
+        commandSubject.eraseToAnyPublisher()
+    }
 
     override func setFrameSize(_ newSize: NSSize) {
         let widthChanged = newSize.width != frame.width
@@ -26,7 +42,7 @@ final class TrayCollectionView: NSCollectionView {
         if !selectionIndexPaths.contains(path) {
             selectionIndexPaths = [path]
         }
-        selectionChanged?()
+        commandSubject.send(.selectionChanged)
         let menu = NSMenu()
         let count = selectionIndexPaths.count
         let copy = NSMenuItem(
@@ -47,7 +63,7 @@ final class TrayCollectionView: NSCollectionView {
         let trash = NSMenuItem(
             title: count > 1 ? L10n.text("trash_count", count) : L10n.text("Move to Trash"),
             action: #selector(trash),
-            keyEquivalent: "\u{8}"
+            keyEquivalent: Self.backspaceKeyEquivalent
         )
         trash.target = self
         menu.addItem(trash)
@@ -58,37 +74,37 @@ final class TrayCollectionView: NSCollectionView {
         let clickedCard = indexPathForItem(at: convert(event.locationInWindow, from: nil)) != nil
         dragStartedOnCard = clickedCard
         super.mouseDown(with: event)
-        if event.clickCount == 2, clickedCard {
-            previewItems?()
+        if event.clickCount == Self.previewClickCount, clickedCard {
+            commandSubject.send(.preview)
         }
     }
 
     override func keyDown(with event: NSEvent) {
         if event.charactersIgnoringModifiers == "c", event.modifierFlags.contains(.command) {
-            copyItems?()
-        } else if event.modifierFlags.contains(.command), event.keyCode == 51 {
-            trashItems?()
+            commandSubject.send(.copy)
+        } else if event.modifierFlags.contains(.command), event.keyCode == Self.deleteKeyCode {
+            commandSubject.send(.trash)
         } else if event.charactersIgnoringModifiers == " " {
-            previewItems?()
-        } else if event.keyCode == 53, escapePressed?() == true {
-            return
-        } else if event.keyCode == 53, !selectionIndexPaths.isEmpty {
+            commandSubject.send(.preview)
+        } else if event.keyCode == Self.escapeKeyCode, consumesEscape {
+            commandSubject.send(.collapseClipboard)
+        } else if event.keyCode == Self.escapeKeyCode, !selectionIndexPaths.isEmpty {
             deselectAll(nil)
-            selectionChanged?()
+            commandSubject.send(.selectionChanged)
         } else {
             super.keyDown(with: event)
         }
     }
 
     @objc func copy(_: Any?) {
-        copyItems?()
+        commandSubject.send(.copy)
     }
 
     @objc private func reveal() {
-        revealItems?()
+        commandSubject.send(.reveal)
     }
 
     @objc private func trash() {
-        trashItems?()
+        commandSubject.send(.trash)
     }
 }

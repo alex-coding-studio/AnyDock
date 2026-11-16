@@ -168,7 +168,6 @@ func floatingDetailLeavesContentFrameUnchanged() throws {
     let before = scroll.frame
     #expect(tray.footer.dropZoneSurface.isHidden == true)
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
-    tray.collection.selectionChanged?()
     settle(tray)
     #expect(tray.footer.dropZoneSurface.isHidden == false)
     #expect(scroll.frame == before)
@@ -190,7 +189,6 @@ func lastCardClearsBottomControlsWhenScrolledToEnd() throws {
     tray.footer.replaceClips([ClipboardClip(text: "clip", copiedAt: Date())])
     tray.footer.clipboardBar.setExpanded(true, animated: false)
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
-    tray.collection.selectionChanged?()
     settle(tray)
     let scroll = try #require(tray.collection.enclosingScrollView)
     let documentHeight = tray.collection.frame.height
