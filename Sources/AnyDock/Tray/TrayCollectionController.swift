@@ -34,7 +34,6 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         scroll.autohidesScrollers = true
         scroll.automaticallyAdjustsContentInsets = false
         scroll.contentInsets = NSEdgeInsetsZero
-        scroll.translatesAutoresizingMaskIntoConstraints = false
         return scroll
     }()
 

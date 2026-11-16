@@ -3,27 +3,20 @@ import AppKit
 import Combine
 import PockyFoundation
 import Quartz
+import SnapKit
 
 @MainActor
 final class TrayViewController: NSViewController {
     let viewModel: TrayViewModel
 
-    private(set) lazy var header: TrayHeaderView = {
-        let header = TrayHeaderView(viewModel: viewModel)
-        header.translatesAutoresizingMaskIntoConstraints = false
-        return header
-    }()
+    private(set) lazy var header = TrayHeaderView(viewModel: viewModel)
 
-    private(set) lazy var footer: TrayFooterView = {
-        let footer = TrayFooterView(
-            viewModel: viewModel,
-            clipboard: clipboard,
-            entries: cache,
-            dragSource: collection
-        )
-        footer.translatesAutoresizingMaskIntoConstraints = false
-        return footer
-    }()
+    private(set) lazy var footer = TrayFooterView(
+        viewModel: viewModel,
+        clipboard: clipboard,
+        entries: cache,
+        dragSource: collection
+    )
 
     private let clipboard: ClipboardMonitor
     private let pasteboard: TrayPasteboardWriter
@@ -79,42 +72,21 @@ final class TrayViewController: NSViewController {
         for element in [scroll, emptyState, footer, header] {
             content.addSubview(element)
         }
-        NSLayoutConstraint.activate([
-            scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            scroll.topAnchor.constraint(equalTo: content.topAnchor),
-            scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-            emptyState.centerXAnchor.constraint(equalTo: content.centerXAnchor),
-            emptyState.centerYAnchor.constraint(
-                equalTo: content.centerYAnchor,
-                constant: TrayEmptyStateView.centerOffset
-            ),
-            emptyState.widthAnchor.constraint(
-                lessThanOrEqualTo: content.widthAnchor,
-                constant: -TrayEmptyStateView.sideInset * 2
-            ),
-            footer.leadingAnchor.constraint(
-                equalTo: content.leadingAnchor,
-                constant: TrayMetrics.margin
-            ),
-            footer.trailingAnchor.constraint(
-                equalTo: content.trailingAnchor,
-                constant: -TrayMetrics.margin
-            ),
-            footer.bottomAnchor.constraint(
-                equalTo: content.bottomAnchor,
-                constant: -PKYLayout.Space.s16
-            ),
-            header.leadingAnchor.constraint(
-                equalTo: content.leadingAnchor,
-                constant: TrayMetrics.margin
-            ),
-            header.trailingAnchor.constraint(
-                equalTo: content.trailingAnchor,
-                constant: -TrayMetrics.margin
-            ),
-            header.topAnchor.constraint(equalTo: content.topAnchor, constant: TrayMetrics.margin),
-        ])
+        scroll.snp.makeConstraints { $0.edges.equalToSuperview() }
+        emptyState.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().offset(TrayEmptyStateView.opticalCenterOffset)
+            make.width.lessThanOrEqualTo(content.snp.width)
+                .offset(-PKYLayout.Inset.page(.wide) * 2)
+        }
+        footer.snp.makeConstraints { make in
+            make.directionalHorizontalEdges.equalToSuperview().inset(PKYLayout.Inset.page(.wide))
+            make.bottom.equalToSuperview().inset(PKYLayout.Inset.page(.standard))
+        }
+        header.snp.makeConstraints { make in
+            make.directionalHorizontalEdges.equalToSuperview().inset(PKYLayout.Inset.page(.wide))
+            make.top.equalToSuperview().inset(PKYLayout.Inset.page(.wide))
+        }
         subscribeEvents()
     }
 

@@ -1,14 +1,13 @@
 import AppKit
 import Combine
 import PockyFoundation
+import SnapKit
 
 @MainActor
 final class TrayEmptyStateView: NSStackView {
-    static let centerOffset = -PKYLayout.Space.s24
-    static let sideInset = PKYLayout.Space.s32
+    static let opticalCenterOffset: CGFloat = -24
 
     private static let iconSide: CGFloat = 40
-    private static let itemSpacing: CGFloat = 10
 
     private let viewModel: TrayViewModel
     private var subscriptions = Set<AnyCancellable>()
@@ -44,10 +43,7 @@ final class TrayEmptyStateView: NSStackView {
         super.init(frame: .zero)
         configure()
         setViews([icon, title, detail], in: .center)
-        NSLayoutConstraint.activate([
-            icon.widthAnchor.constraint(equalToConstant: Self.iconSide),
-            icon.heightAnchor.constraint(equalToConstant: Self.iconSide),
-        ])
+        icon.snp.makeConstraints { $0.size.equalTo(Self.iconSide) }
         subscribeEvents()
     }
 
@@ -58,8 +54,7 @@ final class TrayEmptyStateView: NSStackView {
     private func configure() {
         orientation = .vertical
         alignment = .centerX
-        spacing = Self.itemSpacing
-        translatesAutoresizingMaskIntoConstraints = false
+        spacing = PKYLayout.Gap.content(.standard)
     }
 
     private func subscribeEvents() {

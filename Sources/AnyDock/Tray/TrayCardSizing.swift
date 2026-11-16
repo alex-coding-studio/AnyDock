@@ -79,7 +79,7 @@ final class TrayCardSizing {
         columnWidth: CGFloat,
         singleColumn: Bool
     ) -> CGFloat {
-        let previewWidth = columnWidth - TrayMetrics.framePadding * 2
+        let previewWidth = columnWidth - PKYLayout.Inset.container(.compact) * 2
         let maximum = singleColumn
             ? Self.singleColumnMaximumHeight
             : columnWidth * Self.maximumRatio
@@ -87,8 +87,8 @@ final class TrayCardSizing {
             return min(columnWidth * Self.documentCardRatio, maximum)
         }
         let caption = entry.kind == .file ? Self.captionFont : Self.timeFont
-        let strip = max(Self.lineHeight(caption), TrayMetrics.dot)
-        let height = TrayMetrics.framePadding * 2 + preview + Self.lineGap + strip
+        let strip = max(Self.lineHeight(caption), PKYLayout.Size.dot(.compact))
+        let height = PKYLayout.Inset.container(.compact) * 2 + preview + Self.lineGap + strip
         return min(height, maximum)
     }
 

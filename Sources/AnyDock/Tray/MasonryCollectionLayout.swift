@@ -31,14 +31,14 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
     private var preparedWidth: CGFloat = 0
 
     var availableWidth: CGFloat {
-        max(preparedWidth - TrayMetrics.margin * 2, 0)
+        max(preparedWidth - PKYLayout.Inset.page(.wide) * 2, 0)
     }
 
     var columnWidth: CGFloat {
         PKYGridPlacementInput(
             width: availableWidth,
             columns: .fixed(columnCount),
-            spacing: TrayMetrics.cardSpacing
+            spacing: PKYLayout.Gap.content(.wide)
         ).resolve().itemWidth
     }
 
@@ -69,16 +69,16 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
         let indexPaths = (0 ..< count).map { IndexPath(item: $0, section: 0) }
         let placement = PKYMasonryPlacement.frames(
             aspectRatios: indexPaths.map { 1 / aspectRatio($0) },
-            width: width - TrayMetrics.margin * 2,
+            width: width - PKYLayout.Inset.page(.wide) * 2,
             columns: columnCount,
-            spacing: TrayMetrics.cardSpacing,
+            spacing: PKYLayout.Gap.content(.wide),
             rounding: nil,
             maximumHeightRatio: 2.5
         )
         attributes = zip(indexPaths, placement.frames).map { indexPath, frame in
             let item = NSCollectionViewLayoutAttributes(forItemWith: indexPath)
             item.frame = collectionView.backingAlignedRect(
-                frame.offsetBy(dx: TrayMetrics.margin, dy: TrayMetrics.contentTopInset),
+                frame.offsetBy(dx: PKYLayout.Inset.page(.wide), dy: TrayMetrics.contentTopInset),
                 options: .alignAllEdgesNearest
             )
             return item

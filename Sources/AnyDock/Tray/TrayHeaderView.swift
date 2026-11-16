@@ -2,33 +2,28 @@ import AnyDockCore
 import AppKit
 import Combine
 import PockyFoundation
+import SnapKit
 
 @MainActor
 final class TrayHeaderView: NSView {
     private static let iconPointSize: CGFloat = 14
-    private static let buttonWidth: CGFloat = 36
-    private static let buttonHeight = TrayMetrics.scopeBarHeight - TrayMetrics.scopeBarInset * 2
+    private static let buttonHeight =
+        PKYLayout.Size.button(.compact) - PKYLayout.Gap.content(.compact) * 2
 
-    private(set) lazy var filterBar: TrayScopeBar = {
-        let bar = TrayScopeBar(
-            surface: TrayGlass.surface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2)
-        )
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        return bar
-    }()
+    private(set) lazy var filterBar = TrayScopeBar(
+        surface: TrayGlass.surface(NSView(), cornerRadius: PKYLayout.Size.button(.compact) / 2)
+    )
 
     private(set) lazy var controlGroup: NSView = {
         let buttons = NSStackView(views: [folderButton, settingsButton])
         buttons.spacing = 0
         buttons.edgeInsets = NSEdgeInsets(
-            top: TrayMetrics.scopeBarInset,
-            left: TrayMetrics.scopeBarInset,
-            bottom: TrayMetrics.scopeBarInset,
-            right: TrayMetrics.scopeBarInset
+            top: PKYLayout.Gap.content(.compact),
+            left: PKYLayout.Gap.content(.compact),
+            bottom: PKYLayout.Gap.content(.compact),
+            right: PKYLayout.Gap.content(.compact)
         )
-        let group = TrayGlass.surface(buttons, cornerRadius: TrayMetrics.scopeBarHeight / 2)
-        group.translatesAutoresizingMaskIntoConstraints = false
-        return group
+        return TrayGlass.surface(buttons, cornerRadius: PKYLayout.Size.button(.compact) / 2)
     }()
 
     private let viewModel: TrayViewModel
@@ -69,18 +64,16 @@ final class TrayHeaderView: NSView {
         super.init(frame: .zero)
         addSubview(filterBar)
         addSubview(controlGroup)
-        NSLayoutConstraint.activate([
-            filterBar.leadingAnchor.constraint(equalTo: leadingAnchor),
-            filterBar.trailingAnchor.constraint(
-                lessThanOrEqualTo: controlGroup.leadingAnchor,
-                constant: -PKYLayout.Space.s8
-            ),
-            filterBar.topAnchor.constraint(equalTo: topAnchor),
-            controlGroup.heightAnchor.constraint(equalToConstant: TrayMetrics.scopeBarHeight),
-            controlGroup.topAnchor.constraint(equalTo: topAnchor),
-            controlGroup.trailingAnchor.constraint(equalTo: trailingAnchor),
-            heightAnchor.constraint(equalToConstant: TrayMetrics.scopeBarHeight),
-        ])
+        filterBar.snp.makeConstraints { make in
+            make.top.leading.equalToSuperview()
+            make.trailing.lessThanOrEqualTo(controlGroup.snp.leading)
+                .offset(-PKYLayout.Gap.group(.compact))
+        }
+        controlGroup.snp.makeConstraints { make in
+            make.top.trailing.equalToSuperview()
+            make.height.equalTo(PKYLayout.Size.button(.compact))
+        }
+        snp.makeConstraints { $0.height.equalTo(PKYLayout.Size.button(.compact)) }
         subscribeEvents()
     }
 
@@ -133,10 +126,10 @@ final class TrayHeaderView: NSView {
         button.imageScaling = .scaleProportionallyDown
         button.toolTip = title
         button.setAccessibilityLabel(title)
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: Self.buttonWidth),
-            button.heightAnchor.constraint(equalToConstant: Self.buttonHeight),
-        ])
+        button.snp.makeConstraints { make in
+            make.width.equalTo(PKYLayout.Size.button(.compact))
+            make.height.equalTo(Self.buttonHeight)
+        }
         return button
     }
 

@@ -1,4 +1,5 @@
 import AppKit
+import SnapKit
 
 @MainActor
 enum TrayGlass {
@@ -20,13 +21,7 @@ enum TrayGlass {
             effect.addSubview(content)
             surface = effect
         }
-        content.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            content.leadingAnchor.constraint(equalTo: surface.leadingAnchor),
-            content.trailingAnchor.constraint(equalTo: surface.trailingAnchor),
-            content.topAnchor.constraint(equalTo: surface.topAnchor),
-            content.bottomAnchor.constraint(equalTo: surface.bottomAnchor),
-        ])
+        content.snp.makeConstraints { $0.edges.equalTo(surface) }
         return surface
     }
 

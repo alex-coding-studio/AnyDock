@@ -80,8 +80,8 @@ final class LatestDot: NSView {
         super.init(frame: frame)
         configure()
         NSLayoutConstraint.activate([
-            widthAnchor.constraint(equalToConstant: TrayMetrics.dot),
-            heightAnchor.constraint(equalToConstant: TrayMetrics.dot),
+            widthAnchor.constraint(equalToConstant: PKYLayout.Size.dot(.compact)),
+            heightAnchor.constraint(equalToConstant: PKYLayout.Size.dot(.compact)),
         ])
     }
 
@@ -97,7 +97,7 @@ final class LatestDot: NSView {
     private func configure() {
         wantsLayer = true
         translatesAutoresizingMaskIntoConstraints = false
-        layer?.cornerRadius = TrayMetrics.dot / 2
+        layer?.cornerRadius = PKYLayout.Size.dot(.compact) / 2
         updateColors()
     }
 
