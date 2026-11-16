@@ -23,7 +23,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let configurationStore = ConnectionConfigurationStore()
 
-    private lazy var tray = TrayViewController(clipboard: clipboard)
+    private lazy var trayModel = TrayViewModel(inbox: TrayInbox(
+        list: { [weak self] in try await self?.currentItems() ?? [] },
+        recycle: { [weak self] in try await self?.recycleItems($0) }
+    ))
+    private lazy var tray = TrayViewController(viewModel: trayModel, clipboard: clipboard)
     private lazy var trayPopover = TrayPopoverController(tray: tray, statusItem: statusItem)
     private let store = InboxStore()
     private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
@@ -38,14 +42,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         trayPopover.reloadRequests
             .sink { [weak self] in Task { await self?.reloadItems() } }
             .store(in: &subscriptions)
+        tray.settingsRequests
+            .sink { [weak self] in self?.showSettings() }
+            .store(in: &subscriptions)
+        tray.folderRequests
+            .sink { [weak self] in self?.openFolder() }
+            .store(in: &subscriptions)
         guard let current = loadConfiguration() else {
             return
         }
         configuration = current
-        tray.openSettings = { [weak self] in self?.showSettings() }
-        tray.openFolder = { [weak self] in self?.openFolder() }
-        tray.loadItems = { [weak self] in try await self?.currentItems() ?? [] }
-        tray.recycleItems = { [weak self] urls in try await self?.recycleItems(urls) }
         let preferences = SettingsController(configuration: current)
         preferences.apply = { [weak self] next in try await self?.apply(next) }
         hotKeys.onPress = { [weak self] in self?.trayPopover.toggle() }
@@ -126,7 +132,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard directory == configuration?.receiver.directory else {
             return
         }
-        tray.append(item)
+        trayModel.receive(item)
         if Preferences.copiesNewItems {
             tray.copyToPasteboard(item)
         }
@@ -143,7 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard directory == configuration?.receiver.directory else {
                 return
             }
-            tray.replaceItems(items)
+            trayModel.replace(items)
         } catch {
             receiverFailed(L10n.text(
                 "Unable to read the receive folder: %@",

@@ -43,7 +43,7 @@ private func makeTray(texts: [String]) throws -> (TrayViewController, NSWindow) 
     )
     window.contentViewController = tray
     window.setContentSize(TrayMetrics.popoverSize)
-    tray.replaceItems(items)
+    tray.viewModel.replace(items)
     return (tray, window)
 }
 

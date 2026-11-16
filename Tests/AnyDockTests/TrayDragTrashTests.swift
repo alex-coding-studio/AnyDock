@@ -5,7 +5,9 @@ import Testing
 @testable import AnyDockCore
 
 @MainActor
-private func makeTray() throws -> (TrayViewController, [ReceivedItem], NSWindow) {
+private func makeTray(
+    recycle: @escaping @MainActor ([URL]) -> Void = { _ in }
+) throws -> (TrayViewController, [ReceivedItem], NSWindow) {
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     let kinds: [ReceivedKind] = [.text, .text, .link, .text]
@@ -20,7 +22,7 @@ private func makeTray() throws -> (TrayViewController, [ReceivedItem], NSWindow)
             isPlainText: false
         )
     }
-    let tray = makeTestTray()
+    let tray = makeTestTray(inbox: TrayInbox(list: { items }, recycle: { recycle($0) }))
     let window = NSWindow(
         contentRect: NSRect(origin: .zero, size: TrayMetrics.popoverSize),
         styleMask: .borderless,
@@ -28,18 +30,16 @@ private func makeTray() throws -> (TrayViewController, [ReceivedItem], NSWindow)
         defer: true
     )
     window.contentViewController = tray
-    tray.replaceItems(items)
-    tray.loadItems = { items }
+    tray.viewModel.replace(items)
     return (tray, items, window)
 }
 
 @MainActor
 @Test("拖到删除区只回收被拖动的项目，并清空选择")
 func droppingOnTrashRecyclesOnlyDraggedItems() async throws {
-    let (tray, items, window) = try makeTray()
-    defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
     var recycled = [URL]()
-    tray.recycleItems = { recycled = $0 }
+    let (tray, items, window) = try makeTray { recycled = $0 }
+    defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
     var finished = false
     let subscription = tray.dragFinishes.sink { finished = true }
     defer { subscription.cancel() }
@@ -58,10 +58,9 @@ func droppingOnTrashRecyclesOnlyDraggedItems() async throws {
 @MainActor
 @Test("拖到托盘外不回收任何项目，并照常结束拖动")
 func droppingOutsideRecyclesNothing() throws {
-    let (tray, items, window) = try makeTray()
-    defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
     var recycled: [URL]?
-    tray.recycleItems = { recycled = $0 }
+    let (tray, items, window) = try makeTray { recycled = $0 }
+    defer { try? FileManager.default.removeItem(at: items[0].url.deletingLastPathComponent()) }
     var finished = false
     let subscription = tray.dragFinishes.sink { finished = true }
     defer { subscription.cancel() }

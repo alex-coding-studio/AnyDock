@@ -34,7 +34,7 @@ func singleSelectionShowsItemDetail() throws {
         defer: true
     )
     window.contentViewController = tray
-    tray.replaceItems([
+    tray.viewModel.replace([
         ReceivedItem(
             url: file,
             kind: .file,

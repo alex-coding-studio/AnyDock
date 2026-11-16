@@ -35,7 +35,7 @@ func pdfCardShowsFirstPageThumbnail(filename: String) async throws {
         defer: true
     )
     window.contentViewController = tray
-    tray.replaceItems([
+    tray.viewModel.replace([
         ReceivedItem(url: url, kind: .file, thumbnail: nil, receivedAt: Date(), isPlainText: false),
     ])
     tray.view.layoutSubtreeIfNeeded()
