@@ -35,8 +35,11 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
     }
 
     var columnWidth: CGFloat {
-        let columns = CGFloat(max(columnCount, 1))
-        return max((availableWidth - TrayMetrics.cardSpacing * (columns - 1)) / columns, 0)
+        MasonryLayout.columnWidth(
+            width: availableWidth,
+            columns: columnCount,
+            spacing: TrayMetrics.cardSpacing
+        )
     }
 
     init(aspectRatio: @escaping (IndexPath) -> CGFloat) {

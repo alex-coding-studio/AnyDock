@@ -119,7 +119,9 @@ final class TrayCardSizing {
             if let ratio = entry.pageAspectRatio {
                 return width * ratio
             }
-            if entry.contentType?.conforms(to: .content) == true {
+            if let type = entry.contentType, type.conforms(to: .content), !type.conforms(
+                to: .audio
+            ) {
                 return nil
             }
             return Self.genericPreviewHeight
