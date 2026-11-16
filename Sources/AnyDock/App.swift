@@ -56,7 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         tray.clipboardWillChange = { [weak self] in self?.clipboard.poll() }
         tray.clipsCopied = { [weak self] in self?.clipboard.ignoreCurrentContents() }
         clipboard.onChange = { [weak self] clips in self?.tray.replaceClips(clips) }
-        clipboard.setEnabled(TrayPreferences.keepsClipboardHistory)
+        clipboard.setEnabled(Preferences.keepsClipboardHistory)
         do {
             let storage = try ConfigurationStore()
             configurationStore = storage
@@ -162,7 +162,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             return
         }
         tray.append(item)
-        if TrayPreferences.copiesNewItems {
+        if Preferences.copiesNewItems {
             tray.copyToPasteboard(item)
         }
         if !popover.isShown {
