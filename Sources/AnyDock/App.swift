@@ -17,24 +17,14 @@ enum AnyDockApp {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var statusItem = StatusItemController()
     private var subscriptions = Set<AnyCancellable>()
 
-    private var popoverAppearance: NSKeyValueObservation?
-    private lazy var popover: NSPopover = {
-        let popover = NSPopover()
-        popover.behavior = .transient
-        popover.delegate = self
-        popover.contentViewController = tray
-        popover.contentSize = NSSize(width: 480, height: 640)
-        popoverAppearance = AppAppearance.follow(popover)
-        return popover
-    }()
-
     private let configurationStore = ConnectionConfigurationStore()
 
-    private lazy var tray = ImageTrayController(clipboard: clipboard)
+    private lazy var tray = TrayViewController(clipboard: clipboard)
+    private lazy var trayPopover = TrayPopoverController(tray: tray, statusItem: statusItem)
     private let store = InboxStore()
     private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
     private let hotKeys = HotKeyCenter()
@@ -45,25 +35,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
 
     func applicationDidFinishLaunching(_: Notification) {
-        statusItem.clicks
-            .sink { [weak self] in self?.togglePopover() }
+        trayPopover.reloadRequests
+            .sink { [weak self] in Task { await self?.reloadImages() } }
             .store(in: &subscriptions)
-
         guard let current = loadConfiguration() else {
             return
         }
         configuration = current
         tray.openSettings = { [weak self] in self?.showSettings() }
         tray.openFolder = { [weak self] in self?.openFolder() }
-        tray.didFinishDragging = { [weak self] in self?.popover.performClose(nil) }
-        tray.presentationHeld = { [weak self] held in
-            self?.popover.behavior = held ? .applicationDefined : .transient
-        }
         tray.loadItems = { [weak self] in try await self?.currentItems() ?? [] }
         tray.recycleItems = { [weak self] urls in try await self?.recycleItems(urls) }
         let preferences = SettingsController(configuration: current)
         preferences.apply = { [weak self] next in try await self?.apply(next) }
-        hotKeys.onPress = { [weak self] in self?.togglePopover() }
+        hotKeys.onPress = { [weak self] in self?.trayPopover.toggle() }
         preferences.registerHotKey = { [weak self] hotKey in self?.hotKeys.register(
             hotKey
         ) ?? false }
@@ -78,7 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             showSettings()
         }
         if CommandLine.arguments.contains("--tray") {
-            togglePopover()
+            trayPopover.toggle()
         }
     }
 
@@ -86,17 +71,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         -> Bool {
         showSettings()
         return true
-    }
-
-    func popoverShouldClose(_: NSPopover) -> Bool {
-        !tray.holdsPresentation
-    }
-
-    func popoverDidClose(_ notification: Notification) {
-        guard notification.object as? NSPopover === popover else {
-            return
-        }
-        tray.trayDidClose()
     }
 
     private func loadConfiguration() -> ConnectionConfiguration? {
@@ -156,9 +130,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         if Preferences.copiesNewItems {
             tray.copyToPasteboard(item)
         }
-        if !popover.isShown {
-            showPopover(refreshImages: false)
-        }
+        trayPopover.show(reloading: false)
         tray.scrollToLatestImage()
     }
 
@@ -228,36 +200,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         await startReceiver(next.receiver)
     }
 
-    private func togglePopover() {
-        if tray.holdsPresentation {
-            tray.closePreview()
-            return
-        }
-        if popover.isShown {
-            popover.performClose(nil)
-            return
-        }
-        showPopover()
-    }
-
-    private func showPopover(refreshImages: Bool = true) {
-        guard !popover.isShown else {
-            return
-        }
-        guard let button = statusItem.button else {
-            return
-        }
-        NSApp.activate(ignoringOtherApps: true)
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        tray.focusImages()
-        if refreshImages {
-            Task { await reloadImages() }
-        }
-    }
-
     private func showSettings() {
-        tray.closePreview()
-        popover.performClose(nil)
+        trayPopover.close()
         NSApp.activate(ignoringOtherApps: true)
         settings?.showWindow(nil)
         settings?.window?.makeKeyAndOrderFront(nil)

@@ -5,7 +5,7 @@ import Testing
 @testable import AnyDockCore
 
 @MainActor
-private func makeTray(texts: [String]) throws -> (ImageTrayController, NSWindow) {
+private func makeTray(texts: [String]) throws -> (TrayViewController, NSWindow) {
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     var items = try texts.enumerated().map { index, text in
@@ -48,7 +48,7 @@ private func makeTray(texts: [String]) throws -> (ImageTrayController, NSWindow)
 }
 
 @MainActor
-private func settle(_ tray: ImageTrayController) {
+private func settle(_ tray: TrayViewController) {
     tray.view.layoutSubtreeIfNeeded()
     tray.collection.layoutSubtreeIfNeeded()
     for item in tray.collection.visibleItems() {
@@ -57,7 +57,7 @@ private func settle(_ tray: ImageTrayController) {
 }
 
 @MainActor
-private func cards(_ tray: ImageTrayController) -> [(TrayCardItem, NSRect)] {
+private func cards(_ tray: TrayViewController) -> [(TrayCardItem, NSRect)] {
     tray.collection.visibleItems().compactMap { item in
         guard let card = item as? TrayCardItem else {
             return nil
@@ -137,7 +137,7 @@ func scopeIndicatorFollowsSelection() async throws {
 }
 
 @MainActor
-private func frame(of view: NSView?, in tray: ImageTrayController) throws -> NSRect {
+private func frame(of view: NSView?, in tray: TrayViewController) throws -> NSRect {
     let view = try #require(view)
     return view.convert(view.bounds, to: tray.view)
 }

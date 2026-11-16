@@ -8,9 +8,11 @@ func popoverFollowsAppAppearance() {
     let app = NSApplication.shared
     let original = app.appearance
     defer { app.appearance = original }
-    let popover = NSPopover()
-    let observation = AppAppearance.follow(popover)
-    defer { observation.invalidate() }
+    let trayPopover = TrayPopoverController(
+        tray: makeTestTray(),
+        statusItem: StatusItemController()
+    )
+    let popover = trayPopover.popover
     AppAppearance.dark.apply()
     #expect(popover.appearance?.name == .darkAqua)
     AppAppearance.light.apply()

@@ -55,7 +55,6 @@ final class ClipboardBar: NSView {
 
     private let clearSubject = PassthroughSubject<Void, Never>()
     private let expandedSubject = PassthroughSubject<Bool, Never>()
-    private var subscriptions = Set<AnyCancellable>()
 
     private lazy var icon: NSImageView = {
         let icon = NSImageView(

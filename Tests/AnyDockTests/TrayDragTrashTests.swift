@@ -5,7 +5,7 @@ import Testing
 @testable import AnyDockCore
 
 @MainActor
-private func makeTray() throws -> (ImageTrayController, [ReceivedItem], NSWindow) {
+private func makeTray() throws -> (TrayViewController, [ReceivedItem], NSWindow) {
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     let kinds: [ReceivedKind] = [.text, .text, .link, .text]
@@ -41,7 +41,8 @@ func droppingOnTrashRecyclesOnlyDraggedItems() async throws {
     var recycled = [URL]()
     tray.recycleItems = { recycled = $0 }
     var finished = false
-    tray.didFinishDragging = { finished = true }
+    let subscription = tray.dragFinishes.sink { finished = true }
+    defer { subscription.cancel() }
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.beginDrag([IndexPath(item: 1, section: 0), IndexPath(item: 3, section: 0)])
     let task = try #require(tray.trashDraggedItems())
@@ -62,7 +63,8 @@ func droppingOutsideRecyclesNothing() throws {
     var recycled: [URL]?
     tray.recycleItems = { recycled = $0 }
     var finished = false
-    tray.didFinishDragging = { finished = true }
+    let subscription = tray.dragFinishes.sink { finished = true }
+    defer { subscription.cancel() }
     tray.beginDrag([IndexPath(item: 1, section: 0)])
     tray.endDrag(operation: .copy)
     #expect(tray.trashDraggedItems() == nil)
