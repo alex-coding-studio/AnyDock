@@ -20,13 +20,47 @@ final class TrayScopeBar: NSView {
     private(set) var segments = [Segment]()
     private(set) var selected = TrayFilter.all
 
-    private let scroll = NSScrollView()
-    private let content = FlippedView()
-    private let stack = NSStackView()
-    private let indicator = ScopeIndicator()
+    private let surface: NSView
     private let fade = CAGradientLayer()
+    private lazy var indicator = ScopeIndicator()
     private var buttons = [ScopeSegmentButton]()
-    private var widthConstraint: NSLayoutConstraint?
+
+    private lazy var scroll: NSScrollView = {
+        let scroll = NSScrollView()
+        scroll.drawsBackground = false
+        scroll.hasHorizontalScroller = false
+        scroll.hasVerticalScroller = false
+        scroll.verticalScrollElasticity = .none
+        scroll.automaticallyAdjustsContentInsets = false
+        scroll.contentInsets = NSEdgeInsetsZero
+        scroll.documentView = content
+        scroll.wantsLayer = true
+        scroll.layer?.mask = fade
+        scroll.contentView.postsBoundsChangedNotifications = true
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        return scroll
+    }()
+
+    private lazy var content: FlippedView = {
+        let content = FlippedView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        return content
+    }()
+
+    private lazy var stack: NSStackView = {
+        let stack = NSStackView()
+        stack.orientation = .horizontal
+        stack.spacing = 0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
+    private lazy var widthConstraint: NSLayoutConstraint = {
+        let width = widthAnchor.constraint(equalToConstant: 0)
+        width.priority = .defaultHigh
+        return width
+    }()
+
     private var isAnimating = false
     private let selectionSubject = PassthroughSubject<TrayFilter, Never>()
     private let selectAllSubject = PassthroughSubject<TrayFilter, Never>()
@@ -51,34 +85,17 @@ final class TrayScopeBar: NSView {
     }
 
     init(surface: NSView) {
+        self.surface = surface
         super.init(frame: .zero)
-        surface.translatesAutoresizingMaskIntoConstraints = false
+        configure()
         addSubview(surface)
-        scroll.drawsBackground = false
-        scroll.hasHorizontalScroller = false
-        scroll.hasVerticalScroller = false
-        scroll.verticalScrollElasticity = .none
-        scroll.automaticallyAdjustsContentInsets = false
-        scroll.contentInsets = NSEdgeInsetsZero
-        scroll.documentView = content
-        scroll.wantsLayer = true
-        scroll.layer?.mask = fade
-        scroll.contentView.postsBoundsChangedNotifications = true
-        scroll.translatesAutoresizingMaskIntoConstraints = false
-        content.translatesAutoresizingMaskIntoConstraints = false
-        stack.orientation = .horizontal
-        stack.spacing = 0
-        stack.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(indicator)
         content.addSubview(stack)
         addSubview(scroll)
         let inset = TrayMetrics.scopeBarInset
-        let width = widthAnchor.constraint(equalToConstant: 0)
-        width.priority = .defaultHigh
-        widthConstraint = width
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: TrayMetrics.scopeBarHeight),
-            width,
+            widthConstraint,
             surface.leadingAnchor.constraint(equalTo: leadingAnchor),
             surface.trailingAnchor.constraint(equalTo: trailingAnchor),
             surface.topAnchor.constraint(equalTo: topAnchor),
@@ -95,13 +112,7 @@ final class TrayScopeBar: NSView {
             stack.topAnchor.constraint(equalTo: content.topAnchor),
             stack.bottomAnchor.constraint(equalTo: content.bottomAnchor),
         ])
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(scrolled),
-            name: NSView.boundsDidChangeNotification,
-            object: scroll.contentView
-        )
-        setAccessibilityRole(.tabGroup)
+        subscribeEvents()
     }
 
     required init?(coder _: NSCoder) {
@@ -142,7 +153,7 @@ final class TrayScopeBar: NSView {
             button.isChosen = segment.filter == filter
         }
         layoutSubtreeIfNeeded()
-        widthConstraint?.constant = stack.fittingSize.width + TrayMetrics.scopeBarInset * 2
+        widthConstraint.constant = stack.fittingSize.width + TrayMetrics.scopeBarInset * 2
         layoutSubtreeIfNeeded()
         moveIndicator(animated: animate)
         reveal(animated: animate)
@@ -186,6 +197,20 @@ final class TrayScopeBar: NSView {
         } else {
             content.scrollToVisible(target)
         }
+    }
+
+    private func configure() {
+        surface.translatesAutoresizingMaskIntoConstraints = false
+        setAccessibilityRole(.tabGroup)
+    }
+
+    private func subscribeEvents() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(scrolled),
+            name: NSView.boundsDidChangeNotification,
+            object: scroll.contentView
+        )
     }
 
     @objc private func scrolled() {
@@ -257,7 +282,7 @@ private final class ScopeIndicator: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
+        configure()
     }
 
     required init?(coder _: NSCoder) {
@@ -285,6 +310,10 @@ private final class ScopeIndicator: NSView {
             (dark ? Self.darkFill : NSColor.white).cgColor
         layer?.apply(dark ? .none : .scopeIndicator)
     }
+
+    private func configure() {
+        wantsLayer = true
+    }
 }
 
 @MainActor
@@ -308,13 +337,17 @@ private final class ScopeSegmentButton: NSButton {
         plainTitle = title
         self.target = target
         self.action = action
-        isBordered = false
-        setButtonType(.momentaryChange)
-        refreshTitle()
+        configure()
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
+        refreshTitle()
+    }
+
+    private func configure() {
+        isBordered = false
+        setButtonType(.momentaryChange)
         refreshTitle()
     }
 

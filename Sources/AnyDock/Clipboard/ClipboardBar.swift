@@ -98,8 +98,7 @@ final class ClipboardBar: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
-        layer?.masksToBounds = true
+        configure()
         addSubview(header)
         addSubview(cellRow)
         NSLayoutConstraint.activate([
@@ -113,7 +112,6 @@ final class ClipboardBar: NSView {
             cellRow.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
             cellRow.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
         ])
-        refresh()
     }
 
     required init?(coder _: NSCoder) {
@@ -154,6 +152,12 @@ final class ClipboardBar: NSView {
             height.constant = target
         }
         expandedSubject.send(expanded)
+    }
+
+    private func configure() {
+        wantsLayer = true
+        layer?.masksToBounds = true
+        refresh()
     }
 
     private func refresh() {

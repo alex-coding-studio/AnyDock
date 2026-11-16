@@ -8,8 +8,19 @@ final class TrayDropZone: NSView {
     }
 
     var canAccept: ((AnyObject?) -> Bool)?
-    let label = NSTextField(labelWithString: "")
-    let suffix = NSTextField(labelWithString: "")
+    private(set) lazy var label: NSTextField = {
+        let label = NSTextField(labelWithString: "")
+        label.lineBreakMode = .byTruncatingMiddle
+        label.setContentCompressionResistancePriority(.dragThatCannotResizeWindow, for: .horizontal)
+        return label
+    }()
+
+    private(set) lazy var suffix: NSTextField = {
+        let suffix = NSTextField(labelWithString: "")
+        suffix.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return suffix
+    }()
+
     private(set) var isArmed = false
     private(set) var isTargeted = false {
         didSet { refresh() }
@@ -17,26 +28,26 @@ final class TrayDropZone: NSView {
 
     private let dropSubject = PassthroughSubject<Void, Never>()
 
+    private lazy var row: NSStackView = {
+        let row = NSStackView(views: [label, suffix])
+        row.spacing = 0
+        row.translatesAutoresizingMaskIntoConstraints = false
+        return row
+    }()
+
     var drops: AnyPublisher<Void, Never> {
         dropSubject.eraseToAnyPublisher()
     }
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
-        label.lineBreakMode = .byTruncatingMiddle
-        label.setContentCompressionResistancePriority(.dragThatCannotResizeWindow, for: .horizontal)
-        suffix.setContentCompressionResistancePriority(.required, for: .horizontal)
-        let row = NSStackView(views: [label, suffix])
-        row.spacing = 0
-        row.translatesAutoresizingMaskIntoConstraints = false
+        configure()
         addSubview(row)
         NSLayoutConstraint.activate([
             row.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
             row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
             row.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
-        registerForDraggedTypes([.fileURL, .URL, .string])
     }
 
     required init?(coder _: NSCoder) {
@@ -94,6 +105,11 @@ final class TrayDropZone: NSView {
             isTargeted = false
         }
         refresh()
+    }
+
+    private func configure() {
+        wantsLayer = true
+        registerForDraggedTypes([.fileURL, .URL, .string])
     }
 
     private func refresh() {

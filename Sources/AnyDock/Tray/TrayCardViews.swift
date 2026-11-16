@@ -11,14 +11,18 @@ final class BadgeView: NSView {
     private static let fontSize = NSFont.smallSystemFontSize - 2
     private static let mediaBackground = NSColor(white: 0, alpha: 0.6)
 
-    private let label = NSTextField(labelWithString: "")
     private var style = Style.neutral
+
+    private lazy var label: NSTextField = {
+        let label = NSTextField(labelWithString: "")
+        label.font = .systemFont(ofSize: Self.fontSize, weight: .semibold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
-        label.font = .systemFont(ofSize: Self.fontSize, weight: .semibold)
-        label.translatesAutoresizingMaskIntoConstraints = false
+        configure()
         addSubview(label)
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s4),
@@ -48,6 +52,10 @@ final class BadgeView: NSView {
         updateColors()
     }
 
+    private func configure() {
+        wantsLayer = true
+    }
+
     private func updateColors() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
             switch style {
@@ -69,14 +77,11 @@ final class BadgeView: NSView {
 final class LatestDot: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
-        translatesAutoresizingMaskIntoConstraints = false
+        configure()
         NSLayoutConstraint.activate([
             widthAnchor.constraint(equalToConstant: TrayMetrics.dot),
             heightAnchor.constraint(equalToConstant: TrayMetrics.dot),
         ])
-        layer?.cornerRadius = TrayMetrics.dot / 2
-        updateColors()
     }
 
     required init?(coder _: NSCoder) {
@@ -85,6 +90,13 @@ final class LatestDot: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
+        updateColors()
+    }
+
+    private func configure() {
+        wantsLayer = true
+        translatesAutoresizingMaskIntoConstraints = false
+        layer?.cornerRadius = TrayMetrics.dot / 2
         updateColors()
     }
 
@@ -160,9 +172,7 @@ final class ThumbnailView: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
-        layer?.cornerRadius = TrayMetrics.cornerRadius
-        updateColors()
+        configure()
     }
 
     required init?(coder _: NSCoder) {
@@ -171,6 +181,12 @@ final class ThumbnailView: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
+        updateColors()
+    }
+
+    private func configure() {
+        wantsLayer = true
+        layer?.cornerRadius = TrayMetrics.cornerRadius
         updateColors()
     }
 

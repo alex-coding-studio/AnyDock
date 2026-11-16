@@ -8,9 +8,13 @@ final class TrayHeaderView: NSView {
     private static let buttonWidth: CGFloat = 36
     private static let buttonHeight = TrayMetrics.scopeBarHeight - TrayMetrics.scopeBarInset * 2
 
-    private(set) lazy var filterBar = TrayScopeBar(
-        surface: TrayGlass.surface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2)
-    )
+    private(set) lazy var filterBar: TrayScopeBar = {
+        let bar = TrayScopeBar(
+            surface: TrayGlass.surface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2)
+        )
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        return bar
+    }()
 
     private(set) lazy var controlGroup: NSView = {
         let buttons = NSStackView(views: [folderButton, settingsButton])
@@ -62,7 +66,6 @@ final class TrayHeaderView: NSView {
     init(viewModel: TrayViewModel) {
         self.viewModel = viewModel
         super.init(frame: .zero)
-        filterBar.translatesAutoresizingMaskIntoConstraints = false
         addSubview(filterBar)
         addSubview(controlGroup)
         NSLayoutConstraint.activate([

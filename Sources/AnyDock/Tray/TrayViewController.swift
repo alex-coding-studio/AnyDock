@@ -7,14 +7,22 @@ import Quartz
 final class TrayViewController: NSViewController {
     let viewModel: TrayViewModel
 
-    private(set) lazy var header = TrayHeaderView(viewModel: viewModel)
+    private(set) lazy var header: TrayHeaderView = {
+        let header = TrayHeaderView(viewModel: viewModel)
+        header.translatesAutoresizingMaskIntoConstraints = false
+        return header
+    }()
 
-    private(set) lazy var footer = TrayFooterView(
-        viewModel: viewModel,
-        clipboard: clipboard,
-        entries: cache,
-        dragSource: collection
-    )
+    private(set) lazy var footer: TrayFooterView = {
+        let footer = TrayFooterView(
+            viewModel: viewModel,
+            clipboard: clipboard,
+            entries: cache,
+            dragSource: collection
+        )
+        footer.translatesAutoresizingMaskIntoConstraints = false
+        return footer
+    }()
 
     private let clipboard: ClipboardMonitor
     private let pasteboard: TrayPasteboardWriter
@@ -68,7 +76,6 @@ final class TrayViewController: NSViewController {
         let scroll = collections.scroll
         collection.frame = content.bounds
         for element in [scroll, emptyState, footer, header] {
-            element.translatesAutoresizingMaskIntoConstraints = false
             content.addSubview(element)
         }
         NSLayoutConstraint.activate([

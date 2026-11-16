@@ -60,7 +60,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
+        configure()
         addSubview(text)
         addSubview(meta)
         NSLayoutConstraint.activate([
@@ -72,9 +72,6 @@ final class ClipboardCell: NSView, NSDraggingSource {
             meta.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Space.s8),
             meta.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Space.s4),
         ])
-        setAccessibilityElement(true)
-        setAccessibilityRole(.button)
-        setAccessibilityHelp(L10n.text("Double-click to copy"))
     }
 
     required init?(coder _: NSCoder) {
@@ -136,5 +133,12 @@ final class ClipboardCell: NSView, NSDraggingSource {
         sourceOperationMaskFor context: NSDraggingContext
     ) -> NSDragOperation {
         context == .outsideApplication ? .copy : []
+    }
+
+    private func configure() {
+        wantsLayer = true
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityHelp(L10n.text("Double-click to copy"))
     }
 }

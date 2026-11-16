@@ -6,19 +6,30 @@ class PolaroidCardItem: TrayCardItem {
 
     private static let timeFontSize: CGFloat = 10
 
-    let previewArea = PreviewArea()
-    let caption = NSTextField(labelWithString: "")
+    private(set) lazy var previewArea: PreviewArea = {
+        let area = PreviewArea()
+        area.wantsLayer = true
+        area.layer?.cornerRadius = TrayMetrics.innerCornerRadius
+        area.layer?.masksToBounds = true
+        return area
+    }()
 
-    override func buildContent(in container: NSView) {
-        previewArea.wantsLayer = true
-        previewArea.layer?.cornerRadius = TrayMetrics.innerCornerRadius
-        previewArea.layer?.masksToBounds = true
+    private(set) lazy var caption: NSTextField = {
+        let caption = NSTextField(labelWithString: "")
         caption.font = .systemFont(ofSize: Self.captionFontSize, weight: .medium)
         caption.lineBreakMode = .byTruncatingMiddle
         caption.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         caption.setContentCompressionResistancePriority(.required, for: .vertical)
+        return caption
+    }()
+
+    private lazy var strip: NSStackView = {
         let strip = NSStackView(views: [dot, caption])
         strip.spacing = Space.s4
+        return strip
+    }()
+
+    override func buildContent(in container: NSView) {
         pin(previewArea, in: container, inset: TrayMetrics.framePadding)
         pin(strip, in: container, inset: TrayMetrics.framePadding)
         previewArea.addSubview(badge)
@@ -106,12 +117,19 @@ final class LinkCardItem: PolaroidCardItem {
     private static let domainFontSize: CGFloat = 13
     private static let addressFontSize: CGFloat = 11
 
-    lazy var domain = label(size: Self.domainFontSize, weight: .bold, lines: 1)
-    lazy var address = label(size: Self.addressFontSize, lines: 0)
+    private(set) lazy var domain: NSTextField = {
+        let domain = label(size: Self.domainFontSize, weight: .bold, lines: 1)
+        domain.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
+        return domain
+    }()
+
+    private(set) lazy var address: NSTextField = {
+        let address = label(size: Self.addressFontSize, lines: 0)
+        address.textColor = .secondaryLabelColor
+        return address
+    }()
 
     override func buildPreview(in area: NSView) {
-        address.textColor = .secondaryLabelColor
-        domain.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         fill(domain, in: area, top: Space.s24)
         fill(address, in: area, below: domain)
     }
@@ -130,15 +148,23 @@ final class FileCardItem: PolaroidCardItem {
 
     private static let linesFontSize: CGFloat = 9
 
-    let preview = NSImageView()
-
-    private lazy var lines = label(size: Self.linesFontSize, lines: 0)
-
-    override func buildPreview(in area: NSView) {
+    private(set) lazy var preview: NSImageView = {
+        let preview = NSImageView()
         preview.imageScaling = .scaleProportionallyUpOrDown
         preview.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         preview.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         preview.translatesAutoresizingMaskIntoConstraints = false
+        return preview
+    }()
+
+    private lazy var lines: NSTextField = {
+        let lines = label(size: Self.linesFontSize, lines: 0)
+        lines.font = .monospacedSystemFont(ofSize: Self.linesFontSize, weight: .regular)
+        lines.textColor = .secondaryLabelColor
+        return lines
+    }()
+
+    override func buildPreview(in area: NSView) {
         area.addSubview(preview, positioned: .below, relativeTo: badge)
         NSLayoutConstraint.activate([
             preview.leadingAnchor.constraint(equalTo: area.leadingAnchor),
@@ -146,8 +172,6 @@ final class FileCardItem: PolaroidCardItem {
             preview.topAnchor.constraint(equalTo: area.topAnchor),
             preview.bottomAnchor.constraint(equalTo: area.bottomAnchor),
         ])
-        lines.font = .monospacedSystemFont(ofSize: Self.linesFontSize, weight: .regular)
-        lines.textColor = .secondaryLabelColor
         fill(lines, in: area, top: Space.s24)
     }
 
