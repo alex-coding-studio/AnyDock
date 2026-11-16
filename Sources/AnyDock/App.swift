@@ -1,7 +1,4 @@
-import AnyDockCore
 import AppKit
-import Combine
-import OSLog
 
 @main
 @MainActor
@@ -18,213 +15,21 @@ enum AnyDockApp {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private lazy var statusItem = StatusItemController()
-    private var subscriptions = Set<AnyCancellable>()
-
-    private let configurationStore = ConnectionConfigurationStore()
-
-    private lazy var trayModel = TrayViewModel(inbox: TrayInbox(
-        list: { [weak self] in try await self?.currentItems() ?? [] },
-        recycle: { [weak self] in try await self?.recycleItems($0) }
-    ))
-    private lazy var tray = TrayViewController(viewModel: trayModel, clipboard: clipboard)
-    private lazy var trayPopover = TrayPopoverController(tray: tray, statusItem: statusItem)
-    private let store = InboxStore()
-    private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
-    private let hotKeys = HotKeyCenter()
-    private var server: HTTPServer?
-
-    private var configuration: ConnectionConfiguration?
-    private var settings: SettingsController?
-    private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
+    private var services: AppServiceProvider?
 
     func applicationDidFinishLaunching(_: Notification) {
-        trayPopover.reloadRequests
-            .sink { [weak self] in Task { await self?.reloadItems() } }
-            .store(in: &subscriptions)
-        tray.settingsRequests
-            .sink { [weak self] in self?.showSettings() }
-            .store(in: &subscriptions)
-        tray.folderRequests
-            .sink { [weak self] in self?.openFolder() }
-            .store(in: &subscriptions)
-        guard let current = loadConfiguration() else {
+        let store = ConnectionConfigurationStore()
+        guard let configuration = AppServiceProvider.loadConfiguration(from: store) else {
             return
         }
-        configuration = current
-        let preferences = SettingsController(configuration: current)
-        preferences.apply = { [weak self] next in try await self?.apply(next) }
-        hotKeys.onPress = { [weak self] in self?.trayPopover.toggle() }
-        preferences.registerHotKey = { [weak self] hotKey in self?.hotKeys.register(
-            hotKey
-        ) ?? false }
-        preferences.registerSavedHotKey()
-        settings = preferences
-        server = HTTPServer(store: store)
-        Task {
-            await startReceiver(current.receiver)
-            await reloadItems()
-        }
-        if CommandLine.arguments.contains("--settings") {
-            showSettings()
-        }
-        if CommandLine.arguments.contains("--tray") {
-            trayPopover.toggle()
-        }
+        let services = AppServiceProvider(configuration: configuration, store: store)
+        self.services = services
+        services.start(arguments: CommandLine.arguments)
     }
 
     func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool)
         -> Bool {
-        showSettings()
+        services?.showSettings()
         return true
-    }
-
-    private func loadConfiguration() -> ConnectionConfiguration? {
-        do {
-            return try configurationStore.load()
-        } catch {
-            logger.error(
-                "Configuration could not be loaded: \(error.localizedDescription, privacy: .public)"
-            )
-            let alert = NSAlert(error: error)
-            alert.messageText = L10n.text("Unable to Read AnyDock Configuration")
-            alert.informativeText = L10n.text("configuration.recovery")
-            alert.runModal()
-            NSApp.terminate(nil)
-            return nil
-        }
-    }
-
-    private func startReceiver(_ next: ConnectionConfiguration.Receiver) async {
-        guard let server else {
-            return
-        }
-        do {
-            try await server.start(
-                configuration: next,
-                onReceive: { [weak self] item in
-                    await self?.received(item, directory: next.directory)
-                },
-                onFailure: { [weak self] message in
-                    await self?.receiverFailed(message)
-                }
-            )
-            settings?.setStatus(L10n.text("Listening · %d", Int(next.port)), isError: false)
-            statusItem.showFailure(false)
-        } catch {
-            receiverFailed(
-                L10n.text(
-                    "Unable to listen on port %d: %@",
-                    Int(next.port),
-                    error.localizedDescription
-                )
-            )
-        }
-    }
-
-    private func receiverFailed(_ message: String) {
-        logger.error("Listener failed: \(message, privacy: .public)")
-        settings?.setStatus(message, isError: true)
-        statusItem.showFailure(true)
-    }
-
-    private func received(_ item: ReceivedItem, directory: URL) {
-        guard directory == configuration?.receiver.directory else {
-            return
-        }
-        trayModel.receive(item)
-        if Preferences.copiesNewItems {
-            tray.copyToPasteboard(item)
-        }
-        trayPopover.show(reloading: false)
-        tray.scrollToLatest()
-    }
-
-    private func reloadItems() async {
-        guard let directory = configuration?.receiver.directory else {
-            return
-        }
-        do {
-            let items = try await store.list(in: directory)
-            guard directory == configuration?.receiver.directory else {
-                return
-            }
-            trayModel.replace(items)
-        } catch {
-            receiverFailed(L10n.text(
-                "Unable to read the receive folder: %@",
-                error.localizedDescription
-            ))
-        }
-    }
-
-    private func currentItems() async throws -> [ReceivedItem] {
-        guard let directory = configuration?.receiver.directory else {
-            return []
-        }
-        let items = try await store.list(in: directory)
-        guard directory == configuration?.receiver.directory else {
-            throw CocoaError(.userCancelled)
-        }
-        return items
-    }
-
-    private func recycleItems(_ requested: [URL]) async throws {
-        let allowed = try await Set(currentItems().map(\.url))
-        let urls = requested.filter { allowed.contains($0) }
-        guard !urls.isEmpty else {
-            return
-        }
-        let error: (any Error)? = await withCheckedContinuation { continuation in
-            NSWorkspace.shared.recycle(urls) { _, error in
-                continuation.resume(returning: error)
-            }
-        }
-        await reloadItems()
-        if let error {
-            throw error
-        }
-    }
-
-    private func apply(_ next: ConnectionConfiguration) async throws {
-        let receiverChanged = next.receiver != configuration?.receiver
-        if receiverChanged {
-            try FileManager.default.createDirectory(
-                at: next.receiver.directory,
-                withIntermediateDirectories: true
-            )
-            guard FileManager.default.isWritableFile(atPath: next.receiver.directory.path) else {
-                throw CocoaError(.fileWriteNoPermission)
-            }
-        }
-        try configurationStore.save(next)
-        configuration = next
-        guard receiverChanged else {
-            return
-        }
-        await reloadItems()
-        await startReceiver(next.receiver)
-    }
-
-    private func showSettings() {
-        trayPopover.close()
-        NSApp.activate(ignoringOtherApps: true)
-        settings?.showWindow(nil)
-        settings?.window?.makeKeyAndOrderFront(nil)
-    }
-
-    private func openFolder() {
-        guard let directory = configuration?.receiver.directory else {
-            return
-        }
-        do {
-            try FileManager.default.createDirectory(
-                at: directory,
-                withIntermediateDirectories: true
-            )
-            NSWorkspace.shared.open(directory)
-        } catch {
-            NSAlert(error: error).runModal()
-        }
     }
 }

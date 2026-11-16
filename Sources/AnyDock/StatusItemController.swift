@@ -4,6 +4,8 @@ import Combine
 @MainActor
 final class StatusItemController: NSObject {
     private let clickSubject = PassthroughSubject<Void, Never>()
+    private let status: AnyPublisher<InboxStatus, Never>
+    private var subscriptions = Set<AnyCancellable>()
 
     private lazy var statusItem: NSStatusItem = {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -22,12 +24,27 @@ final class StatusItemController: NSObject {
         statusItem.button
     }
 
-    override init() {
+    init(status: AnyPublisher<InboxStatus, Never>) {
+        self.status = status
         super.init()
-        showFailure(false)
+        subscribeEvents()
     }
 
-    func showFailure(_ failed: Bool) {
+    private func subscribeEvents() {
+        status
+            .sink { [weak self] in self?.show($0) }
+            .store(in: &subscriptions)
+    }
+
+    private func show(_ status: InboxStatus) {
+        if case .failed = status {
+            showFailure(true)
+        } else {
+            showFailure(false)
+        }
+    }
+
+    private func showFailure(_ failed: Bool) {
         statusItem.button?.image =
             failed
                 ? NSImage(

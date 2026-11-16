@@ -2,9 +2,14 @@ import AnyDockCore
 import Combine
 import Foundation
 
-struct TrayInbox {
-    let list: @MainActor () async throws -> [ReceivedItem]
-    let recycle: @MainActor ([URL]) async throws -> Void
+@MainActor
+protocol TrayInbox: AnyObject {
+    var received: AnyPublisher<ReceivedItem, Never> { get }
+    var items: AnyPublisher<[ReceivedItem], Never> { get }
+    func list() async throws -> [ReceivedItem]
+    func recycle(_ urls: [URL]) async throws
+    func reload() async
+    func openFolder()
 }
 
 struct TrayList {
@@ -14,7 +19,7 @@ struct TrayList {
 
 @MainActor
 final class TrayViewModel {
-    private let inbox: TrayInbox
+    private let inbox: any TrayInbox
     private let listSubject = CurrentValueSubject<TrayList, Never>(TrayList())
     private let selectionSubject = CurrentValueSubject<[URL], Never>([])
     private let draggedSubject = CurrentValueSubject<[URL], Never>([])
@@ -23,6 +28,7 @@ final class TrayViewModel {
     private let dragFinishedSubject = PassthroughSubject<Void, Never>()
     private let errorSubject = PassthroughSubject<any Error, Never>()
     private var droppedOnTrash = false
+    private var subscriptions = Set<AnyCancellable>()
 
     var list: AnyPublisher<TrayList, Never> {
         listSubject.eraseToAnyPublisher()
@@ -80,8 +86,9 @@ final class TrayViewModel {
         contents.filter == .kind(.text)
     }
 
-    init(inbox: TrayInbox) {
+    init(inbox: any TrayInbox) {
         self.inbox = inbox
+        subscribeEvents()
     }
 
     func count(of filter: TrayFilter) -> Int {
@@ -171,6 +178,15 @@ final class TrayViewModel {
             await self?.performRecycle(targets)
             self?.recyclingSubject.send(false)
         }
+    }
+
+    private func subscribeEvents() {
+        inbox.received
+            .sink { [weak self] in self?.receive($0) }
+            .store(in: &subscriptions)
+        inbox.items
+            .sink { [weak self] in self?.replace($0) }
+            .store(in: &subscriptions)
     }
 
     private func performRecycle(_ targets: [URL]) async {

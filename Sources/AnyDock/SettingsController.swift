@@ -1,5 +1,6 @@
 import AnyDockCore
 import AppKit
+import Combine
 import ServiceManagement
 
 @MainActor
@@ -13,10 +14,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     )
     let hotKeyRecorder = HotKeyRecorder()
     let hotKeyStatus = NSTextField(wrappingLabelWithString: "")
-    var apply: ((ConnectionConfiguration) async throws -> Void)?
-    var registerHotKey: ((HotKey?) -> Bool)?
 
-    private var configuration: ConnectionConfiguration
+    private let inbox: Inbox
+    private let hotKeys: HotKeyCenter
+    private var subscriptions = Set<AnyCancellable>()
     private var selectedDirectory: URL
     private let appearance = NSPopUpButton(frame: .zero, pullsDown: false)
     private let language = NSPopUpButton(frame: .zero, pullsDown: false)
@@ -49,9 +50,14 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
     private let send = NSButton(title: L10n.text("Send to iPhone…"), target: nil, action: nil)
 
-    init(configuration: ConnectionConfiguration) {
-        self.configuration = configuration
-        selectedDirectory = configuration.receiver.directory
+    private var configuration: ConnectionConfiguration {
+        inbox.configuration
+    }
+
+    init(inbox: Inbox, hotKeys: HotKeyCenter) {
+        self.inbox = inbox
+        self.hotKeys = hotKeys
+        selectedDirectory = inbox.configuration.receiver.directory
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),
             styleMask: [
@@ -81,7 +87,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             if !recording {
                 self?.registerSavedHotKey()
             } else {
-                _ = self?.registerHotKey?(nil)
+                _ = self?.hotKeys.register(nil)
             }
         }
         hotKeyRecorder.onRecord = { [weak self] candidate in self?.recordHotKey(candidate) }
@@ -94,6 +100,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         clearHotKey.controlSize = .small
         clearHotKey.setAccessibilityLabel(L10n.text("hotkey.clear.accessibility"))
         clearHotKey.isEnabled = Preferences.wakeHotKey != nil
+        if let saved = Preferences.wakeHotKey, !hotKeys.isRegistered {
+            showHotKeyMessage(L10n.text("hotkey.unavailable", saved.displayString))
+        }
+        subscribeEvents()
     }
 
     required init?(coder _: NSCoder) {
@@ -119,16 +129,16 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     func registerSavedHotKey() {
         guard let saved = Preferences.wakeHotKey else {
-            _ = registerHotKey?(nil)
+            _ = hotKeys.register(nil)
             return
         }
-        if registerHotKey?(saved) == false {
+        if !hotKeys.register(saved) {
             showHotKeyMessage(L10n.text("hotkey.unavailable", saved.displayString))
         }
     }
 
     func recordHotKey(_ candidate: HotKey) {
-        guard registerHotKey?(candidate) != false else {
+        guard hotKeys.register(candidate) else {
             registerSavedHotKey()
             showHotKeyMessage(L10n.text("hotkey.unavailable", candidate.displayString))
             return
@@ -196,6 +206,23 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         window
     }
 
+    private func subscribeEvents() {
+        inbox.status
+            .sink { [weak self] in self?.show($0) }
+            .store(in: &subscriptions)
+    }
+
+    private func show(_ status: InboxStatus) {
+        switch status {
+        case .starting:
+            break
+        case let .listening(port):
+            setStatus(L10n.text("Listening · %d", Int(port)), isError: false)
+        case let .failed(message):
+            setStatus(message, isError: true)
+        }
+    }
+
     private func showHotKeyMessage(_ text: String) {
         hotKeyStatus.stringValue = text
         hotKeyStatus.isHidden = false
@@ -204,7 +231,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     @objc private func clearSavedHotKey() {
         hotKeyRecorder.endRecording()
         Preferences.wakeHotKey = nil
-        _ = registerHotKey?(nil)
+        _ = hotKeys.register(nil)
         hotKeyRecorder.hotKey = nil
         clearHotKey.isEnabled = false
         hotKeyStatus.isHidden = true
@@ -675,9 +702,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             receivingError.isHidden = false
             return
         }
-        var next = configuration
-        next.receiver.port = value
-        next.receiver.directory = selectedDirectory
+        var next = configuration.receiver
+        next.port = value
+        next.directory = selectedDirectory
         isApplying = true
         receivingError.isHidden = true
         updatePending()
@@ -687,8 +714,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
                 updatePending()
             }
             do {
-                try await apply?(next)
-                configuration = next
+                try await inbox.apply(receiver: next)
                 refreshAddress()
             } catch {
                 receivingError.stringValue = error.localizedDescription
@@ -877,15 +903,12 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
 
     private func saveShortcutName(_ name: String) {
-        var next = configuration
-        next.sender.shortcutName = name
-        Task {
-            do {
-                try await apply?(next)
-                configuration = next
-            } catch {
-                showConnectionMessage(error.localizedDescription)
-            }
+        do {
+            var sender = configuration.sender
+            sender.shortcutName = name
+            try inbox.apply(sender: sender)
+        } catch {
+            showConnectionMessage(error.localizedDescription)
         }
     }
 
