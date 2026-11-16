@@ -4,7 +4,11 @@ import Testing
 @testable import AnyDock
 
 @MainActor
-private func keyEvent(_ keyCode: Int, _ modifiers: NSEvent.ModifierFlags = []) throws -> NSEvent {
+private func keyEvent(
+    _ keyCode: Int,
+    _ character: String = "",
+    _ modifiers: NSEvent.ModifierFlags = []
+) throws -> NSEvent {
     try #require(
         NSEvent.keyEvent(
             with: .keyDown,
@@ -13,30 +17,36 @@ private func keyEvent(_ keyCode: Int, _ modifiers: NSEvent.ModifierFlags = []) t
             timestamp: 0,
             windowNumber: 0,
             context: nil,
-            characters: "",
-            charactersIgnoringModifiers: "",
+            characters: character,
+            charactersIgnoringModifiers: character,
             isARepeat: false,
             keyCode: UInt16(keyCode)
         )
     )
 }
 
-@Test("托盘快捷键按键位和必需修饰键匹配：⌘C、⌘⌫、空格、Esc")
+@Test("托盘快捷键匹配：⌘C、⌘⌫、空格、Esc，多按的修饰键不影响")
 @MainActor
 func trayShortcutsMatchTheirKeys() throws {
-    #expect(try TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_C, .command)))
-    #expect(try TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_C, [.command, .shift])))
-    #expect(try TrayKeyboardShortcuts.trash.matches(keyEvent(kVK_Delete, .command)))
-    #expect(try TrayKeyboardShortcuts.preview.matches(keyEvent(kVK_Space)))
+    #expect(try TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_C, "c", .command)))
+    #expect(try TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_C, "c", [.command, .shift])))
+    #expect(try TrayKeyboardShortcuts.trash.matches(keyEvent(kVK_Delete, "", .command)))
+    #expect(try TrayKeyboardShortcuts.preview.matches(keyEvent(kVK_Space, " ")))
     #expect(try TrayKeyboardShortcuts.escape.matches(keyEvent(kVK_Escape)))
-    #expect(try !TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_V, .command)))
+}
+
+@Test("⌘C 跟随键盘布局的字符：印着 C 的键复制，ANSI C 键位打出别的字母时不复制")
+@MainActor
+func copyMatchesTheLayoutCharacter() throws {
+    #expect(try TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_I, "c", .command)))
+    #expect(try !TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_C, "j", .command)))
 }
 
 @Test("缺少必需修饰键时不触发：单按 C 不复制，⌥⌫ 不删除")
 @MainActor
 func trayShortcutsRequireTheirModifiers() throws {
-    #expect(try !TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_C)))
-    #expect(try !TrayKeyboardShortcuts.trash.matches(keyEvent(kVK_Delete, .option)))
+    #expect(try !TrayKeyboardShortcuts.copy.matches(keyEvent(kVK_ANSI_C, "c")))
+    #expect(try !TrayKeyboardShortcuts.trash.matches(keyEvent(kVK_Delete, "", .option)))
     #expect(try !TrayKeyboardShortcuts.trash.matches(keyEvent(kVK_Delete)))
 }
 

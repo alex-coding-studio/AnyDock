@@ -68,7 +68,7 @@ final class HotKeyRecorder: NSButton {
             endRecording()
             return
         }
-        guard let candidate = KeyCombination.hotKey(
+        guard let candidate = KeyCombination(
             keyCode: UInt32(event.keyCode),
             modifiers: modifiers
         ) else {

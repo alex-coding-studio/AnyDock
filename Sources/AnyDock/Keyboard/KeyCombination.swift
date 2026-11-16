@@ -1,7 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 
-struct KeyCombination: Equatable, Sendable {
+struct KeyCombination: Equatable {
     private static let supportedModifiers: NSEvent.ModifierFlags = [
         .control,
         .option,
@@ -89,13 +89,6 @@ struct KeyCombination: Equatable, Sendable {
         return symbols + keyName
     }
 
-    var keyEquivalent: String {
-        if Int(keyCode) == kVK_Delete {
-            return String(Character(Unicode.Scalar(UInt8(NSBackspaceCharacter))))
-        }
-        return Self.layoutCharacter(for: keyCode)?.lowercased() ?? ""
-    }
-
     private var keyName: String {
         if let name = Self.namedKeys[Int(keyCode)] {
             return name
@@ -103,31 +96,23 @@ struct KeyCombination: Equatable, Sendable {
         return Self.layoutCharacter(for: keyCode)?.uppercased() ?? "#\(keyCode)"
     }
 
-    init(keyCode: Int, modifiers: NSEvent.ModifierFlags = []) {
-        self.keyCode = UInt32(keyCode)
-        self.modifiers = modifiers.intersection(Self.supportedModifiers)
+    init?(keyCode: UInt32, modifiers: NSEvent.ModifierFlags) {
+        let modifiers = modifiers.intersection(Self.supportedModifiers)
+        guard !modifiers.isDisjoint(with: [.control, .option, .command]) else {
+            return nil
+        }
+        self.keyCode = keyCode
+        self.modifiers = modifiers
     }
 
     init?(preference: Any?) {
         guard let values = preference as? [String: Int], let keyCode = values["keyCode"],
               let modifiers = values["modifiers"], let code = UInt32(exactly: keyCode),
-              let flags = UInt(exactly: modifiers),
-              let combination = Self.hotKey(
-                  keyCode: code,
-                  modifiers: NSEvent.ModifierFlags(rawValue: flags)
-              )
+              let flags = UInt(exactly: modifiers)
         else {
             return nil
         }
-        self = combination
-    }
-
-    static func hotKey(keyCode: UInt32, modifiers: NSEvent.ModifierFlags) -> KeyCombination? {
-        let combination = KeyCombination(keyCode: Int(keyCode), modifiers: modifiers)
-        guard !combination.modifiers.isDisjoint(with: [.control, .option, .command]) else {
-            return nil
-        }
-        return combination
+        self.init(keyCode: code, modifiers: NSEvent.ModifierFlags(rawValue: flags))
     }
 
     private static func layoutCharacter(for keyCode: UInt32) -> String? {
@@ -164,10 +149,5 @@ struct KeyCombination: Equatable, Sendable {
         }
         let text = String(utf16CodeUnits: characters, count: length)
         return text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : text
-    }
-
-    func matches(_ event: NSEvent) -> Bool {
-        UInt32(event.keyCode) == keyCode
-            && event.modifierFlags.intersection(Self.supportedModifiers).isSuperset(of: modifiers)
     }
 }

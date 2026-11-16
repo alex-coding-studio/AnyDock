@@ -98,7 +98,7 @@ final class TrayCollectionView: NSCollectionView {
     private func menuItem(
         _ title: String,
         action: Selector,
-        shortcut: KeyCombination? = nil
+        shortcut: TrayShortcut? = nil
     ) -> NSMenuItem {
         let item = NSMenuItem(
             title: title,
