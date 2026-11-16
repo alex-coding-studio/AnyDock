@@ -64,8 +64,8 @@ func polaroidCaptionsStayFullyVisible() throws {
         defer: true
     )
     window.contentViewController = tray
-    tray.replaceItems(Array(items.dropFirst()))
-    tray.append(items[0])
+    tray.viewModel.replace(Array(items.dropFirst()))
+    tray.viewModel.receive(items[0])
     for thumbnail in [nil, NSImage(size: NSSize(width: 480, height: 620))] {
         tray.view.layoutSubtreeIfNeeded()
         tray.collection.layoutSubtreeIfNeeded()

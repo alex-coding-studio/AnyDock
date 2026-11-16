@@ -13,7 +13,10 @@ private func makeTray(with texts: [String]) -> (
     let pasteboard = NSPasteboard(name: NSPasteboard.Name("AnyDockTests-\(UUID().uuidString)"))
     let enabled = CurrentValueSubject<Bool, Never>(true)
     let monitor = ClipboardMonitor(pasteboard: pasteboard, isEnabled: enabled.eraseToAnyPublisher())
-    let tray = TrayViewController(clipboard: monitor)
+    let tray = TrayViewController(
+        viewModel: TrayViewModel(inbox: TrayInbox(list: { [] }, recycle: { _ in })),
+        clipboard: monitor
+    )
     tray.loadViewIfNeeded()
     for text in texts {
         pasteboard.clearContents()

@@ -15,56 +15,59 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     )
     private(set) var dropZoneSurface: NSView?
     private(set) var controlGroup: NSView?
-    var loadItems: (() async throws -> [ReceivedItem])?
-    var recycleItems: (([URL]) async throws -> Void)?
-    var openFolder: (() -> Void)?
-    var openSettings: (() -> Void)?
+    let viewModel: TrayViewModel
 
     private let clipboard: ClipboardMonitor
     private let pasteboard: TrayPasteboardWriter
     private let presentationHoldSubject = PassthroughSubject<Bool, Never>()
-    private let dragFinishedSubject = PassthroughSubject<Void, Never>()
+    private let folderSubject = PassthroughSubject<Void, Never>()
+    private let settingsSubject = PassthroughSubject<Void, Never>()
     private let layout = MasonryCollectionLayout()
     private let scroll = NSScrollView()
     private let timeFormatter = DateFormatter()
     private var dropZoneAboveClipboard: NSLayoutConstraint?
     private var dropZoneAtBottom: NSLayoutConstraint?
     private var emptyState: NSView?
-    private var contents = TrayContents()
     private var entries = [TrayEntry]()
     private var cache = [URL: TrayEntry]()
     private let previews = TrayPreviewCache()
     private var subscriptions = Set<AnyCancellable>()
-    private var latestReceivedURL: URL?
     private var previewSource: TrayQuickLookSource?
-    private var isTrashing = false
-    private var draggedURLs = [URL]()
-    private var droppedOnTrash = false
     private var releaseWatch: Timer?
+    private var renderedLatestURL: URL?
+    private var isApplyingSelection = false
 
     var presentationHolds: AnyPublisher<Bool, Never> {
         presentationHoldSubject.eraseToAnyPublisher()
     }
 
     var dragFinishes: AnyPublisher<Void, Never> {
-        dragFinishedSubject.eraseToAnyPublisher()
+        viewModel.dragFinishes
+    }
+
+    var folderRequests: AnyPublisher<Void, Never> {
+        folderSubject.eraseToAnyPublisher()
+    }
+
+    var settingsRequests: AnyPublisher<Void, Never> {
+        settingsSubject.eraseToAnyPublisher()
     }
 
     var holdsPresentation: Bool {
-        previewSource != nil || isTrashing
+        previewSource != nil || viewModel.isRecycling
     }
 
     private var singleColumn: Bool {
-        contents.filter == .kind(.text)
+        viewModel.contents.filter == .kind(.text)
     }
 
     private var selectedEntries: [TrayEntry] {
-        collection.selectionIndexPaths.sorted { $0.item < $1.item }.compactMap {
-            entries.indices.contains($0.item) ? entries[$0.item] : nil
-        }
+        let selected = Set(viewModel.selectedURLs)
+        return entries.filter { selected.contains($0.url) }
     }
 
-    init(clipboard: ClipboardMonitor) {
+    init(viewModel: TrayViewModel, clipboard: ClipboardMonitor) {
+        self.viewModel = viewModel
         self.clipboard = clipboard
         pasteboard = TrayPasteboardWriter(clipboard: clipboard)
         super.init(nibName: nil, bundle: nil)
@@ -99,13 +102,8 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         collection.copyItems = { [weak self] in self?.copySelection() }
         collection.revealItems = { [weak self] in self?.revealSelection() }
         collection.previewItems = { [weak self] in self?.previewSelection() }
-        collection.trashItems = { [weak self] in
-            guard let self else {
-                return
-            }
-            trash(selectedEntries.map(\.url))
-        }
-        collection.selectionChanged = { [weak self] in self?.updateControls() }
+        collection.trashItems = { [weak self] in self?.viewModel.recycleSelection() }
+        collection.selectionChanged = { [weak self] in self?.syncSelection() }
         collection.escapePressed = { [weak self] in self?.collapseClipboard() ?? false }
         scroll.documentView = collection
         scroll.hasVerticalScroller = true
@@ -125,7 +123,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         configureEmptyState(in: content)
         let group = configureControls(in: content)
         configureFilterBar(in: content, before: group)
-        updateControls()
+        subscribeEvents()
     }
 
     override nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel!) -> Bool {
@@ -150,18 +148,16 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     func select(_ filter: TrayFilter) {
-        contents.select(filter)
-        reloadEntries()
+        viewModel.select(filter)
         scrollToLatest()
     }
 
     func toggleSelectAll(in filter: TrayFilter) {
-        if contents.filter != filter {
-            select(filter)
+        let switching = viewModel.contents.filter != filter
+        viewModel.toggleSelectAll(in: filter)
+        if switching {
+            scrollToLatest()
         }
-        let all = Set(entries.indices.map { IndexPath(item: $0, section: 0) })
-        collection.selectionIndexPaths = collection.selectionIndexPaths == all ? [] : all
-        updateControls()
     }
 
     func replaceClips(_ clips: [ClipboardClip]) {
@@ -184,30 +180,12 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         clipboardBar.setExpanded(false, animated: false)
     }
 
-    func replaceItems(_ next: [ReceivedItem]) {
-        loadViewIfNeeded()
-        contents.replace(next)
-        reloadEntries()
-    }
-
-    func append(_ item: ReceivedItem) {
-        loadViewIfNeeded()
-        latestReceivedURL = item.url
-        cache[item.url] = nil
-        if let thumbnail = item.thumbnail {
-            previews.store(thumbnail, for: item.url)
-        }
-        contents.receive(item)
-        reloadEntries()
-    }
-
     func focusCollection() {
         view.window?.makeFirstResponder(collection)
     }
 
     func clearSelection() {
-        collection.selectionIndexPaths = []
-        updateControls()
+        viewModel.clearSelection()
     }
 
     func scrollToLatest() {
@@ -235,7 +213,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             case .file: FileCardItem.identifier
             }
         let item = collectionView.makeItem(withIdentifier: identifier, for: indexPath)
-        let latest = entry.url == latestReceivedURL
+        let latest = entry.url == viewModel.latestURL
         (item as? TrayCardItem)?.configure(
             entry,
             singleColumn: singleColumn,
@@ -262,20 +240,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             )
         )
         return item
-    }
-
-    func collectionView(
-        _: NSCollectionView,
-        didSelectItemsAt _: Set<IndexPath>
-    ) {
-        updateControls()
-    }
-
-    func collectionView(
-        _: NSCollectionView,
-        didDeselectItemsAt _: Set<IndexPath>
-    ) {
-        updateControls()
     }
 
     func collectionView(
@@ -318,38 +282,19 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     func beginDrag(_ indexPaths: Set<IndexPath>) {
-        draggedURLs = indexPaths.sorted { $0.item < $1.item }.compactMap {
-            entries.indices.contains($0.item) ? entries[$0.item].url : nil
-        }
-        droppedOnTrash = false
-        updateControls()
+        viewModel.beginDrag(urls(at: indexPaths))
         watchForRelease()
     }
 
     func endDrag(operation: NSDragOperation) {
-        let trashed = droppedOnTrash
         releaseWatch?.invalidate()
         releaseWatch = nil
-        draggedURLs = []
-        droppedOnTrash = false
-        updateControls()
-        if !trashed, !operation.isEmpty {
-            dragFinishedSubject.send()
-        }
+        viewModel.endDrag(succeeded: !operation.isEmpty)
     }
 
     @discardableResult
     func trashDraggedItems() -> Task<Void, Never>? {
-        guard !draggedURLs.isEmpty, !isTrashing else {
-            return nil
-        }
-        let targets = draggedURLs
-        draggedURLs = []
-        droppedOnTrash = true
-        collection.selectionIndexPaths = []
-        let task = trash(targets)
-        updateControls()
-        return task
+        viewModel.trashDraggedItems()
     }
 
     func copyToPasteboard(_ item: ReceivedItem) {
@@ -417,10 +362,11 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     private func updateFilterBar() {
+        let contents = viewModel.contents
         filterBar.isHidden = contents.items.isEmpty
         filterBar.update(
             contents.availableFilters.map { filter in
-                let count = kindCount(filter)
+                let count = viewModel.count(of: filter)
                 return TrayScopeBar.Segment(
                     title: "\(filterTitle(filter)) \(count)",
                     accessibilityLabel: L10n.text(
@@ -433,13 +379,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             },
             selected: contents.filter
         )
-    }
-
-    private func kindCount(_ filter: TrayFilter) -> Int {
-        guard case let .kind(kind) = filter else {
-            return contents.items.count
-        }
-        return contents.count(of: kind)
     }
 
     private func filterTitle(_ filter: TrayFilter) -> String {
@@ -477,9 +416,9 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             guard let self else {
                 return false
             }
-            return source === collection && !draggedURLs.isEmpty && !isTrashing
+            return source === collection && viewModel.canDropOnTrash()
         }
-        dropZone.performDrop = { [weak self] in self?.trashDraggedItems() != nil }
+        dropZone.performDrop = { [weak self] in self?.viewModel.trashDraggedItems() != nil }
         let zone = glassSurface(dropZone, cornerRadius: 17)
         zone.heightAnchor.constraint(equalToConstant: 34).isActive = true
         dropZoneSurface = zone
@@ -646,12 +585,44 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         return surface
     }
 
-    private func reloadEntries() {
-        let selected = Set(selectedEntries.map(\.url))
-        let present = Set(contents.items.map(\.url))
+    private func subscribeEvents() {
+        collection.publisher(for: \.selectionIndexPaths)
+            .sink { [weak self] _ in self?.syncSelection() }
+            .store(in: &subscriptions)
+        viewModel.list
+            .sink { [weak self] in self?.render($0) }
+            .store(in: &subscriptions)
+        viewModel.selection
+            .sink { [weak self] in self?.applySelection($0) }
+            .store(in: &subscriptions)
+        viewModel.dragged
+            .sink { [weak self] _ in self?.updateControls() }
+            .store(in: &subscriptions)
+        viewModel.recycling
+            .dropFirst()
+            .sink { [weak self] in self?.recyclingChanged($0) }
+            .store(in: &subscriptions)
+        viewModel.recycleStarts
+            .sink { [weak self] in self?.closePreview() }
+            .store(in: &subscriptions)
+        viewModel.errors
+            .sink { [weak self] in self?.presentError($0) }
+            .store(in: &subscriptions)
+    }
+
+    private func render(_ list: TrayList) {
+        if let latest = list.latestURL, latest != renderedLatestURL,
+           let item = list.contents.items.first(where: { $0.url == latest }) {
+            cache[latest] = nil
+            if let thumbnail = item.thumbnail {
+                previews.store(thumbnail, for: latest)
+            }
+        }
+        renderedLatestURL = list.latestURL
+        let present = Set(list.contents.items.map(\.url))
         previews.forget(cache.keys.filter { !present.contains($0) })
         cache = cache.filter { present.contains($0.key) }
-        entries = contents.visibleItems.map { item in
+        entries = list.contents.visibleItems.map { item in
             if let cached = cache[item.url] {
                 return cached
             }
@@ -662,13 +633,43 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         layout.columnCount = singleColumn ? 1 : 4
         layout.topInset = TrayMetrics.margin + TrayMetrics.scopeBarHeight + Space.s16
         layout.invalidateLayout()
+        isApplyingSelection = true
         collection.reloadData()
-        collection.selectionIndexPaths = Set(
+        isApplyingSelection = false
+        applySelection(viewModel.selectedURLs)
+        updateFilterBar()
+    }
+
+    private func applySelection(_ urls: [URL]) {
+        let selected = Set(urls)
+        let paths = Set(
             entries.enumerated().compactMap {
                 selected.contains($0.element.url) ? IndexPath(item: $0.offset, section: 0) : nil
             }
         )
-        updateFilterBar()
+        if collection.selectionIndexPaths != paths {
+            isApplyingSelection = true
+            collection.selectionIndexPaths = paths
+            isApplyingSelection = false
+        }
+        updateControls()
+    }
+
+    private func syncSelection() {
+        guard !isApplyingSelection else {
+            return
+        }
+        viewModel.select(urls: urls(at: collection.selectionIndexPaths))
+    }
+
+    private func urls(at indexPaths: Set<IndexPath>) -> [URL] {
+        indexPaths.sorted { $0.item < $1.item }.compactMap {
+            entries.indices.contains($0.item) ? entries[$0.item].url : nil
+        }
+    }
+
+    private func recyclingChanged(_: Bool) {
+        presentationHoldSubject.send(holdsPresentation)
         updateControls()
     }
 
@@ -726,7 +727,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     private func hideTrashTargetIfReleased() {
-        guard !draggedURLs.isEmpty, NSEvent.pressedMouseButtons & 1 == 0 else {
+        guard !viewModel.draggedURLs.isEmpty, NSEvent.pressedMouseButtons & 1 == 0 else {
             return
         }
         releaseWatch?.invalidate()
@@ -736,7 +737,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
 
     private func updateControls() {
         let count = selectedEntries.count
-        let dragging = !draggedURLs.isEmpty
+        let dragging = !viewModel.draggedURLs.isEmpty
         if dragging {
             dropZone.show(L10n.text("Drop here to move to Trash"), armed: true)
         } else if count == 1, let entry = selectedEntries.first {
@@ -748,8 +749,8 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         }
         dropZoneSurface?.isHidden = !dragging && dropZone.label.stringValue.isEmpty
         dropZoneSurface?.alphaValue = 1
-        emptyState?.isHidden = !contents.items.isEmpty
-        scroll.isHidden = contents.items.isEmpty
+        emptyState?.isHidden = !viewModel.isEmpty
+        scroll.isHidden = viewModel.isEmpty
     }
 
     private func detailSegments(of entry: TrayEntry) -> [String] {
@@ -769,37 +770,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     private func timeText(_ date: Date) -> String {
         timeFormatter.dateFormat = Calendar.current.isDateInToday(date) ? "HH:mm" : "M/d"
         return timeFormatter.string(from: date)
-    }
-
-    @discardableResult
-    private func trash(_ targets: [URL]) -> Task<Void, Never>? {
-        guard !isTrashing, !targets.isEmpty, let loadItems, let recycleItems else {
-            return nil
-        }
-        isTrashing = true
-        presentationHoldSubject.send(holdsPresentation)
-        updateControls()
-        return Task { [weak self] in
-            guard let self else {
-                return
-            }
-            defer {
-                isTrashing = false
-                presentationHoldSubject.send(holdsPresentation)
-                updateControls()
-            }
-            do {
-                let allowed = try await Set(loadItems().map(\.url))
-                let urls = targets.filter { allowed.contains($0) }
-                guard !urls.isEmpty else {
-                    return
-                }
-                closePreview()
-                try await recycleItems(urls)
-            } catch {
-                presentError(error)
-            }
-        }
     }
 
     private func copySelection() {
@@ -844,10 +814,10 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     @objc private func folderClicked() {
-        openFolder?()
+        folderSubject.send()
     }
 
     @objc private func settingsClicked() {
-        openSettings?()
+        settingsSubject.send()
     }
 }

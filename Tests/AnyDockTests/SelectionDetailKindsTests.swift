@@ -72,7 +72,7 @@ func singleSelectionDetailIsVisibleForEveryKind(kind: String) throws {
         defer: true
     )
     window.contentViewController = tray
-    tray.replaceItems([item])
+    tray.viewModel.replace([item])
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.collection.selectionChanged?()
     tray.view.layoutSubtreeIfNeeded()
