@@ -3,9 +3,6 @@
   "counts": {
     "Sources/AnyDock/Clipboard/ClipboardBar.swift": {
       "anchor": 9
-    },
-    "Sources/AnyDock/Tray/TrayFooterView.swift": {
-      "anchor": 10
     }
   }
 }
