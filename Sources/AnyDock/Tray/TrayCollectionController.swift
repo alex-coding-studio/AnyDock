@@ -6,9 +6,6 @@ import Combine
 final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
     NSCollectionViewDelegate {
     private static let squareRatio: CGFloat = 1
-    private static let textCardRatio: CGFloat = 1.15
-    private static let fileCardRatio: CGFloat = 1.4
-    private static let singleColumnTextHeight: CGFloat = 112
 
     private(set) lazy var collection: TrayCollectionView = {
         let collection = TrayCollectionView()
@@ -49,6 +46,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
     private let viewModel: TrayViewModel
     private let cache: TrayEntryCache
     private let previews = TrayPreviewCache()
+    private let sizing = TrayCardSizing()
     private var entries = [TrayEntry]()
     private var renderedLatestURL: URL?
     private var isApplyingSelection = false
@@ -219,7 +217,9 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
             }
         }
         renderedLatestURL = list.latestURL
-        previews.forget(cache.keep(only: Set(list.contents.items.map(\.url))))
+        let removed = cache.keep(only: Set(list.contents.items.map(\.url)))
+        previews.forget(removed)
+        sizing.forget(removed)
         entries = list.contents.visibleItems.map(cache.entry(for:))
         scroll.isHidden = list.contents.items.isEmpty
         layout.columnCount = viewModel.isSingleColumn ? TrayMetrics.singleColumnCount : TrayMetrics.multiColumnCount
@@ -262,18 +262,11 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         guard entries.indices.contains(index) else {
             return Self.squareRatio
         }
-        let entry = entries[index]
-        switch entry.kind {
-        case .image:
-            return entry.item.aspectRatio.map { CGFloat($0) } ?? Self.squareRatio
-        case .text:
-            guard viewModel.isSingleColumn else {
-                return Self.textCardRatio
-            }
-            return Self.singleColumnTextHeight / max(layout.availableWidth, 1)
-        case .link: return Self.squareRatio
-        case .file: return Self.fileCardRatio
-        }
+        return sizing.heightRatio(
+            of: entries[index],
+            columnWidth: layout.columnWidth,
+            singleColumn: viewModel.isSingleColumn
+        )
     }
 
     private func showPreview(for url: URL) {

@@ -2,12 +2,9 @@ import AppKit
 
 @MainActor
 class PolaroidCardItem: TrayCardItem {
-    static let captionFontSize: CGFloat = 11
-
-    private static let timeFontSize: CGFloat = 10
-
     private(set) lazy var previewArea: PreviewArea = {
         let area = PreviewArea()
+        area.setContentHuggingPriority(.defaultLow, for: .vertical)
         area.wantsLayer = true
         area.layer?.cornerRadius = TrayMetrics.innerCornerRadius
         area.layer?.masksToBounds = true
@@ -16,7 +13,7 @@ class PolaroidCardItem: TrayCardItem {
 
     private(set) lazy var caption: NSTextField = {
         let caption = NSTextField(labelWithString: "")
-        caption.font = .systemFont(ofSize: Self.captionFontSize, weight: .medium)
+        caption.font = TrayCardSizing.captionFont
         caption.lineBreakMode = .byTruncatingMiddle
         caption.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         caption.setContentCompressionResistancePriority(.required, for: .vertical)
@@ -26,6 +23,7 @@ class PolaroidCardItem: TrayCardItem {
     private lazy var strip: NSStackView = {
         let strip = NSStackView(views: [dot, caption])
         strip.spacing = Space.s4
+        strip.setHuggingPriority(.defaultHigh, for: .vertical)
         return strip
     }()
 
@@ -39,7 +37,10 @@ class PolaroidCardItem: TrayCardItem {
                 equalTo: container.topAnchor,
                 constant: TrayMetrics.framePadding
             ),
-            previewArea.bottomAnchor.constraint(equalTo: strip.topAnchor, constant: -Space.s4),
+            previewArea.bottomAnchor.constraint(
+                equalTo: strip.topAnchor,
+                constant: -TrayCardSizing.lineGap
+            ),
             strip.bottomAnchor.constraint(
                 equalTo: container.bottomAnchor,
                 constant: -TrayMetrics.framePadding
@@ -61,11 +62,11 @@ class PolaroidCardItem: TrayCardItem {
     }
 
     func fill(_ subview: NSView, in area: NSView, below anchor: NSView) {
-        fill(subview, in: area, topAnchor: anchor.bottomAnchor, offset: Space.s4)
+        fill(subview, in: area, topAnchor: anchor.bottomAnchor, offset: TrayCardSizing.lineGap)
     }
 
     func showTime(_ time: String) {
-        caption.font = .monospacedDigitSystemFont(ofSize: Self.timeFontSize, weight: .regular)
+        caption.font = TrayCardSizing.timeFont
         caption.textColor = .secondaryLabelColor
         caption.lineBreakMode = .byTruncatingTail
         caption.stringValue = time
@@ -80,12 +81,18 @@ class PolaroidCardItem: TrayCardItem {
         subview.translatesAutoresizingMaskIntoConstraints = false
         area.addSubview(subview, positioned: .below, relativeTo: badge)
         NSLayoutConstraint.activate([
-            subview.leadingAnchor.constraint(equalTo: area.leadingAnchor, constant: Space.s8),
-            subview.trailingAnchor.constraint(equalTo: area.trailingAnchor, constant: -Space.s8),
+            subview.leadingAnchor.constraint(
+                equalTo: area.leadingAnchor,
+                constant: TrayCardSizing.textInset
+            ),
+            subview.trailingAnchor.constraint(
+                equalTo: area.trailingAnchor,
+                constant: -TrayCardSizing.textInset
+            ),
             subview.topAnchor.constraint(equalTo: topAnchor, constant: offset),
             subview.bottomAnchor.constraint(
                 lessThanOrEqualTo: area.bottomAnchor,
-                constant: -Space.s8
+                constant: -TrayCardSizing.textInset
             ),
         ])
     }
@@ -95,12 +102,10 @@ class PolaroidCardItem: TrayCardItem {
 final class TextCardItem: PolaroidCardItem {
     static let identifier = NSUserInterfaceItemIdentifier("TextCard")
 
-    private static let bodyFontSize: CGFloat = 12
-
-    lazy var body = label(size: Self.bodyFontSize, lines: 0)
+    lazy var body = label(font: TrayCardSizing.bodyFont, lines: 0)
 
     override func buildPreview(in area: NSView) {
-        fill(body, in: area, top: Space.s24)
+        fill(body, in: area, top: TrayCardSizing.textTop)
     }
 
     override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
@@ -114,23 +119,20 @@ final class TextCardItem: PolaroidCardItem {
 final class LinkCardItem: PolaroidCardItem {
     static let identifier = NSUserInterfaceItemIdentifier("LinkCard")
 
-    private static let domainFontSize: CGFloat = 13
-    private static let addressFontSize: CGFloat = 11
-
     private(set) lazy var domain: NSTextField = {
-        let domain = label(size: Self.domainFontSize, weight: .bold, lines: 1)
+        let domain = label(font: TrayCardSizing.domainFont, lines: 1)
         domain.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         return domain
     }()
 
     private(set) lazy var address: NSTextField = {
-        let address = label(size: Self.addressFontSize, lines: 0)
+        let address = label(font: TrayCardSizing.addressFont, lines: 0)
         address.textColor = .secondaryLabelColor
         return address
     }()
 
     override func buildPreview(in area: NSView) {
-        fill(domain, in: area, top: Space.s24)
+        fill(domain, in: area, top: TrayCardSizing.textTop)
         fill(address, in: area, below: domain)
     }
 
@@ -146,8 +148,6 @@ final class LinkCardItem: PolaroidCardItem {
 final class FileCardItem: PolaroidCardItem {
     static let identifier = NSUserInterfaceItemIdentifier("FileCard")
 
-    private static let linesFontSize: CGFloat = 9
-
     private(set) lazy var preview: NSImageView = {
         let preview = NSImageView()
         preview.imageScaling = .scaleProportionallyUpOrDown
@@ -158,8 +158,7 @@ final class FileCardItem: PolaroidCardItem {
     }()
 
     private lazy var lines: NSTextField = {
-        let lines = label(size: Self.linesFontSize, lines: 0)
-        lines.font = .monospacedSystemFont(ofSize: Self.linesFontSize, weight: .regular)
+        let lines = label(font: TrayCardSizing.fileLinesFont, lines: 0)
         lines.textColor = .secondaryLabelColor
         return lines
     }()
@@ -172,7 +171,7 @@ final class FileCardItem: PolaroidCardItem {
             preview.topAnchor.constraint(equalTo: area.topAnchor),
             preview.bottomAnchor.constraint(equalTo: area.bottomAnchor),
         ])
-        fill(lines, in: area, top: Space.s24)
+        fill(lines, in: area, top: TrayCardSizing.textTop)
     }
 
     override func configure(_ entry: TrayEntry, singleColumn: Bool, time: String, latest: Bool) {
@@ -182,7 +181,7 @@ final class FileCardItem: PolaroidCardItem {
         lines.isHidden = !plainText
         preview.image = plainText ? nil : entry.thumbnail
         lines.stringValue = plainText ? entry.text ?? "" : ""
-        caption.font = .systemFont(ofSize: Self.captionFontSize, weight: .medium)
+        caption.font = TrayCardSizing.captionFont
         caption.textColor = .labelColor
         caption.lineBreakMode = .byTruncatingMiddle
         caption.stringValue = entry.displayName

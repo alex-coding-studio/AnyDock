@@ -14,6 +14,8 @@ struct TrayEntry {
     let text: String?
     let link: URL?
     let size: Int64?
+    let modified: Date?
+    let pageAspectRatio: CGFloat?
     let contentType: UTType?
 
     var url: URL {
@@ -84,10 +86,14 @@ struct TrayEntry {
         var text: String?
         var link: URL?
         var size: Int64?
+        var pageAspectRatio: CGFloat?
         var contentType = UTType(filenameExtension: item.url.pathExtension)
+        let values = try? item.url.resourceValues(forKeys: [
+            .fileSizeKey,
+            .contentModificationDateKey,
+        ])
         if item.kind == .image || item.kind == .file {
-            size = (try? item.url.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap(\.self)
-                .map(Int64.init)
+            size = values?.fileSize.map(Int64.init)
         }
         switch item.kind {
         case .image:
@@ -120,11 +126,27 @@ struct TrayEntry {
             if item.isPlainText {
                 text = String(decoding: prefix, as: UTF8.self)
             }
+            if contentType?.conforms(to: .pdf) == true {
+                pageAspectRatio = Self.pageAspectRatio(of: item.url)
+            }
         }
         self.thumbnail = thumbnail
+        modified = values?.contentModificationDate
+        self.pageAspectRatio = pageAspectRatio
         self.text = text
         self.link = link
         self.size = size
         self.contentType = contentType
+    }
+
+    private static func pageAspectRatio(of url: URL) -> CGFloat? {
+        guard let page = CGPDFDocument(url as CFURL)?.page(at: 1) else {
+            return nil
+        }
+        let box = page.getBoxRect(.mediaBox)
+        guard box.width > 0, box.height > 0 else {
+            return nil
+        }
+        return page.rotationAngle % 180 == 0 ? box.height / box.width : box.width / box.height
     }
 }

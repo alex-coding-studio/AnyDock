@@ -1,6 +1,11 @@
 import CoreGraphics
 
 public enum MasonryLayout {
+    public static func columnWidth(width: CGFloat, columns: Int, spacing: CGFloat) -> CGFloat {
+        let count = max(columns, 1)
+        return max((width - spacing * CGFloat(count - 1)) / CGFloat(count), 0)
+    }
+
     public static func frames(
         heightRatios: [CGFloat],
         columns: Int,
@@ -9,10 +14,7 @@ public enum MasonryLayout {
         maximumRatio: CGFloat = 2.5
     ) -> (frames: [CGRect], height: CGFloat) {
         let columnCount = max(columns, 1)
-        let columnWidth = max(
-            (width - spacing * CGFloat(columnCount - 1)) / CGFloat(columnCount),
-            0
-        )
+        let columnWidth = columnWidth(width: width, columns: columnCount, spacing: spacing)
         var heights = Array(repeating: CGFloat(0), count: columnCount)
         let frames = heightRatios.map { ratio in
             let column = heights.indices.min { heights[$0] < heights[$1] } ?? 0

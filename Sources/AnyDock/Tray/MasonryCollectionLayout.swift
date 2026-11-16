@@ -34,6 +34,14 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
         max(preparedWidth - TrayMetrics.margin * 2, 0)
     }
 
+    var columnWidth: CGFloat {
+        MasonryLayout.columnWidth(
+            width: availableWidth,
+            columns: columnCount,
+            spacing: TrayMetrics.cardSpacing
+        )
+    }
+
     init(aspectRatio: @escaping (IndexPath) -> CGFloat) {
         self.aspectRatio = aspectRatio
         super.init()
