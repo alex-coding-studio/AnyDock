@@ -1,10 +1,23 @@
 import AnyDockCore
 import AppKit
 import Combine
+import PockyFoundation
 import ServiceManagement
+import SnapKit
 
 @MainActor
 final class SettingsController: NSWindowController, NSTextFieldDelegate, NSSharingServiceDelegate {
+    private enum Metrics {
+        static let windowSide: CGFloat = 600
+        static let aboutIconSide: CGFloat = 96
+        static let shortcutNameWidth: CGFloat = 260
+        static let portWidth: CGFloat = 76
+        static let statusIconSide: CGFloat = 9
+        static let statusRowMinimumHeight: CGFloat = 38
+        static let formRowMinimumHeight: CGFloat = 40
+        static let aboutOpticalCenterOffset: CGFloat = -24
+    }
+
     let statusIcon = NSImageView(
         image: NSImage(
             systemSymbolName: "circle.fill",
@@ -59,7 +72,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         self.hotKeys = hotKeys
         selectedDirectory = inbox.configuration.receiver.directory
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),
+            contentRect: NSRect(x: 0, y: 0, width: Metrics.windowSide, height: Metrics.windowSide),
             styleMask: [
                 .titled,
                 .closable,
@@ -336,8 +349,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func aboutTab() -> NSTabViewItem {
         let icon = NSImageView(image: BrandIcon.artwork ?? BrandIcon.menuBar())
         icon.imageScaling = .scaleProportionallyUpOrDown
-        icon.widthAnchor.constraint(equalToConstant: 96).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 96).isActive = true
+        icon.snp.makeConstraints { $0.size.equalTo(Metrics.aboutIconSide) }
         let name = NSTextField(labelWithString: L10n.text("AnyDock"))
         name.font = .systemFont(ofSize: NSFont.systemFontSize + 7, weight: .semibold)
         let version = footnote(Self.versionText(bundle: .main) ?? "")
@@ -358,26 +370,29 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         let identity = NSStackView(views: [icon, name, version, tagline, links, copyright])
         identity.orientation = .vertical
         identity.alignment = .centerX
-        identity.spacing = 8
-        identity.setCustomSpacing(12, after: icon)
-        identity.setCustomSpacing(16, after: tagline)
-        identity.setCustomSpacing(16, after: links)
-        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))
+        identity.spacing = PKYLayout.Gap.content(.standard)
+        identity.setCustomSpacing(PKYLayout.Gap.content(.wide), after: icon)
+        identity.setCustomSpacing(PKYLayout.Gap.group(.standard), after: tagline)
+        identity.setCustomSpacing(PKYLayout.Gap.group(.standard), after: links)
+        let content = NSView(frame: NSRect(
+            x: 0,
+            y: 0,
+            width: Metrics.windowSide,
+            height: Metrics.windowSide
+        ))
         for view in [identity, quit] {
-            view.translatesAutoresizingMaskIntoConstraints = false
             content.addSubview(view)
         }
-        NSLayoutConstraint.activate([
-            identity.centerXAnchor.constraint(equalTo: content.centerXAnchor),
-            identity.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: -24),
-            identity.leadingAnchor.constraint(
-                greaterThanOrEqualTo: content.leadingAnchor,
-                constant: 24
-            ),
-            quit.centerXAnchor.constraint(equalTo: content.centerXAnchor),
-            quit.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -24),
-            quit.topAnchor.constraint(greaterThanOrEqualTo: identity.bottomAnchor, constant: 24),
-        ])
+        identity.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().offset(Metrics.aboutOpticalCenterOffset)
+            make.leading.greaterThanOrEqualToSuperview().offset(PKYLayout.Inset.page(.wide))
+        }
+        quit.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.bottom.equalToSuperview().inset(PKYLayout.Inset.page(.wide))
+            make.top.greaterThanOrEqualTo(identity.snp.bottom).offset(PKYLayout.Gap.group(.wide))
+        }
         return tabItem(L10n.text("About"), symbol: "info.circle", content: content)
     }
 
@@ -406,7 +421,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         configureMessage(shortcutNameStatus)
         shortcutName.delegate = self
         shortcutName.setAccessibilityLabel(L10n.text("Shortcut name"))
-        shortcutName.widthAnchor.constraint(equalToConstant: 260).isActive = true
+        shortcutName.snp.makeConstraints { $0.width.equalTo(Metrics.shortcutNameWidth) }
         updateShortcutName()
         let copyAddress = button(L10n.text("Copy"), #selector(copyConnectionAddress))
         copyAddress.setAccessibilityLabel(L10n.text("Copy receive address"))
@@ -452,13 +467,14 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         port.placeholderString = String(ConnectionConfiguration.Receiver.defaultPort)
         port.alignment = .right
         port.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        port.widthAnchor.constraint(equalToConstant: 76).isActive = true
+        port.snp.makeConstraints { $0.width.equalTo(Metrics.portWidth) }
         port.delegate = self
         port.setAccessibilityLabel(L10n.text("Listening port"))
-        statusIcon.widthAnchor.constraint(equalToConstant: 9).isActive = true
-        statusIcon.heightAnchor.constraint(equalToConstant: 9).isActive = true
+        statusIcon.snp.makeConstraints { $0.size.equalTo(Metrics.statusIconSide) }
         let statusRow = row([statusIcon, receiverStatus, NSView()])
-        statusRow.heightAnchor.constraint(greaterThanOrEqualToConstant: 38).isActive = true
+        statusRow.snp.makeConstraints {
+            $0.height.greaterThanOrEqualTo(Metrics.statusRowMinimumHeight)
+        }
         configureMessage(receivingError)
         pending.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         pending.textColor = .secondaryLabelColor
@@ -496,46 +512,44 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     private func tab(_ title: String, symbol: String, views: [NSView], bottomBar: NSView? = nil)
         -> NSTabViewItem {
-        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))
+        let content = NSView(frame: NSRect(
+            x: 0,
+            y: 0,
+            width: Metrics.windowSide,
+            height: Metrics.windowSide
+        ))
         let stack = NSStackView(views: views)
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 18
-        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.spacing = PKYLayout.Gap.section(.compact)
         content.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -24),
-            stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 24),
-        ])
         for element in stack.arrangedSubviews {
-            element.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+            element.snp.makeConstraints { $0.width.equalTo(stack) }
         }
+        let bottomTarget: ConstraintItem
+        let bottomGap: CGFloat
         if let bottomBar {
-            bottomBar.translatesAutoresizingMaskIntoConstraints = false
             content.addSubview(bottomBar)
             let separator = NSBox()
             separator.boxType = .separator
-            separator.translatesAutoresizingMaskIntoConstraints = false
             content.addSubview(separator)
-            NSLayoutConstraint.activate([
-                bottomBar.leadingAnchor.constraint(equalTo: stack.leadingAnchor),
-                bottomBar.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
-                bottomBar.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -16),
-                separator.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-                separator.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-                separator.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -12),
-                stack.bottomAnchor.constraint(
-                    lessThanOrEqualTo: separator.topAnchor,
-                    constant: -12
-                ),
-            ])
+            bottomBar.snp.makeConstraints { make in
+                make.leading.trailing.equalTo(stack)
+                make.bottom.equalToSuperview().inset(PKYLayout.Inset.page(.standard))
+            }
+            separator.snp.makeConstraints { make in
+                make.directionalHorizontalEdges.equalToSuperview()
+                make.bottom.equalTo(bottomBar.snp.top).offset(-PKYLayout.Gap.group(.compact))
+            }
+            bottomTarget = separator.snp.top
+            bottomGap = PKYLayout.Gap.group(.compact)
         } else {
-            let bottom = stack.bottomAnchor.constraint(
-                lessThanOrEqualTo: content.bottomAnchor,
-                constant: -24
-            )
-            bottom.isActive = true
+            bottomTarget = content.snp.bottom
+            bottomGap = PKYLayout.Inset.page(.wide)
+        }
+        stack.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview().inset(PKYLayout.Inset.page(.wide))
+            make.bottom.lessThanOrEqualTo(bottomTarget).offset(-bottomGap)
         }
         return tabItem(title, symbol: symbol, content: content)
     }
@@ -543,7 +557,10 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func tabItem(_ title: String, symbol: String, content: NSView) -> NSTabViewItem {
         let controller = NSViewController()
         controller.title = title
-        controller.preferredContentSize = NSSize(width: 600, height: 600)
+        controller.preferredContentSize = NSSize(
+            width: Metrics.windowSide,
+            height: Metrics.windowSide
+        )
         controller.view = content
         let item = NSTabViewItem(viewController: controller)
         item.label = title
@@ -554,7 +571,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func row(_ views: [NSView]) -> NSStackView {
         let stack = NSStackView(views: views)
         stack.orientation = .horizontal
-        stack.spacing = 10
+        stack.spacing = PKYLayout.Gap.content(.standard)
         stack.alignment = .centerY
         return stack
     }
@@ -582,7 +599,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         let stack = row(
             [label] + (action == nil ? [NSView(), value] : [value]) + (action.map { [$0] } ?? [])
         )
-        stack.heightAnchor.constraint(greaterThanOrEqualToConstant: 40).isActive = true
+        stack.snp.makeConstraints { $0.height.greaterThanOrEqualTo(Metrics.formRowMinimumHeight) }
         return stack
     }
 
@@ -610,9 +627,9 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         )
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 7
+        stack.spacing = PKYLayout.Gap.content(.standard)
         for view in stack.arrangedSubviews.dropFirst() {
-            view.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+            view.snp.makeConstraints { $0.width.equalTo(stack) }
         }
         return stack
     }
@@ -626,20 +643,18 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
                 let separator = NSBox()
                 separator.boxType = .separator
                 contents.addArrangedSubview(separator)
-                separator.widthAnchor.constraint(equalTo: contents.widthAnchor).isActive = true
+                separator.snp.makeConstraints { $0.width.equalTo(contents) }
             }
             contents.addArrangedSubview(item)
-            item.widthAnchor.constraint(equalTo: contents.widthAnchor).isActive = true
+            item.snp.makeConstraints { $0.width.equalTo(contents) }
         }
         let group = SettingsGroup()
-        contents.translatesAutoresizingMaskIntoConstraints = false
         group.addSubview(contents)
-        NSLayoutConstraint.activate([
-            contents.leadingAnchor.constraint(equalTo: group.leadingAnchor, constant: 14),
-            contents.trailingAnchor.constraint(equalTo: group.trailingAnchor, constant: -14),
-            contents.topAnchor.constraint(equalTo: group.topAnchor, constant: 5),
-            contents.bottomAnchor.constraint(equalTo: group.bottomAnchor, constant: -5),
-        ])
+        contents.snp.makeConstraints { make in
+            make.directionalHorizontalEdges.equalToSuperview()
+                .inset(PKYLayout.Inset.row.horizontal(.standard))
+            make.verticalEdges.equalToSuperview().inset(PKYLayout.Inset.row.vertical(.compact))
+        }
         return group
     }
 
