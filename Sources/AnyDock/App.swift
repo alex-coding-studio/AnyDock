@@ -18,7 +18,7 @@ enum AnyDockApp {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var statusItem: NSStatusItem?
-    
+
     private var popoverAppearance: NSKeyValueObservation?
     private lazy var popover: NSPopover = {
         let popover = NSPopover()
@@ -29,7 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popoverAppearance = AppAppearance.follow(popover)
         return popover
     }()
-    
+
     private let configurationStore = ConnectionConfigurationStore()
 
     private let tray = ImageTrayController()
@@ -37,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let clipboard = ClipboardMonitor()
     private let hotKeys = HotKeyCenter()
     private var server: HTTPServer?
-    
+
     private var configuration: ConnectionConfiguration?
     private var settings: SettingsController?
     private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
