@@ -23,7 +23,6 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     var didFinishDragging: (() -> Void)?
 
     private let clipboard: ClipboardMonitor
-    private var subscriptions = Set<AnyCancellable>()
     private let layout = MasonryCollectionLayout()
     private let scroll = NSScrollView()
     private let timeFormatter = DateFormatter()
