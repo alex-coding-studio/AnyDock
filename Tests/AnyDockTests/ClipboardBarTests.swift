@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import SnapKit
 import Testing
 @testable import AnyDock
 @testable import AnyDockCore
@@ -68,9 +69,20 @@ func clickingHeaderCollapsesExpandedBar() throws {
         defer: true
     )
     window.contentView?.addSubview(bar)
-    bar.translatesAutoresizingMaskIntoConstraints = false
-    bar.widthAnchor.constraint(equalToConstant: 400).isActive = true
+    bar.snp.makeConstraints { $0.width.equalTo(400) }
     bar.update([ClipboardClip(text: "clip", copiedAt: Date())])
+    window.contentView?.layoutSubtreeIfNeeded()
+    let collapsedHeight = bar.frame.height
+    #expect(collapsedHeight > 0)
+    bar.setExpanded(true, animated: false)
+    window.contentView?.layoutSubtreeIfNeeded()
+    #expect(bar.frame.height > collapsedHeight)
+    for child in bar.subviews where !child.isHidden {
+        #expect(bar.bounds.contains(child.frame))
+    }
+    bar.setExpanded(false, animated: false)
+    window.contentView?.layoutSubtreeIfNeeded()
+    #expect(bar.frame.height == collapsedHeight)
     let click = { (point: NSPoint) in
         window.contentView?.layoutSubtreeIfNeeded()
         let location = bar.header.convert(point, to: nil)

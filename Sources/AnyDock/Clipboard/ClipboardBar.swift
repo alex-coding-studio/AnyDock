@@ -1,11 +1,12 @@
 import AppKit
 import Combine
 import PockyFoundation
+import SnapKit
 
 @MainActor
 final class ClipboardBar: NSView {
-    static let collapsedHeight = PKYLayout.Space.s8 + headerHeight + PKYLayout.Space.s8
-    static let expandedHeight = collapsedHeight + cellRowHeight + PKYLayout.Space.s8
+    static let collapsedHeight = headerHeight + PKYLayout.Inset.container(.compact) * 2
+    static let expandedHeight = collapsedHeight + cellRowHeight + PKYLayout.Gap.content(.standard)
 
     private static let headerHeight: CGFloat = 24
     private static let cellRowHeight: CGFloat = 52
@@ -47,9 +48,8 @@ final class ClipboardBar: NSView {
     private(set) lazy var header: NSStackView = {
         let header = NSStackView()
         header.setViews([icon, title, NSView(), clearButton, chevron], in: .leading)
-        header.spacing = PKYLayout.Space.s8
+        header.spacing = PKYLayout.Gap.content(.standard)
         header.alignment = .centerY
-        header.translatesAutoresizingMaskIntoConstraints = false
         return header
     }()
 
@@ -76,13 +76,12 @@ final class ClipboardBar: NSView {
     private lazy var cellRow: NSStackView = {
         let row = NSStackView(views: cells)
         row.distribution = .fillEqually
-        row.spacing = PKYLayout.Space.s8
+        row.spacing = PKYLayout.Gap.content(.standard)
         row.detachesHiddenViews = false
-        row.translatesAutoresizingMaskIntoConstraints = false
         return row
     }()
 
-    private lazy var height = heightAnchor.constraint(equalToConstant: Self.collapsedHeight)
+    private var height: Constraint?
 
     var clearRequests: AnyPublisher<Void, Never> {
         clearSubject.eraseToAnyPublisher()
@@ -101,26 +100,21 @@ final class ClipboardBar: NSView {
         configure()
         addSubview(header)
         addSubview(cellRow)
-        NSLayoutConstraint.activate([
-            height,
-            header.topAnchor.constraint(equalTo: topAnchor, constant: PKYLayout.Space.s8),
-            header.heightAnchor.constraint(equalToConstant: Self.headerHeight),
-            header.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s12),
-            header.trailingAnchor.constraint(
-                equalTo: trailingAnchor,
-                constant: -PKYLayout.Space.s12
-            ),
-            cellRow.topAnchor.constraint(
-                equalTo: header.bottomAnchor,
-                constant: PKYLayout.Space.s8
-            ),
-            cellRow.heightAnchor.constraint(equalToConstant: Self.cellRowHeight),
-            cellRow.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s12),
-            cellRow.trailingAnchor.constraint(
-                equalTo: trailingAnchor,
-                constant: -PKYLayout.Space.s12
-            ),
-        ])
+        snp.makeConstraints { make in
+            height = make.height.equalTo(Self.collapsedHeight).constraint
+        }
+        header.snp.makeConstraints { make in
+            make.top.equalToSuperview().inset(PKYLayout.Inset.container(.compact))
+            make.height.equalTo(Self.headerHeight)
+            make.directionalHorizontalEdges.equalToSuperview()
+                .inset(PKYLayout.Inset.row.horizontal(.compact))
+        }
+        cellRow.snp.makeConstraints { make in
+            make.top.equalTo(header.snp.bottom).offset(PKYLayout.Gap.content(.standard))
+            make.height.equalTo(Self.cellRowHeight)
+            make.directionalHorizontalEdges.equalToSuperview()
+                .inset(PKYLayout.Inset.row.horizontal(.compact))
+        }
     }
 
     required init?(coder _: NSCoder) {
@@ -154,11 +148,11 @@ final class ClipboardBar: NSView {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = PKYMotion.Duration.quick
                 context.allowsImplicitAnimation = true
-                height.animator().constant = target
+                height?.layoutConstraints.first?.animator().constant = target
                 window?.contentView?.layoutSubtreeIfNeeded()
             }
         } else {
-            height.constant = target
+            height?.update(offset: target)
         }
         expandedSubject.send(expanded)
     }

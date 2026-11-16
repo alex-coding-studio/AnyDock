@@ -1,8 +1,4 @@
 {
   "requirements": {},
-  "counts": {
-    "Sources/AnyDock/Clipboard/ClipboardBar.swift": {
-      "anchor": 9
-    }
-  }
+  "counts": {}
 }
