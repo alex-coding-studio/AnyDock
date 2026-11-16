@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import PockyFoundation
 
 @MainActor
 final class ClipboardCell: NSView, NSDraggingSource {
@@ -42,7 +43,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private lazy var meta: NSStackView = {
         let meta = NSStackView(views: [dot, time])
-        meta.spacing = Space.s4
+        meta.spacing = PKYLayout.Space.s4
         meta.translatesAutoresizingMaskIntoConstraints = false
         return meta
     }()
@@ -64,13 +65,16 @@ final class ClipboardCell: NSView, NSDraggingSource {
         addSubview(text)
         addSubview(meta)
         NSLayoutConstraint.activate([
-            text.topAnchor.constraint(equalTo: topAnchor, constant: Space.s4),
-            text.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s8),
-            text.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s8),
+            text.topAnchor.constraint(equalTo: topAnchor, constant: PKYLayout.Space.s4),
+            text.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s8),
+            text.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -PKYLayout.Space.s8),
             text.bottomAnchor.constraint(lessThanOrEqualTo: meta.topAnchor),
-            meta.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s8),
-            meta.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Space.s8),
-            meta.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Space.s4),
+            meta.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s8),
+            meta.trailingAnchor.constraint(
+                lessThanOrEqualTo: trailingAnchor,
+                constant: -PKYLayout.Space.s8
+            ),
+            meta.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -PKYLayout.Space.s4),
         ])
     }
 
@@ -84,7 +88,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
     }
 
     override func updateLayer() {
-        layer?.cornerRadius = Space.s8
+        layer?.cornerRadius = PKYLayout.Space.s8
         layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
     }
 

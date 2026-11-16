@@ -1,10 +1,11 @@
 import AppKit
 import Combine
+import PockyFoundation
 
 @MainActor
 final class TrayEmptyStateView: NSStackView {
-    static let centerOffset = -Space.s24
-    static let sideInset = Space.s32
+    static let centerOffset = -PKYLayout.Space.s24
+    static let sideInset = PKYLayout.Space.s32
 
     private static let iconSide: CGFloat = 40
     private static let itemSpacing: CGFloat = 10

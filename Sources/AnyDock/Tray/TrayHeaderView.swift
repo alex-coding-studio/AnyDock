@@ -1,6 +1,7 @@
 import AnyDockCore
 import AppKit
 import Combine
+import PockyFoundation
 
 @MainActor
 final class TrayHeaderView: NSView {
@@ -72,7 +73,7 @@ final class TrayHeaderView: NSView {
             filterBar.leadingAnchor.constraint(equalTo: leadingAnchor),
             filterBar.trailingAnchor.constraint(
                 lessThanOrEqualTo: controlGroup.leadingAnchor,
-                constant: -Space.s8
+                constant: -PKYLayout.Space.s8
             ),
             filterBar.topAnchor.constraint(equalTo: topAnchor),
             controlGroup.heightAnchor.constraint(equalToConstant: TrayMetrics.scopeBarHeight),

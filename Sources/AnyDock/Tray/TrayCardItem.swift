@@ -1,4 +1,5 @@
 import AppKit
+import PockyFoundation
 
 @MainActor
 class TrayCardItem: NSCollectionViewItem {
@@ -55,8 +56,11 @@ class TrayCardItem: NSCollectionViewItem {
         buildContent(in: card)
         card.addSubview(check)
         NSLayoutConstraint.activate([
-            check.topAnchor.constraint(equalTo: card.topAnchor, constant: Space.s4),
-            check.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Space.s4),
+            check.topAnchor.constraint(equalTo: card.topAnchor, constant: PKYLayout.Space.s4),
+            check.trailingAnchor.constraint(
+                equalTo: card.trailingAnchor,
+                constant: -PKYLayout.Space.s4
+            ),
             check.widthAnchor.constraint(equalToConstant: Self.checkmarkSide),
             check.heightAnchor.constraint(equalToConstant: Self.checkmarkSide),
         ])
@@ -110,14 +114,14 @@ final class ImageCardItem: TrayCardItem {
     private lazy var placeholder: PreviewArea = {
         let placeholder = PreviewArea()
         placeholder.wantsLayer = true
-        placeholder.layer?.cornerRadius = TrayMetrics.cornerRadius
+        placeholder.layer?.cornerRadius = PKYShape.Radius.card
         return placeholder
     }()
 
     private lazy var preview: TopAlignedImageView = {
         let preview = TopAlignedImageView()
         preview.wantsLayer = true
-        preview.layer?.cornerRadius = TrayMetrics.cornerRadius
+        preview.layer?.cornerRadius = PKYShape.Radius.card
         preview.layer?.masksToBounds = true
         return preview
     }()
@@ -131,8 +135,13 @@ final class ImageCardItem: TrayCardItem {
 
     private lazy var timeRow: NSStackView = {
         let row = NSStackView(views: [dot, time])
-        row.spacing = Space.s4
-        row.edgeInsets = NSEdgeInsets(top: 0, left: Space.s4, bottom: 0, right: Space.s4)
+        row.spacing = PKYLayout.Space.s4
+        row.edgeInsets = NSEdgeInsets(
+            top: 0,
+            left: PKYLayout.Space.s4,
+            bottom: 0,
+            right: PKYLayout.Space.s4
+        )
         row.translatesAutoresizingMaskIntoConstraints = false
         return row
     }()
@@ -158,10 +167,19 @@ final class ImageCardItem: TrayCardItem {
             row.leadingAnchor.constraint(equalTo: capsule.leadingAnchor),
             row.trailingAnchor.constraint(equalTo: capsule.trailingAnchor),
             row.centerYAnchor.constraint(equalTo: capsule.centerYAnchor),
-            capsule.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Space.s4),
-            capsule.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Space.s4),
-            badge.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Space.s4),
-            badge.topAnchor.constraint(equalTo: container.topAnchor, constant: Space.s4),
+            capsule.leadingAnchor.constraint(
+                equalTo: container.leadingAnchor,
+                constant: PKYLayout.Space.s4
+            ),
+            capsule.bottomAnchor.constraint(
+                equalTo: container.bottomAnchor,
+                constant: -PKYLayout.Space.s4
+            ),
+            badge.leadingAnchor.constraint(
+                equalTo: container.leadingAnchor,
+                constant: PKYLayout.Space.s4
+            ),
+            badge.topAnchor.constraint(equalTo: container.topAnchor, constant: PKYLayout.Space.s4),
         ])
         imageView = preview
         textField = time

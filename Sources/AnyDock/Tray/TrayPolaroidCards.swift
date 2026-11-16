@@ -1,4 +1,5 @@
 import AppKit
+import PockyFoundation
 
 @MainActor
 class PolaroidCardItem: TrayCardItem {
@@ -6,7 +7,7 @@ class PolaroidCardItem: TrayCardItem {
         let area = PreviewArea()
         area.setContentHuggingPriority(.defaultLow, for: .vertical)
         area.wantsLayer = true
-        area.layer?.cornerRadius = TrayMetrics.innerCornerRadius
+        area.layer?.cornerRadius = PKYShape.Radius.content
         area.layer?.masksToBounds = true
         return area
     }()
@@ -22,7 +23,7 @@ class PolaroidCardItem: TrayCardItem {
 
     private lazy var strip: NSStackView = {
         let strip = NSStackView(views: [dot, caption])
-        strip.spacing = Space.s4
+        strip.spacing = PKYLayout.Space.s4
         strip.setHuggingPriority(.defaultHigh, for: .vertical)
         return strip
     }()
@@ -45,8 +46,14 @@ class PolaroidCardItem: TrayCardItem {
                 equalTo: container.bottomAnchor,
                 constant: -TrayMetrics.framePadding
             ),
-            badge.leadingAnchor.constraint(equalTo: previewArea.leadingAnchor, constant: Space.s4),
-            badge.topAnchor.constraint(equalTo: previewArea.topAnchor, constant: Space.s4),
+            badge.leadingAnchor.constraint(
+                equalTo: previewArea.leadingAnchor,
+                constant: PKYLayout.Space.s4
+            ),
+            badge.topAnchor.constraint(
+                equalTo: previewArea.topAnchor,
+                constant: PKYLayout.Space.s4
+            ),
         ])
     }
 

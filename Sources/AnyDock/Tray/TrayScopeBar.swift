@@ -1,6 +1,7 @@
 import AnyDockCore
 import AppKit
 import Combine
+import PockyFoundation
 import QuartzCore
 
 @MainActor
@@ -308,7 +309,11 @@ private final class ScopeIndicator: NSView {
         let dark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         layer?.backgroundColor =
             (dark ? Self.darkFill : NSColor.white).cgColor
-        layer?.apply(dark ? .none : .scopeIndicator)
+        layer?.pkyApplyElevation(
+            .insetIndicator,
+            color: CGColor.black,
+            appearance: dark ? .dark : .light
+        )
     }
 
     private func configure() {
@@ -321,7 +326,7 @@ private final class ScopeSegmentButton: NSButton {
     override var intrinsicContentSize: NSSize {
         let size = super.intrinsicContentSize
         return NSSize(
-            width: size.width + Space.s12 * 2,
+            width: size.width + PKYLayout.Space.s12 * 2,
             height: TrayMetrics.scopeBarHeight - TrayMetrics.scopeBarInset * 2
         )
     }

@@ -1,4 +1,5 @@
 import AppKit
+import PockyFoundation
 
 @MainActor
 final class BadgeView: NSView {
@@ -25,8 +26,8 @@ final class BadgeView: NSView {
         configure()
         addSubview(label)
         NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s4),
-            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s4),
+            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s4),
+            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -PKYLayout.Space.s4),
             label.centerYAnchor.constraint(equalTo: centerYAnchor),
             heightAnchor.constraint(equalToConstant: TrayMetrics.badgeHeight),
         ])
@@ -155,8 +156,6 @@ final class TopAlignedImageView: NSImageView {
 final class ThumbnailView: NSView {
     private static let polaroidLight = NSColor(white: 0.985, alpha: 1)
     private static let polaroidDark = NSColor(white: 0.24, alpha: 1)
-    private static let selectedBorderWidth: CGFloat = 2
-    private static let polaroidBorderWidth: CGFloat = 0.5
 
     var checkmark: NSImageView?
     var selected = false {
@@ -186,7 +185,7 @@ final class ThumbnailView: NSView {
 
     private func configure() {
         wantsLayer = true
-        layer?.cornerRadius = TrayMetrics.cornerRadius
+        layer?.cornerRadius = PKYShape.Radius.card
         updateColors()
     }
 
@@ -196,10 +195,14 @@ final class ThumbnailView: NSView {
             layer?.backgroundColor =
                 polaroid ? (dark ? Self.polaroidDark : Self.polaroidLight).cgColor : nil
             layer?.borderWidth =
-                selected ? Self.selectedBorderWidth : (polaroid ? Self.polaroidBorderWidth : 0)
+                selected ? PKYShape.Stroke.strong : (polaroid ? PKYShape.Stroke.standard : 0)
             layer?.borderColor =
                 (selected ? NSColor.controlAccentColor : NSColor.separatorColor).cgColor
-            layer?.apply(polaroid ? (dark ? .cardDark : .card) : .none)
+            layer?.pkyApplyElevation(
+                polaroid ? .subtle : .none,
+                color: CGColor.black,
+                appearance: dark ? .dark : .light
+            )
             checkmark?.isHidden = !selected
         }
     }

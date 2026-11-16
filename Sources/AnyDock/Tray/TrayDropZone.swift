@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import PockyFoundation
 
 @MainActor
 final class TrayDropZone: NSView {
@@ -44,8 +45,8 @@ final class TrayDropZone: NSView {
         configure()
         addSubview(row)
         NSLayoutConstraint.activate([
-            row.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
-            row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
+            row.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s12),
+            row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -PKYLayout.Space.s12),
             row.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
     }
