@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import PockyFoundation
+import SnapKit
 
 @MainActor
 final class ClipboardCell: NSView, NSDraggingSource {
@@ -26,7 +27,6 @@ final class ClipboardCell: NSView, NSDraggingSource {
         text.cell?.truncatesLastVisibleLine = true
         text.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         text.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
-        text.translatesAutoresizingMaskIntoConstraints = false
         return text
     }()
 
@@ -43,8 +43,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private lazy var meta: NSStackView = {
         let meta = NSStackView(views: [dot, time])
-        meta.spacing = PKYLayout.Space.s4
-        meta.translatesAutoresizingMaskIntoConstraints = false
+        meta.spacing = PKYLayout.Gap.content(.compact)
         return meta
     }()
 
@@ -64,18 +63,18 @@ final class ClipboardCell: NSView, NSDraggingSource {
         configure()
         addSubview(text)
         addSubview(meta)
-        NSLayoutConstraint.activate([
-            text.topAnchor.constraint(equalTo: topAnchor, constant: PKYLayout.Space.s4),
-            text.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s8),
-            text.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -PKYLayout.Space.s8),
-            text.bottomAnchor.constraint(lessThanOrEqualTo: meta.topAnchor),
-            meta.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s8),
-            meta.trailingAnchor.constraint(
-                lessThanOrEqualTo: trailingAnchor,
-                constant: -PKYLayout.Space.s8
-            ),
-            meta.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -PKYLayout.Space.s4),
-        ])
+        text.snp.makeConstraints { make in
+            make.top.equalToSuperview().inset(PKYLayout.Inset.control.vertical(.compact))
+            make.directionalHorizontalEdges.equalToSuperview()
+                .inset(PKYLayout.Inset.control.horizontal(.compact))
+            make.bottom.lessThanOrEqualTo(meta.snp.top)
+        }
+        meta.snp.makeConstraints { make in
+            make.leading.equalToSuperview().inset(PKYLayout.Inset.control.horizontal(.compact))
+            make.trailing.lessThanOrEqualToSuperview()
+                .inset(PKYLayout.Inset.control.horizontal(.compact))
+            make.bottom.equalToSuperview().inset(PKYLayout.Inset.control.vertical(.compact))
+        }
     }
 
     required init?(coder _: NSCoder) {
