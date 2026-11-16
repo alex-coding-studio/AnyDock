@@ -66,6 +66,8 @@ class TrayCardItem: NSCollectionViewItem {
 
     func buildContent(in _: NSView) {}
 
+    func showThumbnail(_: NSImage) {}
+
     func configure(_ entry: TrayEntry, singleColumn _: Bool, time _: String, latest: Bool) {
         badge.show(entry.badge, style: entry.badgeStyle)
         dot.isHidden = !latest
@@ -173,7 +175,7 @@ final class ImageCardItem: TrayCardItem {
         self.time.stringValue = time
     }
 
-    func showThumbnail(_ image: NSImage) {
+    override func showThumbnail(_ image: NSImage) {
         preview.image = image
         placeholder.isHidden = true
     }

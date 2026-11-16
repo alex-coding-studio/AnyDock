@@ -181,7 +181,7 @@ final class FileCardItem: PolaroidCardItem {
         caption.stringValue = entry.displayName
     }
 
-    func showThumbnail(_ image: NSImage) {
+    override func showThumbnail(_ image: NSImage) {
         guard !preview.isHidden else {
             return
         }

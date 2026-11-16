@@ -108,7 +108,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         )
         if entry.kind == .image || (entry.kind == .file && !entry.item.isPlainText) {
             if let image = previews.image(for: entry.url) {
-                show(image, in: item)
+                (item as? TrayCardItem)?.showThumbnail(image)
             } else {
                 previews.load(entry)
             }
@@ -261,14 +261,9 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         else {
             return
         }
-        show(image, in: collection.item(at: IndexPath(item: index, section: 0)))
-    }
-
-    private func show(_ image: NSImage, in item: NSCollectionViewItem?) {
-        switch item {
-        case let card as ImageCardItem: card.showThumbnail(image)
-        case let card as FileCardItem: card.showThumbnail(image)
-        default: break
-        }
+        (collection.item(at: IndexPath(
+            item: index,
+            section: 0
+        )) as? TrayCardItem)?.showThumbnail(image)
     }
 }
