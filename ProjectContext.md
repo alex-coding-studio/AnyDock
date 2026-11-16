@@ -37,15 +37,15 @@ See `docs/PROJECT.md` for the complete current UI and engineering rules.
 
 ## Commands
 
-Run from the project root. No package installation is required; development scripts use system Python 3.
+Run from the project root. The app has no package dependencies; development scripts use system Python 3, and lint needs SwiftFormat 0.62.1 (`brew install swiftformat` locally; CI installs that exact release).
 
-- `./scripts/lint.sh`: check formatting, script syntax and bundle metadata.
+- `./scripts/lint.sh`: check formatting with SwiftFormat (`.swiftformat`, `.swift-version`) over `Sources`, `Tests` and `Package.swift`, then script syntax and bundle metadata. `--fix` rewrites the Swift sources.
 - `./scripts/test.sh`: run Swift and shortcut checks.
 - `./scripts/build.sh`: create and ad-hoc sign `dist/AnyDock.app`. It regenerates the unsigned `Resources/Shortcuts/Template.shortcut`, which is ignored by Git.
 - `./scripts/run.sh`: build and open the menu bar app when launching is requested.
 - `./scripts/release.sh`: build, sign with Developer ID under the hardened runtime, package and sign `dist/AnyDock-<version>.dmg`, notarize, staple and check it with Gatekeeper. Local only; it needs the signing certificate and a notarytool keychain profile (default `MyQuickFinderApi`). See `docs/PROJECT.md`.
 
-GitHub Actions (`.github/workflows/ci.yml`) runs lint, test and build on the `macos-26` runner with its newest installed Xcode. `scripts/shortcut.sh` signs the generic shortcut with `shortcuts sign`, which needs a signed-in Mac; run it locally and commit the signed `Resources/Shortcuts/发送到 Mac.shortcut`. CI never signs and never runs `release.sh`; lint checks every script's syntax with `bash -n`.
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, test and build on the `macos-26` runner with its newest installed Xcode. It installs SwiftFormat from the pinned GitHub release binary (`SWIFTFORMAT_VERSION`, checked by SHA-256); update that pin together with the local version. `scripts/shortcut.sh` signs the generic shortcut with `shortcuts sign`, which needs a signed-in Mac; run it locally and commit the signed `Resources/Shortcuts/发送到 Mac.shortcut`. CI never signs and never runs `release.sh`; lint checks every script's syntax with `bash -n`.
 
 Pull requests merge through `.github/workflows/auto-merge.yml`; authors never merge by hand. A PR is squash-merged when its current head is the approved commit, no reviewer's latest decision is `CHANGES_REQUESTED`, counting only reviewers with write, maintain or admin permission on the repository, CI has run and every other check succeeded, and it has no `needs-acceptance` label. A PR with visible UI changes gets `needs-acceptance` when it is opened; the architect removes it after the user accepts the UI, which retries the merge. After merging, the workflow dispatches CI on `main`, because merges made with `GITHUB_TOKEN` do not trigger push CI. See `docs/PROJECT.md` for details.
 
