@@ -63,10 +63,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private let save = NSButton(title: L10n.text("Apply"), target: nil, action: nil)
     private let send = NSButton(title: L10n.text("Send to iPhone…"), target: nil, action: nil)
 
-    private var configuration: ConnectionConfiguration {
-        inbox.configuration
-    }
-
     init(inbox: Inbox, hotKeys: GlobalHotKeyCenter) {
         self.inbox = inbox
         self.hotKeys = hotKeys
@@ -85,7 +81,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         window.center()
         super.init(window: window)
         statusIcon.contentTintColor = .tertiaryLabelColor
-        if let savedName = configuration.sender.shortcutName {
+        if let savedName = inbox.configuration.sender.shortcutName {
             shortcutName.stringValue = savedName
         } else if let computerName = LocalHost.computerName()?
             .trimmingCharacters(in: .whitespacesAndNewlines), !computerName.isEmpty {
@@ -463,7 +459,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private func receivingTab() -> NSTabViewItem {
         refreshFolder()
         folder.lineBreakMode = .byTruncatingMiddle
-        port.stringValue = String(configuration.receiver.port)
+        port.stringValue = String(inbox.configuration.receiver.port)
         port.placeholderString = String(ConnectionConfiguration.Receiver.defaultPort)
         port.alignment = .right
         port.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
@@ -659,7 +655,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
 
     private func refreshAddress() {
-        address.stringValue = LocalHost.receiveAddress(port: configuration.receiver.port)
+        address.stringValue = LocalHost.receiveAddress(port: inbox.configuration.receiver.port)
     }
 
     private func refreshFolder() {
@@ -669,7 +665,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     private func updatePending() {
         let enteredPort = UInt16(port.stringValue.trimmingCharacters(in: .whitespaces))
-        let changed = selectedDirectory != configuration.receiver.directory || enteredPort != configuration.receiver.port
+        let changed = selectedDirectory != inbox.configuration.receiver.directory || enteredPort != inbox.configuration.receiver.port
         pending.stringValue = changed ? L10n.text("Unapplied changes") : ""
         save.isEnabled = changed && !isApplying
     }
@@ -680,7 +676,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             shortcutNameStatus.stringValue = L10n.text("shortcut.name.normalized", name)
             shortcutNameStatus.textColor = .secondaryLabelColor
             shortcutNameStatus.isHidden = name == shortcutName.stringValue
-            send.isEnabled = !isSending && !configuration.receiver.token.isEmpty
+            send.isEnabled = !isSending && !inbox.configuration.receiver.token.isEmpty
         } catch {
             shortcutNameStatus.stringValue = error.localizedDescription
             shortcutNameStatus.textColor = .systemRed
@@ -723,7 +719,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             receivingError.isHidden = false
             return
         }
-        var next = configuration.receiver
+        var next = inbox.configuration.receiver
         next.port = value
         next.directory = selectedDirectory
         isApplying = true
@@ -845,7 +841,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
 
     @objc private func copyToken() {
-        copy(configuration.receiver.token, concealed: true)
+        copy(inbox.configuration.receiver.token, concealed: true)
     }
 
     private func copy(_ value: String, concealed: Bool = false) {
@@ -889,7 +885,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         }
         shortcutName.stringValue = name
         let receiveAddress = address.stringValue
-        let key = configuration.receiver.token
+        let key = inbox.configuration.receiver.token
         setSending(true)
         showConnectionMessage(L10n.text("Creating and signing the shortcut…"), isError: false)
         Task {
@@ -925,7 +921,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     private func saveShortcutName(_ name: String) {
         do {
-            var sender = configuration.sender
+            var sender = inbox.configuration.sender
             sender.shortcutName = name
             try inbox.apply(sender: sender)
         } catch {
