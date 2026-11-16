@@ -5,7 +5,10 @@ import Testing
 @testable import AnyDockCore
 
 @MainActor
-private func makeTray(texts: [String]) throws -> (TrayViewController, NSWindow) {
+private func makeTray(
+    texts: [String],
+    includeImage: Bool = false
+) throws -> (TrayViewController, NSWindow) {
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     var items = try texts.enumerated().map { index, text in
@@ -34,6 +37,15 @@ private func makeTray(texts: [String]) throws -> (TrayViewController, NSWindow) 
             isPlainText: false
         )
     )
+    if includeImage {
+        items.append(ReceivedItem(
+            url: folder.appendingPathComponent("AnyDock-image.png"),
+            kind: .image,
+            thumbnail: nil,
+            receivedAt: Date(),
+            isPlainText: false
+        ))
+    }
     let tray = makeTestTray()
     let window = NSWindow(
         contentRect: NSRect(origin: .zero, size: TrayMetrics.popoverSize),
@@ -119,6 +131,30 @@ func cardsStayInsideTrayMarginsWithBadgesAtTopLeft() throws {
         }
         withExtendedLifetime(window) {}
     }
+}
+
+@MainActor
+@Test("图片与拍立得卡片的角标相对卡片左上角对齐")
+func imageAndPolaroidBadgesShareCardCornerOffset() throws {
+    let (tray, window) = try makeTray(texts: ["短文本"], includeImage: true)
+    settle(tray)
+    let visible = cards(tray).map(\.0)
+    let image = try #require(visible.first { $0 is ImageCardItem })
+    let imageBadge = image.badge.convert(image.badge.bounds, to: image.view)
+    let imageOffset = NSPoint(
+        x: imageBadge.minX - image.view.bounds.minX,
+        y: image.view.bounds.maxY - imageBadge.maxY
+    )
+    let polaroids = visible.filter { $0 is PolaroidCardItem }
+    #expect(!polaroids.isEmpty)
+    #expect(polaroids.allSatisfy { card in
+        let badge = card.badge.convert(card.badge.bounds, to: card.view)
+        return NSPoint(
+            x: badge.minX - card.view.bounds.minX,
+            y: card.view.bounds.maxY - badge.maxY
+        ) == imageOffset
+    })
+    withExtendedLifetime(window) {}
 }
 
 @MainActor

@@ -32,7 +32,6 @@ class PolaroidCardItem: TrayCardItem {
     override func buildContent(in container: NSView) {
         container.addSubview(previewArea)
         container.addSubview(strip)
-        previewArea.addSubview(badge)
         buildPreview(in: previewArea)
         previewArea.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
@@ -42,9 +41,6 @@ class PolaroidCardItem: TrayCardItem {
         strip.snp.makeConstraints { make in
             make.leading.trailing.bottom.equalToSuperview()
                 .inset(PKYLayout.Inset.container(.compact))
-        }
-        badge.snp.makeConstraints {
-            $0.top.leading.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
         }
     }
 
@@ -68,7 +64,7 @@ class PolaroidCardItem: TrayCardItem {
         top target: ConstraintItem,
         offset: CGFloat
     ) {
-        area.addSubview(subview, positioned: .below, relativeTo: badge)
+        area.addSubview(subview)
         subview.snp.makeConstraints { make in
             make.directionalHorizontalEdges.equalToSuperview()
                 .inset(PKYLayout.Inset.container(.compact))
@@ -138,7 +134,7 @@ final class FileCardItem: PolaroidCardItem {
     }()
 
     override func buildPreview(in area: NSView) {
-        area.addSubview(preview, positioned: .below, relativeTo: badge)
+        area.addSubview(preview)
         preview.snp.makeConstraints { $0.edges.equalToSuperview() }
         fill(lines, in: area, top: area.snp.top, offset: TrayCardSizing.badgeClearance)
     }

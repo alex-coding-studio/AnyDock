@@ -53,6 +53,11 @@ class TrayCardItem: NSCollectionViewItem {
 
     override func loadView() {
         buildContent(in: card)
+        card.addSubview(badge)
+        badge.snp.makeConstraints { make in
+            make.top.leading.equalToSuperview()
+                .inset(PKYLayout.Inset.container(.compact) + PKYLayout.Gap.content(.compact))
+        }
         card.addSubview(check)
         check.snp.makeConstraints { make in
             make.top.trailing.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
@@ -143,7 +148,6 @@ final class ImageCardItem: TrayCardItem {
         let capsule = timeCapsule
         capsule.addSubview(row)
         container.addSubview(capsule)
-        container.addSubview(badge)
         placeholder.snp.makeConstraints { $0.directionalHorizontalEdges.equalToSuperview() }
         preview.snp.makeConstraints { $0.edges.equalToSuperview() }
         row.snp.makeConstraints { make in
@@ -151,10 +155,8 @@ final class ImageCardItem: TrayCardItem {
             make.centerY.equalToSuperview()
         }
         capsule.snp.makeConstraints {
-            $0.leading.bottom.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
-        }
-        badge.snp.makeConstraints {
-            $0.top.leading.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
+            $0.leading.bottom.equalToSuperview()
+                .inset(PKYLayout.Inset.container(.compact) + PKYLayout.Gap.content(.compact))
         }
         imageView = preview
         textField = time
