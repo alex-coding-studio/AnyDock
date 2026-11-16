@@ -30,8 +30,8 @@ enum Preferences {
         set { defaults.set(newValue.rawValue, forKey: Key.appearance.rawValue) }
     }
 
-    static var wakeHotKey: HotKey? {
-        get { HotKey(preference: defaults.object(forKey: Key.wakeHotKey.rawValue)) }
+    static var wakeHotKey: KeyCombination? {
+        get { KeyCombination(preference: defaults.object(forKey: Key.wakeHotKey.rawValue)) }
         set { defaults.set(newValue?.preference, forKey: Key.wakeHotKey.rawValue) }
     }
 

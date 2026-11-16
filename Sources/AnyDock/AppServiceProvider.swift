@@ -11,7 +11,7 @@ final class AppServiceProvider {
 
     private let inbox: Inbox
     private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
-    private let hotKeys = HotKeyCenter()
+    private let hotKeys = GlobalHotKeyCenter()
     private var subscriptions = Set<AnyCancellable>()
 
     private lazy var statusItem = StatusItemController(status: inbox.status)

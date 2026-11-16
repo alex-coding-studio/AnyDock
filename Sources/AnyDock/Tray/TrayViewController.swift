@@ -216,7 +216,7 @@ final class TrayViewController: NSViewController {
             .store(in: &subscriptions)
     }
 
-    private func perform(_ command: TrayCollectionView.Command) {
+    private func perform(_ command: TrayCommand) {
         switch command {
         case .copy:
             pasteboard.copy(collections.selectedEntries)
@@ -228,8 +228,6 @@ final class TrayViewController: NSViewController {
             viewModel.recycleSelection()
         case .collapseClipboard:
             footer.collapseClipboard()
-        case .selectionChanged:
-            break
         }
     }
 

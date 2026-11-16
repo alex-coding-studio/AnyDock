@@ -1,11 +1,12 @@
 import AppKit
+import Carbon.HIToolbox
 import Combine
 import Quartz
 
 @MainActor
 final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDelegate {
-    private static let previousKeyCodes: Set<UInt16> = [123, 126]
-    private static let nextKeyCodes: Set<UInt16> = [124, 125]
+    private static let previousKeyCodes: Set<Int> = [kVK_LeftArrow, kVK_UpArrow]
+    private static let nextKeyCodes: Set<Int> = [kVK_RightArrow, kVK_DownArrow]
 
     private(set) var isShowing = false
 
@@ -74,9 +75,9 @@ final class TrayQuickLookController: NSObject, @MainActor QLPreviewPanelDelegate
             return false
         }
         let step: Int
-        if Self.previousKeyCodes.contains(event.keyCode) {
+        if Self.previousKeyCodes.contains(Int(event.keyCode)) {
             step = -1
-        } else if Self.nextKeyCodes.contains(event.keyCode) {
+        } else if Self.nextKeyCodes.contains(Int(event.keyCode)) {
             step = 1
         } else {
             return false
