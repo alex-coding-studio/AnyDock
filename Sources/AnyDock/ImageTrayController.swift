@@ -522,12 +522,18 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     }
 
     private func configureClipboardBar(in content: NSView) {
-        clipboardBar.onClear = { [weak self] in self?.clipboard.clear() }
         clipboard.clipsPublisher
             .sink { [weak self] in self?.replaceClips($0) }
             .store(in: &subscriptions)
-        clipboardBar.onCopy = { [weak self] clip in self?.copyClip(clip) }
-        clipboardBar.onExpandedChange = { [weak self] _ in self?.updateClipboardSurface() }
+        clipboardBar.clearRequests
+            .sink { [weak self] in self?.clipboard.clear() }
+            .store(in: &subscriptions)
+        clipboardBar.copyRequests
+            .sink { [weak self] in self?.copyClip($0) }
+            .store(in: &subscriptions)
+        clipboardBar.expandedChanges
+            .sink { [weak self] _ in self?.updateClipboardSurface() }
+            .store(in: &subscriptions)
         let surface = glassSurface(clipboardBar, cornerRadius: ClipboardBar.collapsedHeight / 2)
         surface.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(surface, positioned: .below, relativeTo: dropZoneSurface)

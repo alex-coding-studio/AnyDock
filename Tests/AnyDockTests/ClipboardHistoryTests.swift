@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import AnyDockCore
+@testable import AnyDock
 
 @Test("剪贴板历史最多保留 4 条，新的挤掉最旧的")
 func clipboardHistoryKeepsNewestFour() {
