@@ -352,11 +352,13 @@ final class ImageCardItem: TrayCardItem {
         super.configure(entry, singleColumn: singleColumn, time: time, latest: latest)
         card.polaroid = false
         preview.image = entry.thumbnail
+        placeholder.isHidden = false
         self.time.stringValue = time
     }
 
     func showThumbnail(_ image: NSImage) {
         preview.image = image
+        placeholder.isHidden = true
     }
 }
 

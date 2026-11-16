@@ -36,10 +36,12 @@ enum FileTypeDetector {
     }
 
     static func isPlainText(_ data: Data, filename: String) -> Bool {
-        guard declaredType(of: filename)?.conforms(to: .text) == true, !data.contains(0) else {
+        let probe = data.prefix(plainTextProbeSize)
+        guard declaredType(of: filename)?.conforms(to: .text) == true, !probe.contains(0) else {
             return false
         }
-        return String(data: data, encoding: .utf8) != nil
+        let cut = data.count > plainTextProbeSize ? 0 ... 3 : 0 ... 0
+        return cut.contains { String(data: probe.dropLast($0), encoding: .utf8) != nil }
     }
 
     static func isPlainTextFile(_ url: URL) -> Bool {
@@ -49,13 +51,10 @@ enum FileTypeDetector {
             return false
         }
         defer { try? handle.close() }
-        guard let data = try? handle.read(upToCount: plainTextProbeSize) ?? Data(), !data.contains(
-            0
-        ) else {
+        guard let data = try? handle.read(upToCount: plainTextProbeSize + 1) ?? Data() else {
             return false
         }
-        let cut = data.count == plainTextProbeSize ? 0 ... 3 : 0 ... 0
-        return cut.contains { String(data: data.dropLast($0), encoding: .utf8) != nil }
+        return isPlainText(data, filename: url.lastPathComponent)
     }
 
     private static func detectedType(of data: Data) -> UTType? {
