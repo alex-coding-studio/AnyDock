@@ -75,66 +75,6 @@
     "text": "    override nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel!) {"
   },
   {
-    "text": "            icon.widthAnchor.constraint(equalToConstant: 40),",
-    "violation": {
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "line": 586,
-        "character": 41
-      },
-      "reason": "Use a local Metrics role"
-    }
-  },
-  {
-    "text": "            icon.heightAnchor.constraint(equalToConstant: 40),",
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "line": 587,
-        "character": 42
-      }
-    }
-  },
-  {
-    "text": "            stack.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: -24),",
-    "violation": {
-      "ruleDescription": "",
-      "severity": "error",
-      "location": {
-        "line": 589,
-        "character": 76,
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift"
-      },
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value"
-    }
-  },
-  {
-    "text": "            stack.widthAnchor.constraint(lessThanOrEqualTo: content.widthAnchor, constant: -64),",
-    "violation": {
-      "severity": "error",
-      "location": {
-        "character": 82,
-        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
-        "line": 590
-      },
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": ""
-    }
-  },
-  {
     "text": "            contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),",
     "violation": {
       "reason": "Use a local Metrics role",

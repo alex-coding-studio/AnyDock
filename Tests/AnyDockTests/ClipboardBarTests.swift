@@ -34,10 +34,10 @@ func clearingEmptiesHistoryAndHidesBar() {
         enabled.send(false)
         pasteboard.releaseGlobally()
     }
-    #expect(tray.clipboardSurface?.isHidden == false)
-    tray.clipboardBar.clearButton.performClick(nil)
-    #expect(tray.clipboardBar.clips.isEmpty)
-    #expect(tray.clipboardSurface?.isHidden == true)
+    #expect(tray.footer.clipboardSurface.isHidden == false)
+    tray.footer.clipboardBar.clearButton.performClick(nil)
+    #expect(tray.footer.clipboardBar.clips.isEmpty)
+    #expect(tray.footer.clipboardSurface.isHidden == true)
 }
 
 @MainActor
@@ -48,13 +48,13 @@ func barCollapsesForEachOpening() {
         enabled.send(false)
         pasteboard.releaseGlobally()
     }
-    #expect(!tray.clipboardBar.isExpanded)
-    tray.clipboardBar.setExpanded(true, animated: false)
-    #expect(tray.collapseClipboard())
-    #expect(!tray.clipboardBar.isExpanded)
-    tray.clipboardBar.setExpanded(true, animated: false)
+    #expect(!tray.footer.clipboardBar.isExpanded)
+    tray.footer.clipboardBar.setExpanded(true, animated: false)
+    #expect(tray.footer.collapseClipboard())
+    #expect(!tray.footer.clipboardBar.isExpanded)
+    tray.footer.clipboardBar.setExpanded(true, animated: false)
     tray.trayDidClose()
-    #expect(!tray.clipboardBar.isExpanded)
+    #expect(!tray.footer.clipboardBar.isExpanded)
 }
 
 @MainActor

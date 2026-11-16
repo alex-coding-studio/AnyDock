@@ -50,7 +50,7 @@ func singleSelectionShowsItemDetail() throws {
             isPlainText: false
         ),
     ])
-    let zone = tray.dropZone
+    let zone = tray.footer.dropZone
 
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
     tray.collection.selectionChanged?()
