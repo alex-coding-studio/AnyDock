@@ -4,8 +4,6 @@ import SnapKit
 
 @MainActor
 class TrayCardItem: NSCollectionViewItem {
-    private static let checkmarkSide: CGFloat = 16
-
     override var isSelected: Bool {
         didSet { updateSelection() }
     }
@@ -43,7 +41,12 @@ class TrayCardItem: NSCollectionViewItem {
                 ?? NSImage()
         )
         check.symbolConfiguration = NSImage.SymbolConfiguration(
-            paletteColors: [NSColor.pkyOnAccent, NSColor.pkyAccent(.primary)]
+            pointSize: PKYIcon.Size.item.pointSize,
+            weight: .regular
+        ).applying(
+            NSImage.SymbolConfiguration(
+                paletteColors: [NSColor.pkyOnAccent, NSColor.pkyAccent(.primary)]
+            )
         )
         return check
     }()
@@ -53,7 +56,6 @@ class TrayCardItem: NSCollectionViewItem {
         card.addSubview(check)
         check.snp.makeConstraints { make in
             make.top.trailing.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
-            make.size.equalTo(Self.checkmarkSide)
         }
         view = card
         updateSelection()

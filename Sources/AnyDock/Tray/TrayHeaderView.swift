@@ -6,7 +6,6 @@ import SnapKit
 
 @MainActor
 final class TrayHeaderView: NSView {
-    private static let iconPointSize: CGFloat = 14
     private static let buttonHeight =
         PKYLayout.Size.button(.compact) - PKYLayout.Gap.content(.compact) * 2
 
@@ -116,7 +115,7 @@ final class TrayHeaderView: NSView {
         let button = NSButton()
         button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)?
             .withSymbolConfiguration(NSImage.SymbolConfiguration(
-                pointSize: Self.iconPointSize,
+                pointSize: PKYIcon.Size.control.pointSize,
                 weight: .regular
             ))
         button.target = self

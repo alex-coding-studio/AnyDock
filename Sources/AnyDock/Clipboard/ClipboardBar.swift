@@ -10,8 +10,6 @@ final class ClipboardBar: NSView {
 
     private static let headerHeight: CGFloat = 24
     private static let cellRowHeight: CGFloat = 52
-    private static let iconPointSize: CGFloat = 11
-    private static let chevronPointSize: CGFloat = 10
 
     private(set) var isExpanded = false
     private(set) var clips = [ClipboardClip]()
@@ -64,7 +62,7 @@ final class ClipboardBar: NSView {
             ) ?? NSImage()
         )
         icon.symbolConfiguration = NSImage.SymbolConfiguration(
-            pointSize: Self.iconPointSize,
+            pointSize: PKYIcon.Size.accessory.pointSize,
             weight: .medium
         )
         icon.contentTintColor = .pkyContent(.secondary)
@@ -171,7 +169,7 @@ final class ClipboardBar: NSView {
         let label = isExpanded ? L10n.text("Collapse Clipboard") : L10n.text("Expand Clipboard")
         chevron.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)?
             .withSymbolConfiguration(NSImage.SymbolConfiguration(
-                pointSize: Self.chevronPointSize,
+                pointSize: PKYIcon.Size.accessory.pointSize,
                 weight: .semibold
             ))
         chevron.toolTip = label
