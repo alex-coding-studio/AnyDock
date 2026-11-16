@@ -1,5 +1,6 @@
 import AppKit
 import PockyFoundation
+import SnapKit
 
 @MainActor
 final class BadgeView: NSView {
@@ -17,7 +18,6 @@ final class BadgeView: NSView {
     private lazy var label: NSTextField = {
         let label = NSTextField(labelWithString: "")
         label.font = .systemFont(ofSize: Self.fontSize, weight: .semibold)
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -25,12 +25,12 @@ final class BadgeView: NSView {
         super.init(frame: frame)
         configure()
         addSubview(label)
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s4),
-            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -PKYLayout.Space.s4),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor),
-            heightAnchor.constraint(equalToConstant: TrayMetrics.badgeHeight),
-        ])
+        label.snp.makeConstraints { make in
+            make.directionalHorizontalEdges.equalToSuperview()
+                .inset(PKYLayout.Inset.container(.compact))
+            make.centerY.equalToSuperview()
+        }
+        snp.makeConstraints { $0.height.equalTo(TrayMetrics.badgeHeight) }
     }
 
     required init?(coder _: NSCoder) {
@@ -79,10 +79,7 @@ final class LatestDot: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         configure()
-        NSLayoutConstraint.activate([
-            widthAnchor.constraint(equalToConstant: PKYLayout.Size.dot(.compact)),
-            heightAnchor.constraint(equalToConstant: PKYLayout.Size.dot(.compact)),
-        ])
+        snp.makeConstraints { $0.size.equalTo(PKYLayout.Size.dot(.compact)) }
     }
 
     required init?(coder _: NSCoder) {
@@ -96,7 +93,6 @@ final class LatestDot: NSView {
 
     private func configure() {
         wantsLayer = true
-        translatesAutoresizingMaskIntoConstraints = false
         layer?.cornerRadius = PKYLayout.Size.dot(.compact) / 2
         updateColors()
     }

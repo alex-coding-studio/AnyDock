@@ -1,5 +1,6 @@
 import AppKit
 import PockyFoundation
+import SnapKit
 
 @MainActor
 class TrayCardItem: NSCollectionViewItem {
@@ -32,11 +33,7 @@ class TrayCardItem: NSCollectionViewItem {
         return card
     }()
 
-    private(set) lazy var badge: BadgeView = {
-        let badge = BadgeView()
-        badge.translatesAutoresizingMaskIntoConstraints = false
-        return badge
-    }()
+    private(set) lazy var badge = BadgeView()
 
     private(set) lazy var dot = LatestDot()
 
@@ -48,22 +45,16 @@ class TrayCardItem: NSCollectionViewItem {
         check.symbolConfiguration = NSImage.SymbolConfiguration(
             paletteColors: [.white, .controlAccentColor]
         )
-        check.translatesAutoresizingMaskIntoConstraints = false
         return check
     }()
 
     override func loadView() {
         buildContent(in: card)
         card.addSubview(check)
-        NSLayoutConstraint.activate([
-            check.topAnchor.constraint(equalTo: card.topAnchor, constant: PKYLayout.Space.s4),
-            check.trailingAnchor.constraint(
-                equalTo: card.trailingAnchor,
-                constant: -PKYLayout.Space.s4
-            ),
-            check.widthAnchor.constraint(equalToConstant: Self.checkmarkSide),
-            check.heightAnchor.constraint(equalToConstant: Self.checkmarkSide),
-        ])
+        check.snp.makeConstraints { make in
+            make.top.trailing.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
+            make.size.equalTo(Self.checkmarkSide)
+        }
         view = card
         updateSelection()
     }
@@ -75,15 +66,6 @@ class TrayCardItem: NSCollectionViewItem {
     func configure(_ entry: TrayEntry, singleColumn _: Bool, time _: String, latest: Bool) {
         badge.show(entry.badge, style: entry.badgeStyle)
         dot.isHidden = !latest
-    }
-
-    func pin(_ subview: NSView, in container: NSView, inset: CGFloat) {
-        subview.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(subview)
-        NSLayoutConstraint.activate([
-            subview.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: inset),
-            subview.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -inset),
-        ])
     }
 
     func label(font: NSFont, lines: Int) -> NSTextField {
@@ -135,52 +117,42 @@ final class ImageCardItem: TrayCardItem {
 
     private lazy var timeRow: NSStackView = {
         let row = NSStackView(views: [dot, time])
-        row.spacing = PKYLayout.Space.s4
+        row.spacing = PKYLayout.Gap.content(.compact)
         row.edgeInsets = NSEdgeInsets(
             top: 0,
-            left: PKYLayout.Space.s4,
+            left: PKYLayout.Inset.container(.compact),
             bottom: 0,
-            right: PKYLayout.Space.s4
+            right: PKYLayout.Inset.container(.compact)
         )
-        row.translatesAutoresizingMaskIntoConstraints = false
         return row
     }()
 
     private lazy var timeCapsule: BadgeView = {
         let capsule = BadgeView()
         capsule.show("", style: .media)
-        capsule.translatesAutoresizingMaskIntoConstraints = false
         return capsule
     }()
 
     override func buildContent(in container: NSView) {
-        pin(placeholder, in: container, inset: 0)
-        pin(preview, in: container, inset: 0)
+        container.addSubview(placeholder)
+        container.addSubview(preview)
         let row = timeRow
         let capsule = timeCapsule
         capsule.addSubview(row)
         container.addSubview(capsule)
         container.addSubview(badge)
-        NSLayoutConstraint.activate([
-            preview.topAnchor.constraint(equalTo: container.topAnchor),
-            preview.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            row.leadingAnchor.constraint(equalTo: capsule.leadingAnchor),
-            row.trailingAnchor.constraint(equalTo: capsule.trailingAnchor),
-            row.centerYAnchor.constraint(equalTo: capsule.centerYAnchor),
-            capsule.leadingAnchor.constraint(
-                equalTo: container.leadingAnchor,
-                constant: PKYLayout.Space.s4
-            ),
-            capsule.bottomAnchor.constraint(
-                equalTo: container.bottomAnchor,
-                constant: -PKYLayout.Space.s4
-            ),
-            badge.leadingAnchor.constraint(
-                equalTo: container.leadingAnchor,
-                constant: PKYLayout.Space.s4
-            ),
-            badge.topAnchor.constraint(equalTo: container.topAnchor, constant: PKYLayout.Space.s4),
-        ])
+        placeholder.snp.makeConstraints { $0.directionalHorizontalEdges.equalToSuperview() }
+        preview.snp.makeConstraints { $0.edges.equalToSuperview() }
+        row.snp.makeConstraints { make in
+            make.directionalHorizontalEdges.equalToSuperview()
+            make.centerY.equalToSuperview()
+        }
+        capsule.snp.makeConstraints {
+            $0.leading.bottom.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
+        }
+        badge.snp.makeConstraints {
+            $0.top.leading.equalToSuperview().inset(PKYLayout.Gap.content(.compact))
+        }
         imageView = preview
         textField = time
     }

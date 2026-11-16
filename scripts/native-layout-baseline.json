@@ -7,17 +7,8 @@
     "Sources/AnyDock/SettingsController.swift": {
       "anchor": 33
     },
-    "Sources/AnyDock/Tray/TrayCardItem.swift": {
-      "anchor": 15
-    },
-    "Sources/AnyDock/Tray/TrayCardViews.swift": {
-      "anchor": 6
-    },
     "Sources/AnyDock/Tray/TrayFooterView.swift": {
       "anchor": 10
-    },
-    "Sources/AnyDock/Tray/TrayPolaroidCards.swift": {
-      "anchor": 13
     },
     "Sources/AnyDock/Tray/TrayScopeBar.swift": {
       "anchor": 17
