@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Testing
 @testable import AnyDock
 
@@ -9,8 +10,9 @@ func popoverFollowsAppAppearance() {
     let original = app.appearance
     defer { app.appearance = original }
     let trayPopover = TrayPopoverController(
-        tray: makeTestTray(),
-        statusItem: StatusItemController()
+        inbox: TestInbox(),
+        clipboard: makeTestClipboard(),
+        statusItem: StatusItemController(status: Just(.starting).eraseToAnyPublisher())
     )
     let popover = trayPopover.popover
     AppAppearance.dark.apply()

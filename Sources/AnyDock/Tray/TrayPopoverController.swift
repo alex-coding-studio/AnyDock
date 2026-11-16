@@ -1,9 +1,10 @@
+import AnyDockCore
 import AppKit
 import Combine
 
 @MainActor
 final class TrayPopoverController: NSObject, NSPopoverDelegate {
-    let tray: TrayViewController
+    private(set) lazy var tray = TrayViewController(viewModel: viewModel, clipboard: clipboard)
 
     private(set) lazy var popover: NSPopover = {
         let popover = NSPopover()
@@ -15,17 +16,21 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         return popover
     }()
 
+    private let inbox: any TrayInbox
+    private let clipboard: ClipboardMonitor
     private let statusItem: StatusItemController
-    private let reloadSubject = PassthroughSubject<Void, Never>()
     private var appearance: NSKeyValueObservation?
     private var subscriptions = Set<AnyCancellable>()
 
-    var reloadRequests: AnyPublisher<Void, Never> {
-        reloadSubject.eraseToAnyPublisher()
+    private lazy var viewModel = TrayViewModel(inbox: inbox)
+
+    var settingsRequests: AnyPublisher<Void, Never> {
+        tray.settingsRequests
     }
 
-    init(tray: TrayViewController, statusItem: StatusItemController) {
-        self.tray = tray
+    init(inbox: any TrayInbox, clipboard: ClipboardMonitor, statusItem: StatusItemController) {
+        self.inbox = inbox
+        self.clipboard = clipboard
         self.statusItem = statusItem
         super.init()
         subscribeEvents()
@@ -49,7 +54,7 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         tray.focusCollection()
         if reloading {
-            reloadSubject.send()
+            Task { await inbox.reload() }
         }
     }
 
@@ -76,6 +81,12 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         tray.dragFinishes
             .sink { [weak self] in self?.popover.performClose(nil) }
             .store(in: &subscriptions)
+        tray.folderRequests
+            .sink { [weak self] in self?.inbox.openFolder() }
+            .store(in: &subscriptions)
+        viewModel.arrivals
+            .sink { [weak self] in self?.showArrival($0) }
+            .store(in: &subscriptions)
     }
 
     private func followAppAppearance(_ popover: NSPopover) {
@@ -84,6 +95,14 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         ]) { [weak popover] _, _ in
             MainActor.assumeIsolated { popover?.appearance = NSApp.effectiveAppearance }
         }
+    }
+
+    private func showArrival(_ item: ReceivedItem) {
+        if Preferences.copiesNewItems {
+            tray.copyToPasteboard(item)
+        }
+        show(reloading: false)
+        tray.scrollToLatest()
     }
 
     private func holdPresentation(_ held: Bool) {

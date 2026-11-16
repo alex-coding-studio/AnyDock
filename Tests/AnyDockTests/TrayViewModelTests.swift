@@ -18,7 +18,7 @@ private func item(_ name: String, _ kind: ReceivedKind) -> ReceivedItem {
 func recyclingIsLimitedToListedItems() async {
     let listed = [item("a", .text), item("b", .image)]
     var recycled = [[URL]]()
-    let model = TrayViewModel(inbox: TrayInbox(list: { listed }, recycle: { recycled.append($0) }))
+    let model = TrayViewModel(inbox: TestInbox(list: { listed }, recycle: { recycled.append($0) }))
     let stranger = URL(fileURLWithPath: "/tmp/elsewhere.txt")
     await model.recycle([listed[1].url, stranger])?.value
     #expect(recycled == [[listed[1].url]])
@@ -31,11 +31,25 @@ func recyclingIsLimitedToListedItems() async {
 @Test("切换筛选后，看不到的项目不再算作选中")
 func switchingFilterDropsHiddenSelection() {
     let items = [item("a", .text), item("b", .image)]
-    let model = TrayViewModel(inbox: TrayInbox(list: { items }, recycle: { _ in }))
+    let model = TrayViewModel(inbox: TestInbox(list: { items }))
     model.replace(items)
     model.select(urls: items.map(\.url))
     model.select(.kind(.image))
     #expect(model.selectedURLs == [items[1].url])
     model.select(.all)
     #expect(model.selectedURLs == [items[1].url])
+}
+
+@MainActor
+@Test("托盘 view model 自己订阅收件箱：重列结果替换列表，新收到的项目排在最前并标为最新")
+func viewModelFollowsInboxEvents() {
+    let inbox = TestInbox()
+    let model = TrayViewModel(inbox: inbox)
+    let listed = [item("a", .text), item("b", .image)]
+    inbox.itemsSubject.send(listed)
+    #expect(model.contents.items.map(\.url) == listed.map(\.url))
+    let arrival = item("c", .link)
+    inbox.receivedSubject.send(arrival)
+    #expect(model.contents.items.first?.url == arrival.url)
+    #expect(model.latestURL == arrival.url)
 }

@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import Combine
 
 struct HotKey: Equatable {
     private static let supportedModifiers: NSEvent.ModifierFlags = [
@@ -154,10 +155,17 @@ struct HotKey: Equatable {
 
 @MainActor
 final class HotKeyCenter {
-    var onPress: (() -> Void)?
-
+    private let pressSubject = PassthroughSubject<Void, Never>()
     private var registration: EventHotKeyRef?
     private var handler: EventHandlerRef?
+
+    var presses: AnyPublisher<Void, Never> {
+        pressSubject.eraseToAnyPublisher()
+    }
+
+    var isRegistered: Bool {
+        registration != nil
+    }
 
     func register(_ hotKey: HotKey?) -> Bool {
         if let registration {
@@ -201,7 +209,7 @@ final class HotKeyCenter {
                     return OSStatus(eventNotHandledErr)
                 }
                 let center = Unmanaged<HotKeyCenter>.fromOpaque(context).takeUnretainedValue()
-                MainActor.assumeIsolated { center.onPress?() }
+                MainActor.assumeIsolated { center.pressSubject.send() }
                 return noErr
             },
             1,

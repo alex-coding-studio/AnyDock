@@ -22,7 +22,7 @@ private func makeTray(
             isPlainText: false
         )
     }
-    let tray = makeTestTray(inbox: TrayInbox(list: { items }, recycle: { recycle($0) }))
+    let tray = makeTestTray(inbox: TestInbox(list: { items }, recycle: { recycle($0) }))
     let window = NSWindow(
         contentRect: NSRect(origin: .zero, size: TrayMetrics.popoverSize),
         styleMask: .borderless,
