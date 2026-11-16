@@ -14,9 +14,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private(set) var clip: ClipboardClip?
 
-    private let copySubject = PassthroughSubject<ClipboardClip, Never>()
-
-    private lazy var text: NSTextField = {
+    private(set) lazy var text: NSTextField = {
         let text = NSTextField(wrappingLabelWithString: "")
         text.isSelectable = false
         text.font = PKYTypographyRole.caption.nsFont(in: PKYThemeFallback.system)
@@ -28,7 +26,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
         return text
     }()
 
-    private lazy var time: NSTextField = {
+    private(set) lazy var time: NSTextField = {
         let time = NSTextField(labelWithString: "")
         time.font = PKYTypographyRole.caption.monospacedDigits.nsFont(in: PKYThemeFallback.system)
         time.textColor = .pkyContent(.secondary)
@@ -36,6 +34,8 @@ final class ClipboardCell: NSView, NSDraggingSource {
         time.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return time
     }()
+
+    private let copySubject = PassthroughSubject<ClipboardClip, Never>()
 
     private lazy var dot = LatestDot()
 
@@ -54,6 +54,10 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     var copyRequests: AnyPublisher<ClipboardClip, Never> {
         copySubject.eraseToAnyPublisher()
+    }
+
+    private var resolvedTrayAppearance: NSAppearance {
+        window?.contentView?.effectiveAppearance ?? effectiveAppearance
     }
 
     override init(frame: NSRect) {
@@ -79,14 +83,19 @@ final class ClipboardCell: NSView, NSDraggingSource {
         nil
     }
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateColors()
+    }
+
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
+        updateColors()
         needsDisplay = true
     }
 
     override func updateLayer() {
-        layer?.cornerRadius = PKYShape.Radius.tile
-        layer?.backgroundColor = NSColor.white.cgColor
+        applyLayerColors()
     }
 
     override func accessibilityPerformPress() -> Bool {
@@ -141,5 +150,39 @@ final class ClipboardCell: NSView, NSDraggingSource {
         setAccessibilityElement(true)
         setAccessibilityRole(.button)
         setAccessibilityHelp(L10n.text("Double-click to copy"))
+        updateColors()
+    }
+
+    private func updateColors() {
+        applyLayerColors()
+        let appearance = resolvedTrayAppearance
+        if appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {
+            text.textColor = .pkyContent(.primary)
+            time.textColor = .pkyContent(.secondary)
+        } else {
+            appearance.performAsCurrentDrawingAppearance {
+                text.textColor = NSColor(cgColor: NSColor.pkyContent(.primary).cgColor)
+                    ?? .pkyContent(.primary)
+                time.textColor = NSColor(cgColor: NSColor.pkyContent(.secondary).cgColor)
+                    ?? .pkyContent(.secondary)
+            }
+        }
+    }
+
+    private func applyLayerColors() {
+        let appearance = resolvedTrayAppearance
+        let dark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        appearance.performAsCurrentDrawingAppearance {
+            layer?.cornerRadius = PKYShape.Radius.tile
+            layer?.backgroundColor =
+                (dark ? NSColor.pkyBackground(.standard(.secondary)) : .white).cgColor
+            layer?.borderWidth = dark ? 0 : PKYShape.Stroke.standard
+            layer?.borderColor = dark ? nil : NSColor.pkySeparator(.standard).cgColor
+            if dark {
+                layer?.pkyRemoveElevation()
+            } else {
+                layer?.pkyApplyElevation(.subtle, color: CGColor.black, appearance: .light)
+            }
+        }
     }
 }

@@ -20,8 +20,7 @@ final class TrayFooterView: NSView {
 
     private(set) lazy var clipboardSurface = TrayGlass.surface(
         clipboardBar,
-        cornerRadius: ClipboardBar.collapsedHeight / 2,
-        contentAboveGlass: true
+        cornerRadius: ClipboardBar.collapsedHeight / 2
     )
 
     private let viewModel: TrayViewModel
