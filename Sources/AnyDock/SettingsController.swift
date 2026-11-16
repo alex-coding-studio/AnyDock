@@ -29,7 +29,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     private lazy var restartRow = row([NSView(), restart])
     private var isApplying = false
     private var isSending = false
-    private let shortcutNamePreference = "personalizedShortcutName"
     private let shortcutName = NSTextField()
     private let shortcutNameStatus = NSTextField(wrappingLabelWithString: "")
     private var sharedFile: URL?
@@ -68,7 +67,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         window.center()
         super.init(window: window)
         statusIcon.contentTintColor = .tertiaryLabelColor
-        if let savedName = UserDefaults.standard.string(forKey: shortcutNamePreference) {
+        if let savedName = Preferences.shortcutName {
             shortcutName.stringValue = savedName
         } else if let computerName = LocalHost.computerName()?
             .trimmingCharacters(in: .whitespacesAndNewlines), !computerName.isEmpty {
@@ -77,7 +76,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             shortcutName.stringValue = L10n.text("Send to Mac")
         }
         configureMessage(hotKeyStatus)
-        hotKeyRecorder.hotKey = HotKey.saved
+        hotKeyRecorder.hotKey = Preferences.wakeHotKey
         hotKeyRecorder.onRecordingChanged = { [weak self] recording in
             self?.hotKeyStatus.isHidden = true
             if !recording {
@@ -95,7 +94,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         clearHotKey.bezelStyle = .rounded
         clearHotKey.controlSize = .small
         clearHotKey.setAccessibilityLabel(L10n.text("hotkey.clear.accessibility"))
-        clearHotKey.isEnabled = HotKey.saved != nil
+        clearHotKey.isEnabled = Preferences.wakeHotKey != nil
     }
 
     required init?(coder _: NSCoder) {
@@ -120,7 +119,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
 
     func registerSavedHotKey() {
-        guard let saved = HotKey.saved else {
+        guard let saved = Preferences.wakeHotKey else {
             _ = registerHotKey?(nil)
             return
         }
@@ -135,7 +134,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             showHotKeyMessage(L10n.text("hotkey.unavailable", candidate.displayString))
             return
         }
-        HotKey.saved = candidate
+        Preferences.wakeHotKey = candidate
         hotKeyRecorder.hotKey = candidate
         clearHotKey.isEnabled = true
         hotKeyStatus.isHidden = true
@@ -204,7 +203,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
 
     @objc private func clearSavedHotKey() {
         hotKeyRecorder.endRecording()
-        HotKey.saved = nil
+        Preferences.wakeHotKey = nil
         _ = registerHotKey?(nil)
         hotKeyRecorder.hotKey = nil
         clearHotKey.isEnabled = false
@@ -254,11 +253,11 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         login.target = self
         login.action = #selector(toggleLogin)
         login.setAccessibilityLabel(L10n.text("Launch at login"))
-        autoCopy.state = TrayPreferences.copiesNewItems ? .on : .off
+        autoCopy.state = Preferences.copiesNewItems ? .on : .off
         autoCopy.target = self
         autoCopy.action = #selector(toggleAutoCopy)
         autoCopy.setAccessibilityLabel(L10n.text("Copy new items automatically"))
-        clipboardHistory.state = TrayPreferences.keepsClipboardHistory ? .on : .off
+        clipboardHistory.state = Preferences.keepsClipboardHistory ? .on : .off
         clipboardHistory.target = self
         clipboardHistory.action = #selector(toggleClipboardHistory)
         clipboardHistory.setAccessibilityLabel(L10n.text("Keep last 4 clipboard texts"))
@@ -631,7 +630,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         do {
             let name = try ShortcutInstaller.normalizedName(shortcutName.stringValue)
             if !configuration.token.isEmpty {
-                UserDefaults.standard.set(name, forKey: shortcutNamePreference)
+                Preferences.shortcutName = name
             }
             shortcutNameStatus.stringValue = L10n.text("shortcut.name.normalized", name)
             shortcutNameStatus.textColor = .secondaryLabelColor
@@ -707,7 +706,7 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
             return
         }
         let selected = AppAppearance.allCases[index]
-        UserDefaults.standard.set(selected.rawValue, forKey: "appearance")
+        Preferences.appearance = selected
         selected.apply()
     }
 
@@ -790,11 +789,11 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
     }
 
     @objc private func toggleAutoCopy() {
-        TrayPreferences.copiesNewItems = autoCopy.state == .on
+        Preferences.copiesNewItems = autoCopy.state == .on
     }
 
     @objc private func toggleClipboardHistory() {
-        TrayPreferences.keepsClipboardHistory = clipboardHistory.state == .on
+        Preferences.keepsClipboardHistory = clipboardHistory.state == .on
         clipboardHistoryChanged?(clipboardHistory.state == .on)
     }
 

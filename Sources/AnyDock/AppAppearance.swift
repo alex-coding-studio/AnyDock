@@ -7,7 +7,7 @@ enum AppAppearance: String, CaseIterable {
     case dark
 
     static var current: AppAppearance {
-        AppAppearance(rawValue: UserDefaults.standard.string(forKey: "appearance") ?? "") ?? .system
+        Preferences.appearance
     }
 
     static func follow(_ popover: NSPopover) -> NSKeyValueObservation {

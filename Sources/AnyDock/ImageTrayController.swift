@@ -3,18 +3,6 @@ import AppKit
 import Quartz
 import QuickLookThumbnailing
 
-enum TrayPreferences {
-    static var copiesNewItems: Bool {
-        get { UserDefaults.standard.bool(forKey: "copyNewItems") }
-        set { UserDefaults.standard.set(newValue, forKey: "copyNewItems") }
-    }
-
-    static var keepsClipboardHistory: Bool {
-        get { UserDefaults.standard.object(forKey: "keepClipboardHistory") as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: "keepClipboardHistory") }
-    }
-}
-
 @MainActor
 final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     NSCollectionViewDelegate, @MainActor QLPreviewPanelDelegate {

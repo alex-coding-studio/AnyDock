@@ -2,8 +2,6 @@ import AppKit
 import Carbon.HIToolbox
 
 struct HotKey: Equatable {
-    static let preferenceKey = "wakeHotKey"
-
     private static let supportedModifiers: NSEvent.ModifierFlags = [
         .control,
         .option,
@@ -49,11 +47,6 @@ struct HotKey: Equatable {
         kVK_F19: "F19",
         kVK_F20: "F20",
     ]
-
-    static var saved: HotKey? {
-        get { HotKey(preference: UserDefaults.standard.object(forKey: preferenceKey)) }
-        set { UserDefaults.standard.set(newValue?.preference, forKey: preferenceKey) }
-    }
 
     let keyCode: UInt32
     let modifiers: NSEvent.ModifierFlags
