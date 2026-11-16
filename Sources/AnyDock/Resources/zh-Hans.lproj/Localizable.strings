@@ -128,3 +128,6 @@
 "settings.port.range" = "1024–65535";
 "Revert" = "还原";
 "Settings sections" = "设置分区";
+"settings.pending.folder" = "保存位置有未应用的更改";
+"settings.pending.port" = "端口有未应用的更改";
+"settings.oneStep.illustration" = "iPhone 通过隔空投送连接到这台 Mac";

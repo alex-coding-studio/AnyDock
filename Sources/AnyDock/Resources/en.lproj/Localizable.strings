@@ -128,3 +128,6 @@
 "settings.port.range" = "1024–65535";
 "Revert" = "Revert";
 "Settings sections" = "Settings sections";
+"settings.pending.folder" = "Save location has unapplied changes";
+"settings.pending.port" = "Port has unapplied changes";
+"settings.oneStep.illustration" = "iPhone connects to this Mac via AirDrop";

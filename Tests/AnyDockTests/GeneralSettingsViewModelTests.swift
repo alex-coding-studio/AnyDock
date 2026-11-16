@@ -32,14 +32,14 @@ func languageChangeShowsRestartNotice() {
         restarter: restarter,
         sharing: sharing.eraseToAnyPublisher()
     )
-    #expect(viewModel.currentState.showsRestartNotice == false)
+    #expect(viewModel.state.showsRestartNotice == false)
     viewModel.selectLanguage(.simplifiedChinese)
     #expect(preferences.language == .simplifiedChinese)
-    #expect(viewModel.currentState.showsRestartNotice)
+    #expect(viewModel.state.showsRestartNotice)
     viewModel.restart()
     #expect(restarter.restarts == 0)
     #expect(
-        viewModel.currentState.restartMessage == L10n.text(
+        viewModel.state.restartMessage == L10n.text(
             "Finish sharing before restarting AnyDock."
         )
     )
@@ -47,7 +47,7 @@ func languageChangeShowsRestartNotice() {
     viewModel.restart()
     #expect(restarter.restarts == 1)
     viewModel.selectLanguage(.english)
-    #expect(viewModel.currentState.showsRestartNotice == false)
+    #expect(viewModel.state.showsRestartNotice == false)
 }
 
 @MainActor
@@ -61,15 +61,15 @@ func unavailableHotKeyKeepsPreviousOne() throws {
     _ = hotKeys.register(previous)
     hotKeys.unavailable = [taken.keyCode]
     let viewModel = makeGeneral(preferences: preferences, hotKeys: hotKeys)
-    #expect(viewModel.currentState.hotKeyMessage == nil)
+    #expect(viewModel.state.hotKeyMessage == nil)
 
     viewModel.beginHotKeyRecording()
     #expect(hotKeys.registered == nil)
     viewModel.record(taken)
     #expect(preferences.wakeHotKey == previous)
     #expect(hotKeys.registered == previous)
-    #expect(viewModel.currentState.hotKey == previous)
-    #expect(viewModel.currentState.hotKeyMessage == L10n.text(
+    #expect(viewModel.state.hotKey == previous)
+    #expect(viewModel.state.hotKeyMessage == L10n.text(
         "hotkey.unavailable",
         taken.displayString
     ))
@@ -84,9 +84,9 @@ func clearingHotKeyEmptiesState() throws {
     let hotKeys = FakeHotKeys()
     _ = hotKeys.register(saved)
     let viewModel = makeGeneral(preferences: preferences, hotKeys: hotKeys)
-    #expect(viewModel.currentState.hotKey == saved)
+    #expect(viewModel.state.hotKey == saved)
     viewModel.clearHotKey()
-    #expect(viewModel.currentState.hotKey == nil)
+    #expect(viewModel.state.hotKey == nil)
     #expect(preferences.wakeHotKey == nil)
     #expect(hotKeys.registered == nil)
 }
@@ -98,7 +98,7 @@ func savedHotKeyFailureShowsWhenSettingsOpen() throws {
     let preferences = FakePreferences()
     preferences.wakeHotKey = saved
     let viewModel = makeGeneral(preferences: preferences)
-    #expect(viewModel.currentState.hotKeyMessage == L10n.text(
+    #expect(viewModel.state.hotKeyMessage == L10n.text(
         "hotkey.unavailable",
         saved.displayString
     ))

@@ -9,6 +9,8 @@ struct ReceivingSettingsState: Equatable {
     var hasChanges: Bool
     var isApplying: Bool
     var errorMessage: String?
+    var folderChanged = false
+    var portChanged = false
 
     var canApply: Bool {
         hasChanges && !isApplying
@@ -21,34 +23,35 @@ struct ReceivingSettingsState: Equatable {
     var folderPath: String {
         (folder.path as NSString).abbreviatingWithTildeInPath
     }
+
+    var pendingMessage: String {
+        switch (folderChanged, portChanged) {
+        case (true, false): L10n.text("settings.pending.folder")
+        case (false, true): L10n.text("settings.pending.port")
+        default: L10n.text("Unapplied changes")
+        }
+    }
 }
 
 @MainActor
-final class ReceivingSettingsViewModel {
+final class ReceivingSettingsViewModel: ObservableObject {
     static let portRange: ClosedRange<UInt16> = 1024 ... UInt16.max
 
+    @Published private(set) var state: ReceivingSettingsState
+
     private let receiver: any ReceiverSettings
-    private let stateSubject: CurrentValueSubject<ReceivingSettingsState, Never>
     private var subscriptions = Set<AnyCancellable>()
-
-    var state: AnyPublisher<ReceivingSettingsState, Never> {
-        stateSubject.eraseToAnyPublisher()
-    }
-
-    var currentState: ReceivingSettingsState {
-        stateSubject.value
-    }
 
     init(receiver: any ReceiverSettings) {
         self.receiver = receiver
         let applied = receiver.configuration.receiver
-        stateSubject = CurrentValueSubject(ReceivingSettingsState(
+        state = ReceivingSettingsState(
             status: ListenerStatus(.starting),
             folder: applied.directory,
             portText: String(applied.port),
             hasChanges: false,
             isApplying: false
-        ))
+        )
         receiver.status
             .map(ListenerStatus.init)
             .sink { [weak self] status in self?.update { $0.status = status } }
@@ -68,7 +71,7 @@ final class ReceivingSettingsViewModel {
     }
 
     func revert() {
-        guard !stateSubject.value.isApplying else {
+        guard !state.isApplying else {
             return
         }
         let applied = receiver.configuration.receiver
@@ -80,7 +83,7 @@ final class ReceivingSettingsViewModel {
     }
 
     func apply() {
-        let current = stateSubject.value
+        let current = state
         guard current.canApply else {
             return
         }
@@ -111,14 +114,14 @@ final class ReceivingSettingsViewModel {
     }
 
     private func update(_ change: (inout ReceivingSettingsState) -> Void) {
-        var next = stateSubject.value
+        var next = state
         change(&next)
         let applied = receiver.configuration.receiver
-        next.hasChanges = next.folder != applied.directory || Self.port(
-            from: next.portText
-        ) != applied.port
-        if next != stateSubject.value {
-            stateSubject.send(next)
+        next.folderChanged = next.folder != applied.directory
+        next.portChanged = Self.port(from: next.portText) != applied.port
+        next.hasChanges = next.folderChanged || next.portChanged
+        if next != state {
+            state = next
         }
     }
 }

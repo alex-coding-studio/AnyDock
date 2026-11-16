@@ -80,17 +80,12 @@ final class AppServiceProvider {
             restarter: ApplicationRestarter(),
             sharing: connection.isSending
         )
-        return SettingsWindowController(
+        return SettingsWindowController(rootView: SettingsRootView(
             viewModel: SettingsViewModel(status: inbox.status, about: about),
-            pages: [
-                GeneralSettingsViewController(viewModel: general),
-                ConnectionSettingsViewController(viewModel: connection),
-                ReceivingSettingsViewController(
-                    viewModel: ReceivingSettingsViewModel(receiver: inbox)
-                ),
-                AboutSettingsViewController(about: about),
-            ]
-        )
+            general: general,
+            connection: connection,
+            receiving: ReceivingSettingsViewModel(receiver: inbox)
+        ))
     }
 
     private func subscribeEvents() {

@@ -16,25 +16,18 @@ struct ConnectionSettingsState: Equatable {
 }
 
 @MainActor
-final class ConnectionSettingsViewModel {
+final class ConnectionSettingsViewModel: ObservableObject {
+    @Published private(set) var state: ConnectionSettingsState
+
     private let receiver: any ReceiverSettings
     private let host: any HostInformation
     private let sharing: any ShortcutSharing
     private let pasteboard: any SettingsPasteboard
-    private let stateSubject: CurrentValueSubject<ConnectionSettingsState, Never>
     private var sharedFile: URL?
     private var subscriptions = Set<AnyCancellable>()
 
-    var state: AnyPublisher<ConnectionSettingsState, Never> {
-        stateSubject.eraseToAnyPublisher()
-    }
-
     var isSending: AnyPublisher<Bool, Never> {
-        stateSubject.map(\.isSending).removeDuplicates().eraseToAnyPublisher()
-    }
-
-    var currentState: ConnectionSettingsState {
-        stateSubject.value
+        $state.map(\.isSending).removeDuplicates().eraseToAnyPublisher()
     }
 
     init(
@@ -47,12 +40,12 @@ final class ConnectionSettingsViewModel {
         self.host = host
         self.sharing = sharing
         self.pasteboard = pasteboard
-        stateSubject = CurrentValueSubject(ConnectionSettingsState(
+        state = ConnectionSettingsState(
             shortcutName: Self.initialName(receiver: receiver, host: host),
             canSend: false,
             isSending: false,
             receiveAddress: host.receiveAddress(port: receiver.configuration.receiver.port)
-        ))
+        )
         validateName()
         receiver.status
             .sink { [weak self] _ in self?.refreshAddress() }
@@ -88,7 +81,7 @@ final class ConnectionSettingsViewModel {
     }
 
     func copyReceiveAddress() {
-        pasteboard.copy(stateSubject.value.receiveAddress, concealed: false)
+        pasteboard.copy(state.receiveAddress, concealed: false)
     }
 
     func copyConnectionKey() {
@@ -106,19 +99,19 @@ final class ConnectionSettingsViewModel {
     }
 
     func send() {
-        guard stateSubject.value.canSend else {
+        guard state.canSend else {
             return
         }
         if sharedFile != nil, !cleanUpSharedFile() {
             return
         }
         guard let name = try? ShortcutInstaller.normalizedName(
-            stateSubject.value.shortcutName
+            state.shortcutName
         ) else {
             validateName()
             return
         }
-        let address = stateSubject.value.receiveAddress
+        let address = state.receiveAddress
         let key = receiver.configuration.receiver.token
         update {
             $0.shortcutName = name
@@ -189,7 +182,7 @@ final class ConnectionSettingsViewModel {
     }
 
     private func validateName() {
-        let current = stateSubject.value
+        let current = state
         do {
             let name = try ShortcutInstaller.normalizedName(current.shortcutName)
             update {
@@ -218,10 +211,10 @@ final class ConnectionSettingsViewModel {
     }
 
     private func update(_ change: (inout ConnectionSettingsState) -> Void) {
-        var next = stateSubject.value
+        var next = state
         change(&next)
-        if next != stateSubject.value {
-            stateSubject.send(next)
+        if next != state {
+            state = next
         }
     }
 }

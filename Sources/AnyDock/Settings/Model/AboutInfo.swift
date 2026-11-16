@@ -6,6 +6,10 @@ struct AboutInfo: Equatable {
 
     let version: String?
 
+    init(version: String?) {
+        self.version = version
+    }
+
     init(bundle: Bundle) {
         guard
             let version = bundle.object(

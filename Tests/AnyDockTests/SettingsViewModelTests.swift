@@ -22,25 +22,25 @@ private func settled<State: Sendable>(
 func receivingApplyAndRevertFollowAppliedConfiguration() async {
     let receiver = FakeReceiver(port: 8765)
     let viewModel = ReceivingSettingsViewModel(receiver: receiver)
-    #expect(viewModel.currentState.canApply == false)
+    #expect(viewModel.state.canApply == false)
 
     viewModel.setPortText(" 8765 ")
-    #expect(viewModel.currentState.canApply == false)
+    #expect(viewModel.state.canApply == false)
 
     viewModel.setPortText("9000")
-    #expect(viewModel.currentState.canApply)
+    #expect(viewModel.state.canApply)
     viewModel.revert()
-    #expect(viewModel.currentState.portText == "8765")
-    #expect(viewModel.currentState.hasChanges == false)
+    #expect(viewModel.state.portText == "8765")
+    #expect(viewModel.state.hasChanges == false)
 
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     viewModel.selectFolder(folder)
     viewModel.setPortText("9000")
     viewModel.apply()
-    #expect(viewModel.currentState.isApplying)
-    #expect(viewModel.currentState.canApply == false)
+    #expect(viewModel.state.isApplying)
+    #expect(viewModel.state.canApply == false)
 
-    let applied = await settled(viewModel.state) { !$0.isApplying }
+    let applied = await settled(viewModel.$state.eraseToAnyPublisher()) { !$0.isApplying }
     #expect(applied.hasChanges == false)
     #expect(receiver.appliedReceivers.map(\.port) == [9000])
     #expect(receiver.appliedReceivers.map(\.directory) == [folder])
@@ -54,12 +54,26 @@ func receivingRejectsPortsOutsideRange(text: String) {
     viewModel.setPortText(text)
     viewModel.apply()
     #expect(
-        viewModel.currentState.errorMessage == L10n.text(
+        viewModel.state.errorMessage == L10n.text(
             "Enter a whole-number port between 1024 and 65535."
         )
     )
-    #expect(viewModel.currentState.isApplying == false)
+    #expect(viewModel.state.isApplying == false)
     #expect(receiver.appliedReceivers.isEmpty)
+}
+
+@MainActor
+@Test("底栏说明哪一项未应用：只改端口、只改文件夹或两者都改")
+func receivingPendingMessageNamesChangedItem() {
+    let viewModel = ReceivingSettingsViewModel(receiver: FakeReceiver())
+    viewModel.setPortText("9002")
+    #expect(viewModel.state.pendingMessage == L10n.text("settings.pending.port"))
+    viewModel.selectFolder(
+        FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    )
+    #expect(viewModel.state.pendingMessage == L10n.text("Unapplied changes"))
+    viewModel.setPortText("8765")
+    #expect(viewModel.state.pendingMessage == L10n.text("settings.pending.folder"))
 }
 
 @MainActor
@@ -70,7 +84,7 @@ func receivingKeepsChangesWhenApplyFails() async {
     let viewModel = ReceivingSettingsViewModel(receiver: receiver)
     viewModel.setPortText("9001")
     viewModel.apply()
-    let failed = await settled(viewModel.state) { !$0.isApplying }
+    let failed = await settled(viewModel.$state.eraseToAnyPublisher()) { !$0.isApplying }
     #expect(failed.hasChanges)
     #expect(failed.errorMessage == CocoaError(.fileWriteNoPermission).localizedDescription)
 }
@@ -96,16 +110,16 @@ func shortcutNameDefaults() {
     #expect(
         makeConnection(receiver: FakeReceiver(
             shortcutName: "我的 Mac"
-        )).currentState.shortcutName == "我的 Mac"
+        )).state.shortcutName == "我的 Mac"
     )
     #expect(
-        makeConnection(host: FakeHost(computerName: " Studio ")).currentState.shortcutName
+        makeConnection(host: FakeHost(computerName: " Studio ")).state.shortcutName
             == L10n.text("Send to %@", "Studio")
     )
     #expect(
         makeConnection(host: FakeHost(
             computerName: "  "
-        )).currentState.shortcutName == L10n.text("Send to Mac")
+        )).state.shortcutName == L10n.text("Send to Mac")
     )
 }
 
@@ -114,11 +128,11 @@ func shortcutNameDefaults() {
 func shortcutNameIsValidatedBeforeSigning() {
     let viewModel = makeConnection()
     viewModel.setShortcutName("   ")
-    #expect(viewModel.currentState.canSend == false)
-    #expect(viewModel.currentState.nameMessage?.isError == true)
+    #expect(viewModel.state.canSend == false)
+    #expect(viewModel.state.nameMessage?.isError == true)
     viewModel.setShortcutName(" A/B ")
-    #expect(viewModel.currentState.canSend)
-    #expect(viewModel.currentState.nameMessage == SettingsMessage(
+    #expect(viewModel.state.canSend)
+    #expect(viewModel.state.nameMessage == SettingsMessage(
         text: L10n.text("shortcut.name.normalized", "A-B"),
         isError: false
     ))
@@ -133,16 +147,16 @@ func shortcutNameIsSavedOnlyAfterSuccessfulSend() async {
     let viewModel = makeConnection(receiver: receiver, sharing: sharing)
     viewModel.setShortcutName("First")
     viewModel.send()
-    #expect(viewModel.currentState.isSending)
-    _ = await settled(viewModel.state) { !$0.isSending }
+    #expect(viewModel.state.isSending)
+    _ = await settled(viewModel.$state.eraseToAnyPublisher()) { !$0.isSending }
     #expect(receiver.savedSenders.isEmpty)
     #expect(sharing.cleanedUp == [sharing.file])
-    #expect(viewModel.currentState.message?.isError == true)
+    #expect(viewModel.state.message?.isError == true)
 
     sharing.shareError = nil
     viewModel.setShortcutName(" Second ")
     viewModel.send()
-    let sent = await settled(viewModel.state) { !$0.isSending }
+    let sent = await settled(viewModel.$state.eraseToAnyPublisher()) { !$0.isSending }
     #expect(receiver.savedSenders.map(\.shortcutName) == ["Second"])
     #expect(sharing.cleanedUp == [sharing.file, sharing.file])
     #expect(sent.message == SettingsMessage(
@@ -172,7 +186,7 @@ func listenerStatusMapping() {
     let receiver = FakeReceiver()
     let viewModel = SettingsViewModel(status: receiver.status, about: AboutInfo(bundle: .main))
     var statuses = [ListenerStatus]()
-    let subscription = viewModel.listenerStatus.sink { statuses.append($0) }
+    let subscription = viewModel.$listenerStatus.sink { statuses.append($0) }
     receiver.statusSubject.send(.listening(port: 8766))
     receiver.statusSubject.send(.failed("port busy"))
     subscription.cancel()

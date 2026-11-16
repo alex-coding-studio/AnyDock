@@ -13,26 +13,20 @@ struct GeneralSettingsState: Equatable {
     var keepsClipboardHistory: Bool
     var hotKey: KeyCombination?
     var hotKeyMessage: String?
+    var isRecordingHotKey = false
 }
 
 @MainActor
-final class GeneralSettingsViewModel {
+final class GeneralSettingsViewModel: ObservableObject {
+    @Published private(set) var state: GeneralSettingsState
+
     private let preferences: any SettingsPreferences
     private let loginItem: any LoginItemControlling
     private let hotKeys: any WakeHotKeyRegistering
     private let restarter: any ApplicationRestarting
     private let launchLanguage: AppLanguage
-    private let stateSubject: CurrentValueSubject<GeneralSettingsState, Never>
     private var isSharing = false
     private var subscriptions = Set<AnyCancellable>()
-
-    var state: AnyPublisher<GeneralSettingsState, Never> {
-        stateSubject.eraseToAnyPublisher()
-    }
-
-    var currentState: GeneralSettingsState {
-        stateSubject.value
-    }
 
     init(
         preferences: any SettingsPreferences,
@@ -47,7 +41,7 @@ final class GeneralSettingsViewModel {
         self.restarter = restarter
         launchLanguage = preferences.language
         let saved = preferences.wakeHotKey
-        stateSubject = CurrentValueSubject(GeneralSettingsState(
+        state = GeneralSettingsState(
             appearance: preferences.appearance,
             language: preferences.language,
             showsRestartNotice: false,
@@ -56,7 +50,7 @@ final class GeneralSettingsViewModel {
             keepsClipboardHistory: preferences.keepsClipboardHistory,
             hotKey: saved,
             hotKeyMessage: saved.flatMap { hotKeys.isRegistered ? nil : Self.unavailable($0) }
-        ))
+        )
         sharing
             .sink { [weak self] in self?.isSharing = $0 }
             .store(in: &subscriptions)
@@ -132,11 +126,17 @@ final class GeneralSettingsViewModel {
 
     func beginHotKeyRecording() {
         _ = hotKeys.register(nil)
-        update { $0.hotKeyMessage = nil }
+        update {
+            $0.hotKeyMessage = nil
+            $0.isRecordingHotKey = true
+        }
     }
 
     func endHotKeyRecording() {
-        update { $0.hotKeyMessage = nil }
+        update {
+            $0.hotKeyMessage = nil
+            $0.isRecordingHotKey = false
+        }
         registerSavedHotKey()
     }
 
@@ -163,6 +163,7 @@ final class GeneralSettingsViewModel {
         update {
             $0.hotKey = nil
             $0.hotKeyMessage = nil
+            $0.isRecordingHotKey = false
         }
     }
 
@@ -177,8 +178,8 @@ final class GeneralSettingsViewModel {
     }
 
     private func update(_ change: (inout GeneralSettingsState) -> Void) {
-        var next = stateSubject.value
+        var next = state
         change(&next)
-        stateSubject.send(next)
+        state = next
     }
 }
