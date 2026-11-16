@@ -18,14 +18,12 @@
 "Enter a whole-number port between 1024 and 65535." = "端口需为 1024–65535 之间的整数。";
 "Export failed: %@" = "导出失败：%@";
 "Export…" = "导出…";
-"Folder" = "文件夹";
 "Follow System" = "跟随系统";
 "General" = "通用";
 "Generic shortcut" = "通用快捷指令";
 "Language" = "语言";
 "Launch at login" = "登录时自动启动";
 "Light" = "浅色";
-"Listening" = "正在监听";
 "Listening port" = "监听端口";
 "Listening · %d" = "监听中 · %d";
 "Manual Setup" = "手动设置";
@@ -35,7 +33,6 @@
 "Nothing received yet" = "还没有收到内容";
 "One-step Setup" = "一步设置";
 "Open Folder" = "打开文件夹";
-"Personalization" = "个性化";
 "Quit AnyDock" = "退出随手坞";
 "Receive address" = "接收地址";
 "Receiver Failed" = "接收失败";
@@ -60,7 +57,6 @@
 "AnyDock receiver failed. Open Settings." = "随手坞监听失败，请打开设置";
 "Starting" = "正在启动";
 "Starting the receiver…" = "正在启动接收服务…";
-"Startup" = "启动";
 "shortcut.name.invalidCharacters" = "快捷指令名称不能包含换行或控制字符。";
 "shortcut.name.tooLong" = "快捷指令名称过长，请缩短到 60 个字符以内；复杂表情可能需要更短。";
 "shortcut.resource.missing" = "快捷指令资源缺失，请重新构建完整 App。";
@@ -108,7 +104,6 @@
 "Collapse Clipboard" = "收起剪贴板";
 "Expand Clipboard" = "展开剪贴板";
 "Double-click to copy" = "双击复制";
-"Keyboard" = "键盘";
 "Wake shortcut" = "唤醒快捷键";
 "Record Shortcut" = "录制快捷键";
 "Type shortcut…" = "请按下快捷键…";
@@ -122,3 +117,14 @@
 "GitHub Project" = "GitHub 项目";
 "Author @Cunqi" = "作者 @Cunqi";
 "about.copyright" = "© 2026 Cunqi · MIT License";
+"settings.general.subtitle" = "外观、托盘行为与唤醒方式";
+"settings.connection.subtitle" = "让 iPhone 一步连上这台 Mac";
+"settings.receiving.subtitle" = "内容存到哪里，从哪个端口收";
+"Startup & Keyboard" = "启动与键盘";
+"settings.oneStep.description" = "把专属快捷指令隔空投送到 iPhone，打开即可添加，不用手动填写地址和密钥。";
+"Listening on port %d" = "正在监听端口 %d";
+"settings.receiving.listening.detail" = "iPhone 发来的内容会直接存进下面的文件夹。";
+"Sorted by type" = "按类型分入";
+"settings.port.range" = "1024–65535";
+"Revert" = "还原";
+"Settings sections" = "设置分区";

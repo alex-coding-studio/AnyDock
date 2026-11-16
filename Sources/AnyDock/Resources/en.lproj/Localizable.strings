@@ -18,14 +18,12 @@
 "Enter a whole-number port between 1024 and 65535." = "Enter a whole-number port between 1024 and 65535.";
 "Export failed: %@" = "Export failed: %@";
 "Export…" = "Export…";
-"Folder" = "Folder";
 "Follow System" = "Follow System";
 "General" = "General";
 "Generic shortcut" = "Generic shortcut";
 "Language" = "Language";
 "Launch at login" = "Launch at login";
 "Light" = "Light";
-"Listening" = "Listening";
 "Listening port" = "Listening port";
 "Listening · %d" = "Listening · %d";
 "Manual Setup" = "Manual Setup";
@@ -35,7 +33,6 @@
 "Nothing received yet" = "Nothing received yet";
 "One-step Setup" = "One-step Setup";
 "Open Folder" = "Open Folder";
-"Personalization" = "Personalization";
 "Quit AnyDock" = "Quit AnyDock";
 "Receive address" = "Receive address";
 "Receiver Failed" = "Receiver Failed";
@@ -60,7 +57,6 @@
 "AnyDock receiver failed. Open Settings." = "AnyDock receiver failed. Open Settings.";
 "Starting" = "Starting";
 "Starting the receiver…" = "Starting the receiver…";
-"Startup" = "Startup";
 "shortcut.name.invalidCharacters" = "The shortcut name cannot contain line breaks or control characters.";
 "shortcut.name.tooLong" = "The shortcut name is too long. Use at most 60 characters; complex emoji may need to be shorter.";
 "shortcut.resource.missing" = "The shortcut resource is missing. Rebuild the complete app.";
@@ -108,7 +104,6 @@
 "Collapse Clipboard" = "Collapse Clipboard";
 "Expand Clipboard" = "Expand Clipboard";
 "Double-click to copy" = "Double-click to copy";
-"Keyboard" = "Keyboard";
 "Wake shortcut" = "Wake shortcut";
 "Record Shortcut" = "Record Shortcut";
 "Type shortcut…" = "Type shortcut…";
@@ -122,3 +117,14 @@
 "GitHub Project" = "GitHub Project";
 "Author @Cunqi" = "Author @Cunqi";
 "about.copyright" = "© 2026 Cunqi · MIT License";
+"settings.general.subtitle" = "Appearance, tray behaviour and how to wake AnyDock";
+"settings.connection.subtitle" = "Connect your iPhone to this Mac in one step";
+"settings.receiving.subtitle" = "Where content is saved and which port receives it";
+"Startup & Keyboard" = "Startup & Keyboard";
+"settings.oneStep.description" = "AirDrop a personal shortcut to your iPhone. Open it to add it; there is no address or key to enter.";
+"Listening on port %d" = "Listening on port %d";
+"settings.receiving.listening.detail" = "Content from your iPhone is saved straight into the folder below.";
+"Sorted by type" = "Sorted by type";
+"settings.port.range" = "1024–65535";
+"Revert" = "Revert";
+"Settings sections" = "Settings sections";

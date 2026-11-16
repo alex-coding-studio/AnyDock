@@ -1,569 +1,104 @@
 [
   {
     "violation": {
-      "severity": "error",
+      "ruleIdentifier": "magic_layout_constant",
+      "reason": "Use a local Metrics role",
       "location": {
         "file": "Sources/AnyDock/BrandIcon.swift",
         "line": 11,
         "character": 42
       },
-      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
       "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value"
+      "severity": "error"
     },
     "text": "        let image = NSImage(size: NSSize(width: 18, height: 18))"
   },
   {
     "violation": {
-      "ruleDescription": "",
-      "severity": "error",
       "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
+      "reason": "Use a local Metrics role",
       "location": {
+        "file": "Sources/AnyDock/BrandIcon.swift",
         "line": 11,
-        "character": 53,
-        "file": "Sources/AnyDock/BrandIcon.swift"
+        "character": 53
       },
-      "reason": "Use a local Metrics role"
+      "ruleName": "Literal layout value",
+      "ruleDescription": "",
+      "severity": "error"
     },
     "text": "        let image = NSImage(size: NSSize(width: 18, height: 18))"
   },
   {
-    "text": "            contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),",
     "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 58,
-        "character": 45
-      },
-      "severity": "error",
-      "ruleDescription": ""
-    }
-  },
-  {
-    "text": "            contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),",
-    "violation": {
-      "severity": "error",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "location": {
-        "line": 58,
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "character": 57
-      },
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value"
-    }
-  },
-  {
-    "text": "        icon.widthAnchor.constraint(equalToConstant: 96).isActive = true",
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error",
-      "ruleDescription": "",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 307,
-        "character": 37
-      }
-    }
-  },
-  {
-    "text": "        icon.heightAnchor.constraint(equalToConstant: 96).isActive = true",
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 308,
-        "character": 38
-      },
-      "ruleDescription": ""
-    }
-  },
-  {
-    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))",
-    "violation": {
-      "ruleName": "Literal layout value",
-      "ruleDescription": "",
-      "severity": "error",
-      "location": {
-        "character": 56,
-        "line": 333,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant"
-    }
-  },
-  {
-    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))",
-    "violation": {
-      "ruleName": "Literal layout value",
-      "location": {
-        "line": 333,
-        "character": 68,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "severity": "error",
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": ""
-    }
-  },
-  {
-    "text": "            identity.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: -24),",
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "location": {
-        "character": 79,
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 340
-      }
-    }
-  },
-  {
-    "text": "                constant: 24",
-    "violation": {
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "location": {
-        "character": 17,
-        "line": 343,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error"
-    }
-  },
-  {
-    "text": "            quit.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -24),",
-    "violation": {
-      "severity": "error",
-      "ruleDescription": "",
-      "location": {
-        "line": 346,
-        "character": 73,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value"
-    }
-  },
-  {
-    "violation": {
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 347,
-        "character": 84
-      },
-      "reason": "Use a local Metrics role"
-    },
-    "text": "            quit.topAnchor.constraint(greaterThanOrEqualTo: identity.bottomAnchor, constant: 24),"
-  },
-  {
-    "violation": {
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error",
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "ruleDescription": "",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 377,
-        "character": 45
-      }
-    },
-    "text": "        shortcutName.widthAnchor.constraint(equalToConstant: 260).isActive = true"
-  },
-  {
-    "violation": {
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "location": {
-        "character": 37,
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 423
-      },
-      "reason": "Use a local Metrics role",
-      "severity": "error",
-      "ruleDescription": ""
-    },
-    "text": "        port.widthAnchor.constraint(equalToConstant: 76).isActive = true"
-  },
-  {
-    "violation": {
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "severity": "error",
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 426,
-        "character": 43
-      }
-    },
-    "text": "        statusIcon.widthAnchor.constraint(equalToConstant: 9).isActive = true"
-  },
-  {
-    "violation": {
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "location": {
-        "line": 427,
-        "character": 44,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "ruleName": "Literal layout value",
-      "reason": "Use a local Metrics role",
-      "severity": "error"
-    },
-    "text": "        statusIcon.heightAnchor.constraint(equalToConstant: 9).isActive = true"
-  },
-  {
-    "violation": {
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "line": 467,
-        "character": 56,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "reason": "Use a local Metrics role"
-    },
-    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))"
-  },
-  {
-    "violation": {
-      "ruleName": "Literal layout value",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 467,
-        "character": 68
-      },
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "reason": "Use a local Metrics role",
-      "severity": "error"
-    },
-    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))"
-  },
-  {
-    "violation": {
-      "ruleName": "Literal layout value",
-      "ruleIdentifier": "magic_layout_constant",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 475,
-        "character": 76
-      },
-      "reason": "Use a local Metrics role",
-      "severity": "error",
-      "ruleDescription": ""
-    },
-    "text": "            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 24),"
-  },
-  {
-    "violation": {
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "character": 78,
-        "line": 476,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "reason": "Use a local Metrics role",
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant"
-    },
-    "text": "            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -24),"
-  },
-  {
-    "violation": {
-      "severity": "error",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "location": {
-        "line": 477,
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "character": 68
-      },
-      "reason": "Use a local Metrics role"
-    },
-    "text": "            stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 24),"
-  },
-  {
-    "violation": {
-      "ruleName": "Literal layout value",
-      "ruleDescription": "",
-      "reason": "Use a local Metrics role",
-      "location": {
-        "line": 492,
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "character": 82
-      },
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error"
-    },
-    "text": "                bottomBar.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -16),"
-  },
-  {
-    "violation": {
-      "ruleName": "Literal layout value",
-      "location": {
-        "line": 495,
-        "character": 81,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "severity": "error",
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": ""
-    },
-    "text": "                separator.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -12),"
-  },
-  {
-    "violation": {
-      "location": {
-        "character": 21,
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 498
-      },
-      "reason": "Use a local Metrics role",
-      "severity": "error",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "ruleDescription": ""
-    },
-    "text": "                    constant: -12"
-  },
-  {
-    "violation": {
-      "location": {
-        "character": 17,
-        "line": 504,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "ruleDescription": "",
-      "reason": "Use a local Metrics role"
-    },
-    "text": "                constant: -24"
-  },
-  {
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "character": 50,
-        "line": 514
-      },
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "severity": "error"
-    },
-    "text": "        controller.preferredContentSize = NSSize(width: 600, height: 600)"
-  },
-  {
-    "violation": {
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 514,
-        "character": 62
-      },
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "severity": "error"
-    },
-    "text": "        controller.preferredContentSize = NSSize(width: 600, height: 600)"
-  },
-  {
-    "violation": {
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "ruleIdentifier": "magic_layout_constant",
-      "severity": "error",
-      "reason": "Use a local Metrics role",
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 606,
-        "character": 77
-      }
-    },
-    "text": "            contents.leadingAnchor.constraint(equalTo: group.leadingAnchor, constant: 14),"
-  },
-  {
-    "violation": {
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "reason": "Use a local Metrics role",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "line": 607,
-        "character": 79,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      }
-    },
-    "text": "            contents.trailingAnchor.constraint(equalTo: group.trailingAnchor, constant: -14),"
-  },
-  {
-    "violation": {
-      "location": {
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "line": 608,
-        "character": 69
-      },
-      "reason": "Use a local Metrics role",
-      "ruleDescription": "",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleName": "Literal layout value",
-      "severity": "error"
-    },
-    "text": "            contents.topAnchor.constraint(equalTo: group.topAnchor, constant: 5),"
-  },
-  {
-    "violation": {
-      "reason": "Use a local Metrics role",
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "severity": "error",
-      "location": {
-        "character": 75,
-        "line": 609,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      }
-    },
-    "text": "            contents.bottomAnchor.constraint(equalTo: group.bottomAnchor, constant: -5),"
-  },
-  {
-    "violation": {
-      "ruleIdentifier": "magic_opacity",
-      "ruleDescription": "",
-      "ruleName": "Literal opacity",
-      "severity": "error",
-      "location": {
-        "character": 32,
-        "line": 933,
-        "file": "Sources/AnyDock/SettingsController.swift"
-      },
-      "reason": "Use a local Metrics role or a semantic system color"
-    },
-    "text": "        NSColor.separatorColor.withAlphaComponent(0.5).setStroke()"
-  },
-  {
-    "violation": {
-      "severity": "error",
-      "ruleName": "Literal border width",
-      "reason": "Use a local Metrics role",
-      "location": {
-        "line": 934,
-        "file": "Sources/AnyDock/SettingsController.swift",
-        "character": 15
-      },
-      "ruleIdentifier": "magic_border_width",
-      "ruleDescription": ""
-    },
-    "text": "        shape.lineWidth = 0.5"
-  },
-  {
-    "violation": {
-      "ruleDescription": "Force casts should be avoided",
+      "ruleIdentifier": "force_cast",
       "reason": "Force casts should be avoided",
       "location": {
-        "character": 94,
         "file": "Tests/ShortcutTests/InstallerChecks.swift",
-        "line": 17
+        "line": 17,
+        "character": 94
       },
-      "ruleIdentifier": "force_cast",
       "ruleName": "Force Cast",
+      "ruleDescription": "Force casts should be avoided",
       "severity": "error"
     },
     "text": "        let shortcut = try PropertyListSerialization.propertyList(from: result, format: nil) as! ["
   },
   {
     "violation": {
-      "severity": "error",
       "ruleIdentifier": "force_cast",
+      "reason": "Force casts should be avoided",
+      "location": {
+        "file": "Tests/ShortcutTests/InstallerChecks.swift",
+        "line": 32,
+        "character": 53
+      },
       "ruleName": "Force Cast",
       "ruleDescription": "Force casts should be avoided",
-      "location": {
-        "character": 53,
-        "line": 32,
-        "file": "Tests/ShortcutTests/InstallerChecks.swift"
-      },
-      "reason": "Force casts should be avoided"
+      "severity": "error"
     },
     "text": "        let actions = shortcut[\"WFWorkflowActions\"] as! [[String: Any]]"
   },
   {
     "violation": {
-      "reason": "Force casts should be avoided",
-      "severity": "error",
-      "ruleDescription": "Force casts should be avoided",
       "ruleIdentifier": "force_cast",
-      "ruleName": "Force Cast",
+      "reason": "Force casts should be avoided",
       "location": {
-        "character": 83,
         "file": "Tests/ShortcutTests/InstallerChecks.swift",
-        "line": 33
-      }
+        "line": 33,
+        "character": 83
+      },
+      "ruleName": "Force Cast",
+      "ruleDescription": "Force casts should be avoided",
+      "severity": "error"
     },
     "text": "        let parameters = actions.prefix(2).map { $0[\"WFWorkflowActionParameters\"] as! ["
   },
   {
     "violation": {
-      "ruleDescription": "Force casts should be avoided",
-      "severity": "error",
-      "ruleName": "Force Cast",
       "ruleIdentifier": "force_cast",
+      "reason": "Force casts should be avoided",
       "location": {
-        "character": 61,
         "file": "Tests/ShortcutTests/InstallerChecks.swift",
-        "line": 40
+        "line": 40,
+        "character": 61
       },
-      "reason": "Force casts should be avoided"
+      "ruleName": "Force Cast",
+      "ruleDescription": "Force casts should be avoided",
+      "severity": "error"
     },
     "text": "        precondition((shortcut[\"WFWorkflowImportQuestions\"] as! [Any]).isEmpty)"
   },
   {
     "violation": {
+      "ruleIdentifier": "force_cast",
+      "reason": "Force casts should be avoided",
       "location": {
-        "line": 41,
         "file": "Tests/ShortcutTests/InstallerChecks.swift",
+        "line": 41,
         "character": 96
       },
       "ruleName": "Force Cast",
-      "reason": "Force casts should be avoided",
-      "ruleIdentifier": "force_cast",
       "ruleDescription": "Force casts should be avoided",
       "severity": "error"
     },
@@ -573,14 +108,14 @@
     "violation": {
       "ruleIdentifier": "force_cast",
       "reason": "Force casts should be avoided",
-      "severity": "error",
-      "ruleDescription": "Force casts should be avoided",
-      "ruleName": "Force Cast",
       "location": {
-        "character": 61,
+        "file": "Tests/ShortcutTests/InstallerChecks.swift",
         "line": 44,
-        "file": "Tests/ShortcutTests/InstallerChecks.swift"
-      }
+        "character": 61
+      },
+      "ruleName": "Force Cast",
+      "ruleDescription": "Force casts should be avoided",
+      "severity": "error"
     },
     "text": "        let originalActions = original[\"WFWorkflowActions\"] as! [[String: Any]]"
   }

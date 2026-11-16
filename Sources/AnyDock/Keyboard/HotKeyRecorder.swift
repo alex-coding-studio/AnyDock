@@ -113,10 +113,12 @@ final class HotKeyRecorder: NSButton {
     }
 
     private func updateTitle() {
-        title =
-            isRecording
-                ? L10n.text("Type shortcut…") : hotKey?.displayString ?? L10n.text(
-                    "Record Shortcut"
-                )
+        let showsKeys = !isRecording && hotKey != nil
+        title = isRecording ? L10n.text("Type shortcut…") : showsKeys ? "" : L10n.text(
+            "Record Shortcut"
+        )
+        image = showsKeys ? hotKey.map { KeyCapsImage.make(keys: $0.displayKeys) } : nil
+        imagePosition = showsKeys ? .imageOnly : .noImage
+        setAccessibilityValue(hotKey?.displayString)
     }
 }
