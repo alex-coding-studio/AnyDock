@@ -5,23 +5,20 @@ import Quartz
 
 @MainActor
 final class TrayViewController: NSViewController, NSCollectionViewDataSource,
-    NSCollectionViewDelegate, @MainActor QLPreviewPanelDelegate {
+    NSCollectionViewDelegate {
+    private static let dropZoneHeight: CGFloat = 34
+
     let collection = TrayCollectionView()
     let dropZone = TrayDropZone()
     let clipboardBar = ClipboardBar()
     private(set) var clipboardSurface: NSView?
-    private(set) lazy var filterBar = TrayScopeBar(
-        surface: glassSurface(NSView(), cornerRadius: TrayMetrics.scopeBarHeight / 2)
-    )
+    private(set) lazy var header = TrayHeaderView(viewModel: viewModel)
     private(set) var dropZoneSurface: NSView?
-    private(set) var controlGroup: NSView?
     let viewModel: TrayViewModel
 
     private let clipboard: ClipboardMonitor
     private let pasteboard: TrayPasteboardWriter
     private let presentationHoldSubject = PassthroughSubject<Bool, Never>()
-    private let folderSubject = PassthroughSubject<Void, Never>()
-    private let settingsSubject = PassthroughSubject<Void, Never>()
     private let layout = MasonryCollectionLayout()
     private let scroll = NSScrollView()
     private let timeFormatter = DateFormatter()
@@ -32,7 +29,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     private var cache = [URL: TrayEntry]()
     private let previews = TrayPreviewCache()
     private var subscriptions = Set<AnyCancellable>()
-    private var previewSource: TrayQuickLookSource?
+    private lazy var quickLook = TrayQuickLookController(owner: self, focusTarget: collection)
     private var releaseWatch: Timer?
     private var renderedLatestURL: URL?
     private var isApplyingSelection = false
@@ -46,15 +43,15 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     var folderRequests: AnyPublisher<Void, Never> {
-        folderSubject.eraseToAnyPublisher()
+        header.folderRequests
     }
 
     var settingsRequests: AnyPublisher<Void, Never> {
-        settingsSubject.eraseToAnyPublisher()
+        header.settingsRequests
     }
 
     var holdsPresentation: Bool {
-        previewSource != nil || viewModel.isRecycling
+        quickLook.isShowing || viewModel.isRecycling
     }
 
     private var singleColumn: Bool {
@@ -121,30 +118,33 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
         ])
         configureEmptyState(in: content)
-        let group = configureControls(in: content)
-        configureFilterBar(in: content, before: group)
+        configureControls(in: content)
+        header.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(header)
+        NSLayoutConstraint.activate([
+            header.leadingAnchor.constraint(
+                equalTo: content.leadingAnchor,
+                constant: TrayMetrics.margin
+            ),
+            header.trailingAnchor.constraint(
+                equalTo: content.trailingAnchor,
+                constant: -TrayMetrics.margin
+            ),
+            header.topAnchor.constraint(equalTo: content.topAnchor, constant: TrayMetrics.margin),
+        ])
         subscribeEvents()
     }
 
     override nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel!) -> Bool {
-        MainActor.assumeIsolated { previewSource != nil }
+        MainActor.assumeIsolated { quickLook.isShowing }
     }
 
     override nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
-        MainActor.assumeIsolated {
-            panel.dataSource = previewSource
-            panel.delegate = self
-            panel.reloadData()
-            panel.currentPreviewItemIndex = 0
-        }
+        MainActor.assumeIsolated { quickLook.beginControl(panel) }
     }
 
     override nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
-        MainActor.assumeIsolated {
-            panel.dataSource = nil
-            panel.delegate = nil
-            finishPreview()
-        }
+        MainActor.assumeIsolated { quickLook.endControl(panel) }
     }
 
     func select(_ filter: TrayFilter) {
@@ -244,6 +244,20 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
 
     func collectionView(
         _: NSCollectionView,
+        didSelectItemsAt _: Set<IndexPath>
+    ) {
+        syncSelection()
+    }
+
+    func collectionView(
+        _: NSCollectionView,
+        didDeselectItemsAt _: Set<IndexPath>
+    ) {
+        syncSelection()
+    }
+
+    func collectionView(
+        _: NSCollectionView,
         canDragItemsAt indexPaths: Set<IndexPath>,
         with _: NSEvent
     ) -> Bool {
@@ -301,117 +315,11 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         pasteboard.copy([cache[item.url] ?? TrayEntry(item: item)])
     }
 
-    func previewPanel(_ panel: QLPreviewPanel!, handle event: NSEvent!) -> Bool {
-        guard event.type == .keyDown else {
-            return false
-        }
-        if event.charactersIgnoringModifiers == " " {
-            closePreview()
-            return true
-        }
-        guard let source = previewSource, !source.urls.isEmpty else {
-            return false
-        }
-        let step: Int
-        switch event.keyCode {
-        case 123, 126: step = -1
-        case 124, 125: step = 1
-        default: return false
-        }
-        panel.currentPreviewItemIndex = max(
-            0,
-            min(source.urls.count - 1, panel.currentPreviewItemIndex + step)
-        )
-        return true
-    }
-
-    func windowWillClose(_: Notification) {
-        finishPreview()
-    }
-
     func closePreview() {
-        guard previewSource != nil else {
-            return
-        }
-        if QLPreviewPanel.sharedPreviewPanelExists(), let panel = QLPreviewPanel.shared(),
-           panel.currentController as AnyObject? === self {
-            panel.close()
-        }
-        finishPreview()
+        quickLook.close()
     }
 
-    private func configureFilterBar(in content: NSView, before group: NSView) {
-        filterBar.onSelect = { [weak self] filter in self?.select(filter) }
-        filterBar.onSelectAll = { [weak self] filter in self?.toggleSelectAll(in: filter) }
-        filterBar.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(filterBar)
-        NSLayoutConstraint.activate([
-            filterBar.leadingAnchor.constraint(
-                equalTo: content.leadingAnchor,
-                constant: TrayMetrics.margin
-            ),
-            filterBar.trailingAnchor.constraint(
-                lessThanOrEqualTo: group.leadingAnchor,
-                constant: -Space.s8
-            ),
-            filterBar.topAnchor.constraint(
-                equalTo: content.topAnchor,
-                constant: TrayMetrics.margin
-            ),
-        ])
-    }
-
-    private func updateFilterBar() {
-        let contents = viewModel.contents
-        filterBar.isHidden = contents.items.isEmpty
-        filterBar.update(
-            contents.availableFilters.map { filter in
-                let count = viewModel.count(of: filter)
-                return TrayScopeBar.Segment(
-                    title: "\(filterTitle(filter)) \(count)",
-                    accessibilityLabel: L10n.text(
-                        "filter_accessibility",
-                        filterTitle(filter),
-                        count
-                    ),
-                    filter: filter
-                )
-            },
-            selected: contents.filter
-        )
-    }
-
-    private func filterTitle(_ filter: TrayFilter) -> String {
-        switch filter {
-        case .all: L10n.text("All")
-        case .kind(.image): L10n.text("Images")
-        case .kind(.text): L10n.text("Text")
-        case .kind(.link): L10n.text("Links")
-        case .kind(.file): L10n.text("Files")
-        }
-    }
-
-    private func configureControls(in content: NSView) -> NSView {
-        let folder = iconButton(
-            symbol: "folder",
-            title: L10n.text("Open Folder"),
-            action: #selector(folderClicked)
-        )
-        let settings = iconButton(
-            symbol: "gearshape",
-            title: L10n.text("Settings"),
-            action: #selector(settingsClicked)
-        )
-        let buttons = NSStackView(views: [folder, settings])
-        buttons.spacing = 0
-        buttons.edgeInsets = NSEdgeInsets(
-            top: TrayMetrics.scopeBarInset,
-            left: TrayMetrics.scopeBarInset,
-            bottom: TrayMetrics.scopeBarInset,
-            right: TrayMetrics.scopeBarInset
-        )
-        let group = glassSurface(buttons, cornerRadius: TrayMetrics.scopeBarHeight / 2)
-        controlGroup = group
+    private func configureControls(in content: NSView) {
         dropZone.canAccept = { [weak self] source in
             guard let self else {
                 return false
@@ -419,20 +327,12 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             return source === collection && viewModel.canDropOnTrash()
         }
         dropZone.performDrop = { [weak self] in self?.viewModel.trashDraggedItems() != nil }
-        let zone = glassSurface(dropZone, cornerRadius: 17)
-        zone.heightAnchor.constraint(equalToConstant: 34).isActive = true
+        let zone = TrayGlass.surface(dropZone, cornerRadius: Self.dropZoneHeight / 2)
+        zone.heightAnchor.constraint(equalToConstant: Self.dropZoneHeight).isActive = true
         dropZoneSurface = zone
-        for element in [group, zone] {
-            element.translatesAutoresizingMaskIntoConstraints = false
-            content.addSubview(element)
-        }
+        zone.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(zone)
         NSLayoutConstraint.activate([
-            group.heightAnchor.constraint(equalToConstant: TrayMetrics.scopeBarHeight),
-            group.topAnchor.constraint(equalTo: content.topAnchor, constant: TrayMetrics.margin),
-            group.trailingAnchor.constraint(
-                equalTo: content.trailingAnchor,
-                constant: -TrayMetrics.margin
-            ),
             zone.centerXAnchor.constraint(equalTo: content.centerXAnchor),
             zone.leadingAnchor.constraint(
                 greaterThanOrEqualTo: content.leadingAnchor,
@@ -452,7 +352,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
             zone.bottomAnchor.constraint(equalTo: $0.topAnchor, constant: -Space.s8)
         }
         updateClipboardSurface()
-        return group
     }
 
     private func configureClipboardBar(in content: NSView) {
@@ -468,7 +367,10 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         clipboardBar.expandedChanges
             .sink { [weak self] _ in self?.updateClipboardSurface() }
             .store(in: &subscriptions)
-        let surface = glassSurface(clipboardBar, cornerRadius: ClipboardBar.collapsedHeight / 2)
+        let surface = TrayGlass.surface(
+            clipboardBar,
+            cornerRadius: ClipboardBar.collapsedHeight / 2
+        )
         surface.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(surface, positioned: .below, relativeTo: dropZoneSurface)
         NSLayoutConstraint.activate([
@@ -494,11 +396,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         dropZoneAtBottom?.isActive = !visible
         dropZoneAboveClipboard?.isActive = visible
         let radius = clipboardBar.isExpanded ? Space.s16 : ClipboardBar.collapsedHeight / 2
-        if #available(macOS 26, *), let glass = surface as? NSGlassEffectView {
-            glass.cornerRadius = radius
-        } else {
-            surface.layer?.cornerRadius = radius
-        }
+        TrayGlass.setCornerRadius(radius, of: surface)
         let height =
             clipboardBar.isExpanded ? ClipboardBar.expandedHeight : ClipboardBar.collapsedHeight
         layout.extraBottomInset = visible ? height + Space.s8 : 0
@@ -539,53 +437,13 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         emptyState = stack
     }
 
-    private func iconButton(symbol: String, title: String, action: Selector) -> NSButton {
-        let button = NSButton()
-        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)?
-            .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 14, weight: .regular))
-        button.target = self
-        button.action = action
-        button.isBordered = false
-        button.imagePosition = .imageOnly
-        button.imageScaling = .scaleProportionallyDown
-        button.toolTip = title
-        button.setAccessibilityLabel(title)
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 36),
-            button.heightAnchor.constraint(equalToConstant: 28),
-        ])
-        return button
-    }
-
-    private func glassSurface(_ content: NSView, cornerRadius: CGFloat) -> NSView {
-        let surface: NSView
-        if #available(macOS 26, *) {
-            let glass = NSGlassEffectView()
-            glass.cornerRadius = cornerRadius
-            glass.contentView = content
-            surface = glass
-        } else {
-            let effect = NSVisualEffectView()
-            effect.material = .popover
-            effect.blendingMode = .behindWindow
-            effect.state = .active
-            effect.wantsLayer = true
-            effect.layer?.cornerRadius = cornerRadius
-            effect.layer?.masksToBounds = true
-            effect.addSubview(content)
-            surface = effect
-        }
-        content.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            content.leadingAnchor.constraint(equalTo: surface.leadingAnchor),
-            content.trailingAnchor.constraint(equalTo: surface.trailingAnchor),
-            content.topAnchor.constraint(equalTo: surface.topAnchor),
-            content.bottomAnchor.constraint(equalTo: surface.bottomAnchor),
-        ])
-        return surface
-    }
-
     private func subscribeEvents() {
+        header.filterSelections
+            .sink { [weak self] in self?.select($0) }
+            .store(in: &subscriptions)
+        header.selectAllRequests
+            .sink { [weak self] in self?.toggleSelectAll(in: $0) }
+            .store(in: &subscriptions)
         collection.publisher(for: \.selectionIndexPaths)
             .sink { [weak self] _ in self?.syncSelection() }
             .store(in: &subscriptions)
@@ -601,6 +459,9 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         viewModel.recycling
             .dropFirst()
             .sink { [weak self] in self?.recyclingChanged($0) }
+            .store(in: &subscriptions)
+        quickLook.holds
+            .sink { [weak self] _ in self?.sendPresentationHold() }
             .store(in: &subscriptions)
         viewModel.recycleStarts
             .sink { [weak self] in self?.closePreview() }
@@ -637,7 +498,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         collection.reloadData()
         isApplyingSelection = false
         applySelection(viewModel.selectedURLs)
-        updateFilterBar()
     }
 
     private func applySelection(_ urls: [URL]) {
@@ -669,8 +529,12 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     private func recyclingChanged(_: Bool) {
-        presentationHoldSubject.send(holdsPresentation)
+        sendPresentationHold()
         updateControls()
+    }
+
+    private func sendPresentationHold() {
+        presentationHoldSubject.send(holdsPresentation)
     }
 
     private func aspectRatio(at index: Int) -> CGFloat {
@@ -781,43 +645,6 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     private func previewSelection() {
-        if previewSource != nil {
-            closePreview()
-            return
-        }
-        let urls = selectedEntries.map(\.url)
-        guard !urls.isEmpty, let panel = QLPreviewPanel.shared() else {
-            return
-        }
-        previewSource = TrayQuickLookSource(urls: urls)
-        presentationHoldSubject.send(holdsPresentation)
-        focusCollection()
-        panel.updateController()
-        panel.makeKeyAndOrderFront(nil)
-    }
-
-    private func finishPreview() {
-        guard previewSource != nil else {
-            return
-        }
-        if QLPreviewPanel.sharedPreviewPanelExists(), let panel = QLPreviewPanel.shared(),
-           panel.currentController as AnyObject? === self {
-            panel.dataSource = nil
-            panel.delegate = nil
-        }
-        previewSource = nil
-        if NSApp.isActive, NSApp.keyWindow is QLPreviewPanel {
-            view.window?.makeKey()
-        }
-        focusCollection()
-        presentationHoldSubject.send(holdsPresentation)
-    }
-
-    @objc private func folderClicked() {
-        folderSubject.send()
-    }
-
-    @objc private func settingsClicked() {
-        settingsSubject.send()
+        quickLook.toggle(selectedEntries.map(\.url))
     }
 }
