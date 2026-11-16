@@ -63,10 +63,6 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         return entries.filter { selected.contains($0.url) }
     }
 
-    private var singleColumn: Bool {
-        viewModel.contents.filter == .kind(.text)
-    }
-
     init(viewModel: TrayViewModel, cache: TrayEntryCache) {
         self.viewModel = viewModel
         self.cache = cache
@@ -122,7 +118,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         let latest = entry.url == viewModel.latestURL
         (item as? TrayCardItem)?.configure(
             entry,
-            singleColumn: singleColumn,
+            singleColumn: viewModel.isSingleColumn,
             time: TrayTimeFormat.short(entry.item.receivedAt),
             latest: latest
         )
@@ -226,7 +222,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         previews.forget(cache.keep(only: Set(list.contents.items.map(\.url))))
         entries = list.contents.visibleItems.map(cache.entry(for:))
         scroll.isHidden = list.contents.items.isEmpty
-        layout.columnCount = singleColumn ? TrayMetrics.singleColumnCount : TrayMetrics.multiColumnCount
+        layout.columnCount = viewModel.isSingleColumn ? TrayMetrics.singleColumnCount : TrayMetrics.multiColumnCount
         layout.invalidateLayout()
         isApplyingSelection = true
         collection.reloadData()
@@ -271,7 +267,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         case .image:
             return entry.item.aspectRatio.map { CGFloat($0) } ?? Self.squareRatio
         case .text:
-            guard singleColumn else {
+            guard viewModel.isSingleColumn else {
                 return Self.textCardRatio
             }
             return Self.singleColumnTextHeight / max(layout.availableWidth, 1)
