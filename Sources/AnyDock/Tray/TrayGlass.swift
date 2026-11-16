@@ -25,6 +25,12 @@ enum TrayGlass {
         return surface
     }
 
+    static func setTint(_ color: NSColor?, of surface: NSView) {
+        if #available(macOS 26, *), let glass = surface as? NSGlassEffectView {
+            glass.tintColor = color
+        }
+    }
+
     static func setCornerRadius(_ radius: CGFloat, of surface: NSView) {
         if #available(macOS 26, *), let glass = surface as? NSGlassEffectView {
             glass.cornerRadius = radius

@@ -157,6 +157,10 @@ final class TrayFooterView: NSView {
         let radius = clipboardBar.isExpanded
             ? Self.expandedClipboardCornerRadius : ClipboardBar.collapsedHeight / 2
         TrayGlass.setCornerRadius(radius, of: clipboardSurface)
+        TrayGlass.setTint(
+            clipboardBar.isExpanded ? NSColor.pkyBackground(.standard(.primary)) : nil,
+            of: clipboardSurface
+        )
         let height =
             clipboardBar.isExpanded ? ClipboardBar.expandedHeight : ClipboardBar.collapsedHeight
         bottomInsetSubject.send(visible ? height + PKYLayout.Gap.group(.compact) : 0)
