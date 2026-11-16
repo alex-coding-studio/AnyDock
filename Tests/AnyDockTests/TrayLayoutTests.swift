@@ -36,13 +36,13 @@ private func makeTray(texts: [String]) throws -> (TrayViewController, NSWindow) 
     )
     let tray = makeTestTray()
     let window = NSWindow(
-        contentRect: NSRect(x: 0, y: 0, width: 480, height: 640),
+        contentRect: NSRect(origin: .zero, size: TrayMetrics.popoverSize),
         styleMask: .borderless,
         backing: .buffered,
         defer: true
     )
     window.contentViewController = tray
-    window.setContentSize(NSSize(width: 480, height: 640))
+    window.setContentSize(TrayMetrics.popoverSize)
     tray.replaceItems(items)
     return (tray, window)
 }

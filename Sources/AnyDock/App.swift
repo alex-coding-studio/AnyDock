@@ -36,7 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_: Notification) {
         trayPopover.reloadRequests
-            .sink { [weak self] in Task { await self?.reloadImages() } }
+            .sink { [weak self] in Task { await self?.reloadItems() } }
             .store(in: &subscriptions)
         guard let current = loadConfiguration() else {
             return
@@ -57,7 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         server = HTTPServer(store: store)
         Task {
             await startReceiver(current.receiver)
-            await reloadImages()
+            await reloadItems()
         }
         if CommandLine.arguments.contains("--settings") {
             showSettings()
@@ -131,10 +131,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             tray.copyToPasteboard(item)
         }
         trayPopover.show(reloading: false)
-        tray.scrollToLatestImage()
+        tray.scrollToLatest()
     }
 
-    private func reloadImages() async {
+    private func reloadItems() async {
         guard let directory = configuration?.receiver.directory else {
             return
         }
@@ -174,7 +174,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 continuation.resume(returning: error)
             }
         }
-        await reloadImages()
+        await reloadItems()
         if let error {
             throw error
         }
@@ -196,7 +196,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard receiverChanged else {
             return
         }
-        await reloadImages()
+        await reloadItems()
         await startReceiver(next.receiver)
     }
 

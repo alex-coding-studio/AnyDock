@@ -28,7 +28,7 @@ func singleSelectionShowsItemDetail() throws {
     )?.representation(using: .png, properties: [:])?.write(to: image)
     let tray = makeTestTray()
     let window = NSWindow(
-        contentRect: NSRect(x: 0, y: 0, width: 480, height: 640),
+        contentRect: NSRect(origin: .zero, size: TrayMetrics.popoverSize),
         styleMask: .borderless,
         backing: .buffered,
         defer: true

@@ -47,7 +47,7 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         }
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        tray.focusImages()
+        tray.focusCollection()
         if reloading {
             reloadSubject.send()
         }

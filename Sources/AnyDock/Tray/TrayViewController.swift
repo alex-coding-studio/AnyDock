@@ -6,7 +6,7 @@ import Quartz
 @MainActor
 final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     NSCollectionViewDelegate, @MainActor QLPreviewPanelDelegate {
-    let collection = ImageCollectionView()
+    let collection = TrayCollectionView()
     let dropZone = TrayDropZone()
     let clipboardBar = ClipboardBar()
     private(set) var clipboardSurface: NSView?
@@ -21,6 +21,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     var openSettings: (() -> Void)?
 
     private let clipboard: ClipboardMonitor
+    private let pasteboard: TrayPasteboardWriter
     private let presentationHoldSubject = PassthroughSubject<Bool, Never>()
     private let dragFinishedSubject = PassthroughSubject<Void, Never>()
     private let layout = MasonryCollectionLayout()
@@ -35,7 +36,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     private let previews = TrayPreviewCache()
     private var subscriptions = Set<AnyCancellable>()
     private var latestReceivedURL: URL?
-    private var previewSource: ImagePreviewSource?
+    private var previewSource: TrayQuickLookSource?
     private var isTrashing = false
     private var draggedURLs = [URL]()
     private var droppedOnTrash = false
@@ -65,6 +66,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
 
     init(clipboard: ClipboardMonitor) {
         self.clipboard = clipboard
+        pasteboard = TrayPasteboardWriter(clipboard: clipboard)
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -74,7 +76,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     override func loadView() {
-        let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))
+        let content = NSView(frame: NSRect(origin: .zero, size: TrayMetrics.popoverSize))
         view = content
         layout.aspectRatio = { [weak self] path in self?.aspectRatio(at: path.item) ?? 1 }
         previews.loaded.sink { [weak self] url in self?.showPreview(for: url) }
@@ -94,10 +96,10 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         collection.delegate = self
         collection.setDraggingSourceOperationMask(.copy, forLocal: false)
         collection.setDraggingSourceOperationMask([.copy, .delete], forLocal: true)
-        collection.copyImages = { [weak self] in self?.copySelection() }
-        collection.revealImages = { [weak self] in self?.revealSelection() }
-        collection.previewImages = { [weak self] in self?.previewSelection() }
-        collection.deleteImages = { [weak self] in
+        collection.copyItems = { [weak self] in self?.copySelection() }
+        collection.revealItems = { [weak self] in self?.revealSelection() }
+        collection.previewItems = { [weak self] in self?.previewSelection() }
+        collection.trashItems = { [weak self] in
             guard let self else {
                 return
             }
@@ -150,7 +152,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     func select(_ filter: TrayFilter) {
         contents.select(filter)
         reloadEntries()
-        scrollToLatestImage()
+        scrollToLatest()
     }
 
     func toggleSelectAll(in filter: TrayFilter) {
@@ -199,7 +201,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         reloadEntries()
     }
 
-    func focusImages() {
+    func focusCollection() {
         view.window?.makeFirstResponder(collection)
     }
 
@@ -208,7 +210,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         updateControls()
     }
 
-    func scrollToLatestImage() {
+    func scrollToLatest() {
         guard !entries.isEmpty else {
             return
         }
@@ -281,28 +283,14 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         canDragItemsAt indexPaths: Set<IndexPath>,
         with _: NSEvent
     ) -> Bool {
-        collection.dragStartedOnImage && !indexPaths.isEmpty
+        collection.dragStartedOnCard && !indexPaths.isEmpty
     }
 
     func collectionView(
         _: NSCollectionView,
         pasteboardWriterForItemAt indexPath: IndexPath
     ) -> (any NSPasteboardWriting)? {
-        let entry = entries[indexPath.item]
-        switch entry.kind {
-        case .image, .file:
-            return entry.url as NSURL
-        case .text:
-            return entry.fullText as NSString
-        case .link:
-            let item = NSPasteboardItem()
-            if let link = entry.link {
-                item.setString(link.absoluteString, forType: .URL)
-                item.setString(link.absoluteString, forType: .string)
-            }
-            item.setString(entry.url.absoluteString, forType: .fileURL)
-            return item
-        }
+        TrayPasteboardWriter.dragWriter(for: entries[indexPath.item])
     }
 
     func collectionView(
@@ -365,8 +353,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     }
 
     func copyToPasteboard(_ item: ReceivedItem) {
-        let entry = cache[item.url] ?? TrayEntry(item: item)
-        clipboard.write(recordingInHistory: true) { $0.writeObjects([pasteboardItem(for: entry)]) }
+        pasteboard.copy([cache[item.url] ?? TrayEntry(item: item)])
     }
 
     func previewPanel(_ panel: QLPreviewPanel!, handle event: NSEvent!) -> Bool {
@@ -815,33 +802,8 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         }
     }
 
-    private func pasteboardItem(for entry: TrayEntry) -> NSPasteboardItem {
-        let item = NSPasteboardItem()
-        switch entry.kind {
-        case .image:
-            item.setString(entry.url.absoluteString, forType: .fileURL)
-            item.setDataProvider(ImageClipboardProvider(url: entry.url), forTypes: [.png])
-        case .text:
-            item.setString(entry.fullText, forType: .string)
-        case .link:
-            if let link = entry.link {
-                item.setString(link.absoluteString, forType: .URL)
-                item.setString(link.absoluteString, forType: .string)
-            }
-        case .file:
-            item.setString(entry.url.absoluteString, forType: .fileURL)
-        }
-        return item
-    }
-
     private func copySelection() {
-        let selected = selectedEntries
-        guard !selected.isEmpty else {
-            return
-        }
-        clipboard.write(recordingInHistory: true) { $0.writeObjects(
-            selected.map(pasteboardItem(for:))
-        ) }
+        pasteboard.copy(selectedEntries)
     }
 
     private func revealSelection() {
@@ -857,9 +819,9 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         guard !urls.isEmpty, let panel = QLPreviewPanel.shared() else {
             return
         }
-        previewSource = ImagePreviewSource(urls: urls)
+        previewSource = TrayQuickLookSource(urls: urls)
         presentationHoldSubject.send(holdsPresentation)
-        focusImages()
+        focusCollection()
         panel.updateController()
         panel.makeKeyAndOrderFront(nil)
     }
@@ -877,7 +839,7 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
         if NSApp.isActive, NSApp.keyWindow is QLPreviewPanel {
             view.window?.makeKey()
         }
-        focusImages()
+        focusCollection()
         presentationHoldSubject.send(holdsPresentation)
     }
 
@@ -887,139 +849,5 @@ final class TrayViewController: NSViewController, NSCollectionViewDataSource,
 
     @objc private func settingsClicked() {
         openSettings?()
-    }
-}
-
-private final class ImagePreviewSource: NSObject, QLPreviewPanelDataSource {
-    let urls: [URL]
-
-    init(urls: [URL]) {
-        self.urls = urls
-    }
-
-    func numberOfPreviewItems(in _: QLPreviewPanel!) -> Int {
-        urls.count
-    }
-
-    func previewPanel(_: QLPreviewPanel!, previewItemAt index: Int) -> (any QLPreviewItem)! {
-        urls[index] as NSURL
-    }
-}
-
-private final class ImageClipboardProvider: NSObject, NSPasteboardItemDataProvider {
-    let url: URL
-
-    init(url: URL) {
-        self.url = url
-    }
-
-    func pasteboard(
-        _: NSPasteboard?,
-        item: NSPasteboardItem,
-        provideDataForType _: NSPasteboard.PasteboardType
-    ) {
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
-              let png = NSBitmapImageRep(cgImage: image).representation(
-                  using: .png,
-                  properties: [:]
-              )
-        else {
-            return
-        }
-        item.setData(png, forType: .png)
-    }
-}
-
-@MainActor
-final class ImageCollectionView: NSCollectionView {
-    var copyImages: (() -> Void)?
-    var revealImages: (() -> Void)?
-    var previewImages: (() -> Void)?
-    var deleteImages: (() -> Void)?
-    var selectionChanged: (() -> Void)?
-    var escapePressed: (() -> Bool)?
-    private(set) var dragStartedOnImage = false
-
-    override func setFrameSize(_ newSize: NSSize) {
-        let widthChanged = newSize.width != frame.width
-        super.setFrameSize(newSize)
-        if widthChanged {
-            collectionViewLayout?.invalidateLayout()
-        }
-    }
-
-    override func menu(for event: NSEvent) -> NSMenu? {
-        let point = convert(event.locationInWindow, from: nil)
-        guard let path = indexPathForItem(at: point) else {
-            return nil
-        }
-        if !selectionIndexPaths.contains(path) {
-            selectionIndexPaths = [path]
-        }
-        selectionChanged?()
-        let menu = NSMenu()
-        let count = selectionIndexPaths.count
-        let copy = NSMenuItem(
-            title: count > 1 ? L10n.text("copy_count", count) : L10n.text("Copy"),
-            action: #selector(copy(_:)),
-            keyEquivalent: "c"
-        )
-        copy.target = self
-        menu.addItem(copy)
-        let reveal = NSMenuItem(
-            title: L10n.text("Show in Finder"),
-            action: #selector(reveal),
-            keyEquivalent: ""
-        )
-        reveal.target = self
-        menu.addItem(reveal)
-        menu.addItem(.separator())
-        let trash = NSMenuItem(
-            title: count > 1 ? L10n.text("trash_count", count) : L10n.text("Move to Trash"),
-            action: #selector(trash),
-            keyEquivalent: "\u{8}"
-        )
-        trash.target = self
-        menu.addItem(trash)
-        return menu
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        let clickedImage = indexPathForItem(at: convert(event.locationInWindow, from: nil)) != nil
-        dragStartedOnImage = clickedImage
-        super.mouseDown(with: event)
-        if event.clickCount == 2, clickedImage {
-            previewImages?()
-        }
-    }
-
-    override func keyDown(with event: NSEvent) {
-        if event.charactersIgnoringModifiers == "c", event.modifierFlags.contains(.command) {
-            copyImages?()
-        } else if event.modifierFlags.contains(.command), event.keyCode == 51 {
-            deleteImages?()
-        } else if event.charactersIgnoringModifiers == " " {
-            previewImages?()
-        } else if event.keyCode == 53, escapePressed?() == true {
-            return
-        } else if event.keyCode == 53, !selectionIndexPaths.isEmpty {
-            deselectAll(nil)
-            selectionChanged?()
-        } else {
-            super.keyDown(with: event)
-        }
-    }
-
-    @objc func copy(_: Any?) {
-        copyImages?()
-    }
-
-    @objc private func reveal() {
-        revealImages?()
-    }
-
-    @objc private func trash() {
-        deleteImages?()
     }
 }
