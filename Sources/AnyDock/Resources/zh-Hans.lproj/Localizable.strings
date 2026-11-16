@@ -105,7 +105,7 @@
 "Expand Clipboard" = "展开剪贴板";
 "Double-click to copy" = "双击复制";
 "Wake shortcut" = "唤醒快捷键";
-"Record Shortcut" = "录制快捷键";
+"hotkey.placeholder" = "点按以录制";
 "Type shortcut…" = "请按下快捷键…";
 "hotkey.clear" = "清除";
 "hotkey.clear.accessibility" = "清除唤醒快捷键";

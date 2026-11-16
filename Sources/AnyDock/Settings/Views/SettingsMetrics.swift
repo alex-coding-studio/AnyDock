@@ -12,6 +12,6 @@ enum SettingsMetrics {
     static let folderIconSide: CGFloat = 32
     static let shortcutNameWidth: CGFloat = 240
     static let portFieldWidth: CGFloat = 76
-    static let keyCapHeight: CGFloat = 16
-    static let keyCapCornerRadius: CGFloat = 4
+    static let keyCapHeight: CGFloat = 20
+    static let keyCapCornerRadius: CGFloat = 6
 }

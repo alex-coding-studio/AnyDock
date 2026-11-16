@@ -13,8 +13,7 @@ final class GeneralSettingsViewController: NSViewController {
     private let loginMessage = SettingsLabel.message()
     private let autoCopy = NSSwitch()
     private let clipboardHistory = NSSwitch()
-    private let hotKeyRecorder = HotKeyRecorder()
-    private let clearHotKey = NSButton()
+    private let shortcutField = ShortcutField()
     private let hotKeyMessage = SettingsLabel.message()
     private var appearanceCard: SettingsCard?
     private var restartRow: SettingsRow?
@@ -67,17 +66,6 @@ final class GeneralSettingsViewController: NSViewController {
             control.action = action
             control.setAccessibilityLabel(L10n.text(title))
         }
-        clearHotKey.image = NSImage(
-            systemSymbolName: "xmark.circle.fill",
-            accessibilityDescription: L10n.text("hotkey.clear.accessibility")
-        )
-        clearHotKey.isBordered = false
-        clearHotKey.contentTintColor = .pkyContent(.tertiary)
-        clearHotKey.toolTip = L10n.text("hotkey.clear")
-        clearHotKey.setAccessibilityLabel(L10n.text("hotkey.clear.accessibility"))
-        clearHotKey.target = self
-        clearHotKey.action = #selector(clearSavedHotKey)
-        SettingsControls.style(hotKeyRecorder, role: .secondary)
     }
 
     private func appearanceSection() -> NSView {
@@ -128,7 +116,7 @@ final class GeneralSettingsViewController: NSViewController {
                 SettingsRow(title: L10n.text("Launch at login"), accessories: [login]),
                 SettingsRow(
                     title: L10n.text("Wake shortcut"),
-                    accessories: [hotKeyRecorder, clearHotKey]
+                    accessories: [shortcutField]
                 ),
             ]),
             footer: messages
@@ -142,7 +130,7 @@ final class GeneralSettingsViewController: NSViewController {
         appearancePicker.selections
             .sink { [weak self] in self?.viewModel.selectAppearance($0) }
             .store(in: &subscriptions)
-        hotKeyRecorder.recordingChanges
+        shortcutField.recorder.recordingChanges
             .sink { [weak self] recording in
                 if recording {
                     self?.viewModel.beginHotKeyRecording()
@@ -151,11 +139,14 @@ final class GeneralSettingsViewController: NSViewController {
                 }
             }
             .store(in: &subscriptions)
-        hotKeyRecorder.records
+        shortcutField.recorder.records
             .sink { [weak self] in self?.viewModel.record($0) }
             .store(in: &subscriptions)
-        hotKeyRecorder.rejections
+        shortcutField.recorder.rejections
             .sink { [weak self] in self?.viewModel.rejectHotKey() }
+            .store(in: &subscriptions)
+        shortcutField.clears
+            .sink { [weak self] in self?.viewModel.clearHotKey() }
             .store(in: &subscriptions)
     }
 
@@ -176,8 +167,7 @@ final class GeneralSettingsViewController: NSViewController {
         )
         autoCopy.state = state.copiesNewItems ? .on : .off
         clipboardHistory.state = state.keepsClipboardHistory ? .on : .off
-        hotKeyRecorder.hotKey = state.hotKey
-        clearHotKey.isEnabled = state.hotKey != nil
+        shortcutField.show(state.hotKey)
         SettingsLabel.show(
             state.hotKeyMessage.map { SettingsMessage(text: $0, isError: true) },
             in: hotKeyMessage
@@ -206,10 +196,5 @@ final class GeneralSettingsViewController: NSViewController {
 
     @objc private func toggleClipboardHistory() {
         viewModel.setKeepsClipboardHistory(clipboardHistory.state == .on)
-    }
-
-    @objc private func clearSavedHotKey() {
-        hotKeyRecorder.endRecording()
-        viewModel.clearHotKey()
     }
 }

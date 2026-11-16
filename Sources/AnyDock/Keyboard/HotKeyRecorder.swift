@@ -1,6 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 import Combine
+import PockyFoundation
 
 @MainActor
 final class HotKeyRecorder: NSButton {
@@ -105,7 +106,6 @@ final class HotKeyRecorder: NSButton {
     }
 
     private func configure() {
-        bezelStyle = .rounded
         target = self
         action = #selector(beginRecording)
         setAccessibilityLabel(L10n.text("Wake shortcut"))
@@ -114,9 +114,13 @@ final class HotKeyRecorder: NSButton {
 
     private func updateTitle() {
         let showsKeys = !isRecording && hotKey != nil
-        title = isRecording ? L10n.text("Type shortcut…") : showsKeys ? "" : L10n.text(
-            "Record Shortcut"
+        let prompt = isRecording ? L10n.text("Type shortcut…") : showsKeys ? "" : L10n.text(
+            "hotkey.placeholder"
         )
+        attributedTitle = NSAttributedString(string: prompt, attributes: [
+            .font: PKYTypographyRole.body.nsFont(in: PKYThemeFallback.system),
+            .foregroundColor: NSColor.pkyContent(.secondary),
+        ])
         image = showsKeys ? hotKey.map { KeyCapsImage.make(keys: $0.displayKeys) } : nil
         imagePosition = showsKeys ? .imageOnly : .noImage
         setAccessibilityValue(hotKey?.displayString)

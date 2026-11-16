@@ -238,6 +238,22 @@ func unavailableHotKeyKeepsPreviousOne() throws {
 }
 
 @MainActor
+@Test("清除后状态里不再有快捷键（清除按钮据此隐藏），偏好和注册也一并清空")
+func clearingHotKeyEmptiesState() throws {
+    let saved = try #require(KeyCombination(keyCode: 49, modifiers: [.command]))
+    let preferences = FakePreferences()
+    preferences.wakeHotKey = saved
+    let hotKeys = FakeHotKeys()
+    _ = hotKeys.register(saved)
+    let viewModel = makeGeneral(preferences: preferences, hotKeys: hotKeys)
+    #expect(viewModel.currentState.hotKey == saved)
+    viewModel.clearHotKey()
+    #expect(viewModel.currentState.hotKey == nil)
+    #expect(preferences.wakeHotKey == nil)
+    #expect(hotKeys.registered == nil)
+}
+
+@MainActor
 @Test("启动时保存的快捷键注册失败，首次打开设置就显示已被占用")
 func savedHotKeyFailureShowsWhenSettingsOpen() throws {
     let saved = try #require(KeyCombination(keyCode: 49, modifiers: [.command]))

@@ -4,7 +4,7 @@ import PockyFoundation
 @MainActor
 enum KeyCapsImage {
     static func make(keys: [String]) -> NSImage {
-        let font = PKYTypographyRole.caption.medium.nsFont(in: PKYThemeFallback.system)
+        let font = PKYTypographyRole.supporting.medium.nsFont(in: PKYThemeFallback.system)
         let padding = PKYLayout.Gap.content(.compact)
         let spacing = PKYLayout.Gap.content(.compact)
         let height = SettingsMetrics.keyCapHeight

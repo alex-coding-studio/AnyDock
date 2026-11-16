@@ -105,7 +105,7 @@
 "Expand Clipboard" = "Expand Clipboard";
 "Double-click to copy" = "Double-click to copy";
 "Wake shortcut" = "Wake shortcut";
-"Record Shortcut" = "Record Shortcut";
+"hotkey.placeholder" = "Click to Record";
 "Type shortcut…" = "Type shortcut…";
 "hotkey.clear" = "Clear";
 "hotkey.clear.accessibility" = "Clear wake shortcut";
