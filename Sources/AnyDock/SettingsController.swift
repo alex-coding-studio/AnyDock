@@ -82,18 +82,6 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         }
         configureMessage(hotKeyStatus)
         hotKeyRecorder.hotKey = Preferences.wakeHotKey
-        hotKeyRecorder.onRecordingChanged = { [weak self] recording in
-            self?.hotKeyStatus.isHidden = true
-            if !recording {
-                self?.registerSavedHotKey()
-            } else {
-                _ = self?.hotKeys.register(nil)
-            }
-        }
-        hotKeyRecorder.onRecord = { [weak self] candidate in self?.recordHotKey(candidate) }
-        hotKeyRecorder.onRejected = { [weak self] in
-            self?.showHotKeyMessage(L10n.text("hotkey.modifierRequired"))
-        }
         clearHotKey.target = self
         clearHotKey.action = #selector(clearSavedHotKey)
         clearHotKey.bezelStyle = .rounded
@@ -210,6 +198,24 @@ final class SettingsController: NSWindowController, NSTextFieldDelegate, NSShari
         inbox.status
             .sink { [weak self] in self?.show($0) }
             .store(in: &subscriptions)
+        hotKeyRecorder.recordingChanges
+            .sink { [weak self] in self?.recordingChanged($0) }
+            .store(in: &subscriptions)
+        hotKeyRecorder.records
+            .sink { [weak self] in self?.recordHotKey($0) }
+            .store(in: &subscriptions)
+        hotKeyRecorder.rejections
+            .sink { [weak self] in self?.showHotKeyMessage(L10n.text("hotkey.modifierRequired")) }
+            .store(in: &subscriptions)
+    }
+
+    private func recordingChanged(_ recording: Bool) {
+        hotKeyStatus.isHidden = true
+        if recording {
+            _ = hotKeys.register(nil)
+        } else {
+            registerSavedHotKey()
+        }
     }
 
     private func show(_ status: InboxStatus) {

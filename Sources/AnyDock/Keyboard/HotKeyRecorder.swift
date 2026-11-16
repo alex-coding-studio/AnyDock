@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import Combine
 
 @MainActor
 final class HotKeyRecorder: NSButton {
@@ -11,20 +12,28 @@ final class HotKeyRecorder: NSButton {
         didSet { updateTitle() }
     }
 
-    var onRecordingChanged: ((Bool) -> Void)?
-    var onRecord: ((KeyCombination) -> Void)?
-    var onRejected: (() -> Void)?
     private(set) var isRecording = false
 
-    private var resignObserver: (any NSObjectProtocol)?
+    private let recordingChangeSubject = PassthroughSubject<Bool, Never>()
+    private let recordSubject = PassthroughSubject<KeyCombination, Never>()
+    private let rejectionSubject = PassthroughSubject<Void, Never>()
+    private var resignSubscription: AnyCancellable?
+
+    var recordingChanges: AnyPublisher<Bool, Never> {
+        recordingChangeSubject.eraseToAnyPublisher()
+    }
+
+    var records: AnyPublisher<KeyCombination, Never> {
+        recordSubject.eraseToAnyPublisher()
+    }
+
+    var rejections: AnyPublisher<Void, Never> {
+        rejectionSubject.eraseToAnyPublisher()
+    }
 
     init() {
         super.init(frame: .zero)
-        bezelStyle = .rounded
-        target = self
-        action = #selector(beginRecording)
-        setAccessibilityLabel(L10n.text("Wake shortcut"))
-        updateTitle()
+        configure()
     }
 
     required init?(coder _: NSCoder) {
@@ -33,15 +42,12 @@ final class HotKeyRecorder: NSButton {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        resignObserver.map(NotificationCenter.default.removeObserver)
-        resignObserver = window.map { window in
-            NotificationCenter.default.addObserver(
-                forName: NSWindow.didResignKeyNotification,
-                object: window,
-                queue: .main
-            ) { [weak self] _ in
-                MainActor.assumeIsolated { self?.endRecording() }
-            }
+        resignSubscription = window.map { window in
+            NotificationCenter.default
+                .publisher(for: NSWindow.didResignKeyNotification, object: window)
+                .sink { [weak self] _ in
+                    MainActor.assumeIsolated { self?.endRecording() }
+                }
         }
     }
 
@@ -72,11 +78,11 @@ final class HotKeyRecorder: NSButton {
             keyCode: UInt32(event.keyCode),
             modifiers: modifiers
         ) else {
-            onRejected?()
+            rejectionSubject.send()
             return
         }
         endRecording()
-        onRecord?(candidate)
+        recordSubject.send(candidate)
     }
 
     func endRecording() {
@@ -85,7 +91,7 @@ final class HotKeyRecorder: NSButton {
         }
         isRecording = false
         updateTitle()
-        onRecordingChanged?(false)
+        recordingChangeSubject.send(false)
     }
 
     @objc private func beginRecording() {
@@ -95,7 +101,15 @@ final class HotKeyRecorder: NSButton {
         isRecording = true
         window?.makeFirstResponder(self)
         updateTitle()
-        onRecordingChanged?(true)
+        recordingChangeSubject.send(true)
+    }
+
+    private func configure() {
+        bezelStyle = .rounded
+        target = self
+        action = #selector(beginRecording)
+        setAccessibilityLabel(L10n.text("Wake shortcut"))
+        updateTitle()
     }
 
     private func updateTitle() {
