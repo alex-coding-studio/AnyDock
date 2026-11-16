@@ -4,7 +4,7 @@ import Combine
 import Quartz
 
 @MainActor
-final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
+final class TrayViewController: NSViewController, NSCollectionViewDataSource,
     NSCollectionViewDelegate, @MainActor QLPreviewPanelDelegate {
     let collection = ImageCollectionView()
     let dropZone = TrayDropZone()
@@ -15,14 +15,14 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     )
     private(set) var dropZoneSurface: NSView?
     private(set) var controlGroup: NSView?
-    var presentationHeld: ((Bool) -> Void)?
     var loadItems: (() async throws -> [ReceivedItem])?
     var recycleItems: (([URL]) async throws -> Void)?
     var openFolder: (() -> Void)?
     var openSettings: (() -> Void)?
-    var didFinishDragging: (() -> Void)?
 
     private let clipboard: ClipboardMonitor
+    private let presentationHoldSubject = PassthroughSubject<Bool, Never>()
+    private let dragFinishedSubject = PassthroughSubject<Void, Never>()
     private let layout = MasonryCollectionLayout()
     private let scroll = NSScrollView()
     private let timeFormatter = DateFormatter()
@@ -40,6 +40,14 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
     private var draggedURLs = [URL]()
     private var droppedOnTrash = false
     private var releaseWatch: Timer?
+
+    var presentationHolds: AnyPublisher<Bool, Never> {
+        presentationHoldSubject.eraseToAnyPublisher()
+    }
+
+    var dragFinishes: AnyPublisher<Void, Never> {
+        dragFinishedSubject.eraseToAnyPublisher()
+    }
 
     var holdsPresentation: Bool {
         previewSource != nil || isTrashing
@@ -338,7 +346,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
         droppedOnTrash = false
         updateControls()
         if !trashed, !operation.isEmpty {
-            didFinishDragging?()
+            dragFinishedSubject.send()
         }
     }
 
@@ -782,7 +790,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
             return nil
         }
         isTrashing = true
-        presentationHeld?(holdsPresentation)
+        presentationHoldSubject.send(holdsPresentation)
         updateControls()
         return Task { [weak self] in
             guard let self else {
@@ -790,7 +798,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
             }
             defer {
                 isTrashing = false
-                presentationHeld?(holdsPresentation)
+                presentationHoldSubject.send(holdsPresentation)
                 updateControls()
             }
             do {
@@ -850,7 +858,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
             return
         }
         previewSource = ImagePreviewSource(urls: urls)
-        presentationHeld?(holdsPresentation)
+        presentationHoldSubject.send(holdsPresentation)
         focusImages()
         panel.updateController()
         panel.makeKeyAndOrderFront(nil)
@@ -870,7 +878,7 @@ final class ImageTrayController: NSViewController, NSCollectionViewDataSource,
             view.window?.makeKey()
         }
         focusImages()
-        presentationHeld?(holdsPresentation)
+        presentationHoldSubject.send(holdsPresentation)
     }
 
     @objc private func folderClicked() {

@@ -10,6 +10,9 @@ enum Space {
 }
 
 enum TrayMetrics {
+    static let popoverWidth: CGFloat = 480
+    static let popoverHeight: CGFloat = 640
+    static let popoverSize = CGSize(width: popoverWidth, height: popoverHeight)
     static let margin = Space.s24
     static let framePadding = Space.s8
     static let scopeBarHeight: CGFloat = 36

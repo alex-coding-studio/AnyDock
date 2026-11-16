@@ -3,11 +3,11 @@ import Combine
 @testable import AnyDock
 
 @MainActor
-func makeTestTray() -> ImageTrayController {
+func makeTestTray() -> TrayViewController {
     let pasteboard = NSPasteboard(name: NSPasteboard.Name("AnyDockTests-\(UUID().uuidString)"))
     let clipboard = ClipboardMonitor(
         pasteboard: pasteboard,
         isEnabled: Just(false).eraseToAnyPublisher()
     )
-    return ImageTrayController(clipboard: clipboard)
+    return TrayViewController(clipboard: clipboard)
 }

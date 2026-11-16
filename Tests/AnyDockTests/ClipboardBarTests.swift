@@ -6,14 +6,14 @@ import Testing
 
 @MainActor
 private func makeTray(with texts: [String]) -> (
-    ImageTrayController,
+    TrayViewController,
     CurrentValueSubject<Bool, Never>,
     NSPasteboard
 ) {
     let pasteboard = NSPasteboard(name: NSPasteboard.Name("AnyDockTests-\(UUID().uuidString)"))
     let enabled = CurrentValueSubject<Bool, Never>(true)
     let monitor = ClipboardMonitor(pasteboard: pasteboard, isEnabled: enabled.eraseToAnyPublisher())
-    let tray = ImageTrayController(clipboard: monitor)
+    let tray = TrayViewController(clipboard: monitor)
     tray.loadViewIfNeeded()
     for text in texts {
         pasteboard.clearContents()

@@ -1,36 +1,6 @@
 [
   {
     "violation": {
-      "ruleIdentifier": "magic_layout_constant",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "location": {
-        "line": 46,
-        "file": "Sources/AnyDock/App.swift",
-        "character": 38
-      },
-      "severity": "error",
-      "reason": "Use a local Metrics role"
-    },
-    "text": "        popover.contentSize = NSSize(width: 480, height: 640)"
-  },
-  {
-    "violation": {
-      "severity": "error",
-      "ruleDescription": "",
-      "ruleName": "Literal layout value",
-      "ruleIdentifier": "magic_layout_constant",
-      "reason": "Use a local Metrics role",
-      "location": {
-        "line": 46,
-        "file": "Sources/AnyDock/App.swift",
-        "character": 50
-      }
-    },
-    "text": "        popover.contentSize = NSSize(width: 480, height: 640)"
-  },
-  {
-    "violation": {
       "severity": "error",
       "location": {
         "file": "Sources/AnyDock/BrandIcon.swift",
@@ -62,7 +32,7 @@
   {
     "violation": {
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "character": 56,
         "line": 72
       },
@@ -81,7 +51,7 @@
       "ruleDescription": "",
       "ruleIdentifier": "magic_layout_constant",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 72,
         "character": 68
       },
@@ -95,7 +65,7 @@
       "location": {
         "line": 122,
         "character": 61,
-        "file": "Sources/AnyDock/ImageTrayController.swift"
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift"
       },
       "reason": "Implicitly unwrapped optionals should be avoided when possible",
       "ruleIdentifier": "implicitly_unwrapped_optional",
@@ -110,7 +80,7 @@
       "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
       "severity": "error",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 126,
         "character": 65
       },
@@ -127,7 +97,7 @@
       "severity": "error",
       "location": {
         "line": 135,
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "character": 63
       },
       "reason": "Implicitly unwrapped optionals should be avoided when possible"
@@ -144,7 +114,7 @@
       "reason": "Implicitly unwrapped optionals should be avoided when possible",
       "location": {
         "character": 32,
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 357
       }
     }
@@ -159,7 +129,7 @@
       "location": {
         "line": 357,
         "character": 63,
-        "file": "Sources/AnyDock/ImageTrayController.swift"
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift"
       },
       "reason": "Implicitly unwrapped optionals should be avoided when possible"
     }
@@ -173,7 +143,7 @@
       "ruleName": "Literal corner radius",
       "location": {
         "character": 43,
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 481
       },
       "reason": "Use a local Metrics role"
@@ -187,7 +157,7 @@
       "ruleDescription": "",
       "location": {
         "line": 482,
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "character": 38
       },
       "ruleIdentifier": "magic_layout_constant",
@@ -202,7 +172,7 @@
       "ruleName": "Literal layout value",
       "severity": "error",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 586,
         "character": 41
       },
@@ -218,7 +188,7 @@
       "ruleName": "Literal layout value",
       "severity": "error",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 587,
         "character": 42
       }
@@ -232,7 +202,7 @@
       "location": {
         "line": 589,
         "character": 76,
-        "file": "Sources/AnyDock/ImageTrayController.swift"
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift"
       },
       "reason": "Use a local Metrics role",
       "ruleIdentifier": "magic_layout_constant",
@@ -245,7 +215,7 @@
       "severity": "error",
       "location": {
         "character": 82,
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 590
       },
       "reason": "Use a local Metrics role",
@@ -263,7 +233,7 @@
       "ruleName": "Literal layout value",
       "severity": "error",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 607,
         "character": 43
       }
@@ -276,7 +246,7 @@
       "location": {
         "character": 44,
         "line": 608,
-        "file": "Sources/AnyDock/ImageTrayController.swift"
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift"
       },
       "ruleDescription": "",
       "severity": "error",
@@ -293,7 +263,7 @@
       "severity": "error",
       "reason": "Use a local Metrics role",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "character": 26,
         "line": 699
       }
@@ -308,7 +278,7 @@
       "ruleIdentifier": "magic_layout_constant",
       "ruleDescription": "",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "character": 38,
         "line": 699
       }
@@ -322,7 +292,7 @@
       "ruleName": "Implicitly Unwrapped Optional",
       "location": {
         "character": 37,
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 907
       },
       "severity": "error",
@@ -338,7 +308,7 @@
       "severity": "error",
       "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
       "location": {
-        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift",
         "line": 911,
         "character": 26
       }
@@ -352,7 +322,7 @@
       "location": {
         "line": 911,
         "character": 72,
-        "file": "Sources/AnyDock/ImageTrayController.swift"
+        "file": "Sources/AnyDock/Tray/TrayViewController.swift"
       },
       "reason": "Implicitly unwrapped optionals should be avoided when possible",
       "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
