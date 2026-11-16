@@ -1,0 +1,1157 @@
+[
+  {
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "location": {
+        "line": 46,
+        "file": "Sources/AnyDock/App.swift",
+        "character": 38
+      },
+      "severity": "error",
+      "reason": "Use a local Metrics role"
+    },
+    "text": "        popover.contentSize = NSSize(width: 480, height: 640)"
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "ruleIdentifier": "magic_layout_constant",
+      "reason": "Use a local Metrics role",
+      "location": {
+        "line": 46,
+        "file": "Sources/AnyDock/App.swift",
+        "character": 50
+      }
+    },
+    "text": "        popover.contentSize = NSSize(width: 480, height: 640)"
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/BrandIcon.swift",
+        "line": 11,
+        "character": 42
+      },
+      "reason": "Use a local Metrics role",
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value"
+    },
+    "text": "        let image = NSImage(size: NSSize(width: 18, height: 18))"
+  },
+  {
+    "violation": {
+      "ruleDescription": "",
+      "severity": "error",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "location": {
+        "line": 11,
+        "character": 53,
+        "file": "Sources/AnyDock/BrandIcon.swift"
+      },
+      "reason": "Use a local Metrics role"
+    },
+    "text": "        let image = NSImage(size: NSSize(width: 18, height: 18))"
+  },
+  {
+    "violation": {
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/ClipboardBar.swift",
+        "character": 44,
+        "line": 65
+      },
+      "reason": "Use a local Metrics role"
+    },
+    "text": "            header.heightAnchor.constraint(equalToConstant: 24),"
+  },
+  {
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "location": {
+        "file": "Sources/AnyDock/ClipboardBar.swift",
+        "character": 45,
+        "line": 69
+      },
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error"
+    },
+    "text": "            cellRow.heightAnchor.constraint(equalToConstant: 52),"
+  },
+  {
+    "violation": {
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "character": 56,
+        "line": 72
+      },
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "severity": "error"
+    },
+    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))"
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 72,
+        "character": 68
+      },
+      "ruleName": "Literal layout value"
+    },
+    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 640))"
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "location": {
+        "line": 122,
+        "character": 61,
+        "file": "Sources/AnyDock/ImageTrayController.swift"
+      },
+      "reason": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleIdentifier": "implicitly_unwrapped_optional",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleName": "Implicitly Unwrapped Optional"
+    },
+    "text": "    override nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel!) -> Bool {"
+  },
+  {
+    "violation": {
+      "ruleName": "Implicitly Unwrapped Optional",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 126,
+        "character": 65
+      },
+      "reason": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleIdentifier": "implicitly_unwrapped_optional"
+    },
+    "text": "    override nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {"
+  },
+  {
+    "violation": {
+      "ruleName": "Implicitly Unwrapped Optional",
+      "ruleIdentifier": "implicitly_unwrapped_optional",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "severity": "error",
+      "location": {
+        "line": 135,
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "character": 63
+      },
+      "reason": "Implicitly unwrapped optionals should be avoided when possible"
+    },
+    "text": "    override nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel!) {"
+  },
+  {
+    "text": "    func previewPanel(_ panel: QLPreviewPanel!, handle event: NSEvent!) -> Bool {",
+    "violation": {
+      "ruleIdentifier": "implicitly_unwrapped_optional",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "severity": "error",
+      "ruleName": "Implicitly Unwrapped Optional",
+      "reason": "Implicitly unwrapped optionals should be avoided when possible",
+      "location": {
+        "character": 32,
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 357
+      }
+    }
+  },
+  {
+    "text": "    func previewPanel(_ panel: QLPreviewPanel!, handle event: NSEvent!) -> Bool {",
+    "violation": {
+      "ruleIdentifier": "implicitly_unwrapped_optional",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleName": "Implicitly Unwrapped Optional",
+      "severity": "error",
+      "location": {
+        "line": 357,
+        "character": 63,
+        "file": "Sources/AnyDock/ImageTrayController.swift"
+      },
+      "reason": "Implicitly unwrapped optionals should be avoided when possible"
+    }
+  },
+  {
+    "text": "        let zone = glassSurface(dropZone, cornerRadius: 17)",
+    "violation": {
+      "severity": "error",
+      "ruleIdentifier": "magic_corner_radius",
+      "ruleDescription": "",
+      "ruleName": "Literal corner radius",
+      "location": {
+        "character": 43,
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 481
+      },
+      "reason": "Use a local Metrics role"
+    }
+  },
+  {
+    "text": "        zone.heightAnchor.constraint(equalToConstant: 34).isActive = true",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "ruleDescription": "",
+      "location": {
+        "line": 482,
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "character": 38
+      },
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error"
+    }
+  },
+  {
+    "text": "            icon.widthAnchor.constraint(equalToConstant: 40),",
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 586,
+        "character": 41
+      },
+      "reason": "Use a local Metrics role"
+    }
+  },
+  {
+    "text": "            icon.heightAnchor.constraint(equalToConstant: 40),",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 587,
+        "character": 42
+      }
+    }
+  },
+  {
+    "text": "            stack.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: -24),",
+    "violation": {
+      "ruleDescription": "",
+      "severity": "error",
+      "location": {
+        "line": 589,
+        "character": 76,
+        "file": "Sources/AnyDock/ImageTrayController.swift"
+      },
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value"
+    }
+  },
+  {
+    "text": "            stack.widthAnchor.constraint(lessThanOrEqualTo: content.widthAnchor, constant: -64),",
+    "violation": {
+      "severity": "error",
+      "location": {
+        "character": 82,
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 590
+      },
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": ""
+    }
+  },
+  {
+    "text": "            button.widthAnchor.constraint(equalToConstant: 36),",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 607,
+        "character": 43
+      }
+    }
+  },
+  {
+    "text": "            button.heightAnchor.constraint(equalToConstant: 28),",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "location": {
+        "character": 44,
+        "line": 608,
+        "file": "Sources/AnyDock/ImageTrayController.swift"
+      },
+      "ruleDescription": "",
+      "severity": "error",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value"
+    }
+  },
+  {
+    "text": "            size: CGSize(width: 240, height: 240),",
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "character": 26,
+        "line": 699
+      }
+    }
+  },
+  {
+    "text": "            size: CGSize(width: 240, height: 240),",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "character": 38,
+        "line": 699
+      }
+    }
+  },
+  {
+    "text": "    func numberOfPreviewItems(in _: QLPreviewPanel!) -> Int {",
+    "violation": {
+      "ruleIdentifier": "implicitly_unwrapped_optional",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleName": "Implicitly Unwrapped Optional",
+      "location": {
+        "character": 37,
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 907
+      },
+      "severity": "error",
+      "reason": "Implicitly unwrapped optionals should be avoided when possible"
+    }
+  },
+  {
+    "text": "    func previewPanel(_: QLPreviewPanel!, previewItemAt index: Int) -> (any QLPreviewItem)! {",
+    "violation": {
+      "ruleIdentifier": "implicitly_unwrapped_optional",
+      "reason": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleName": "Implicitly Unwrapped Optional",
+      "severity": "error",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "location": {
+        "file": "Sources/AnyDock/ImageTrayController.swift",
+        "line": 911,
+        "character": 26
+      }
+    }
+  },
+  {
+    "text": "    func previewPanel(_: QLPreviewPanel!, previewItemAt index: Int) -> (any QLPreviewItem)! {",
+    "violation": {
+      "ruleName": "Implicitly Unwrapped Optional",
+      "severity": "error",
+      "location": {
+        "line": 911,
+        "character": 72,
+        "file": "Sources/AnyDock/ImageTrayController.swift"
+      },
+      "reason": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleDescription": "Implicitly unwrapped optionals should be avoided when possible",
+      "ruleIdentifier": "implicitly_unwrapped_optional"
+    }
+  },
+  {
+    "text": "            contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 58,
+        "character": 45
+      },
+      "severity": "error",
+      "ruleDescription": ""
+    }
+  },
+  {
+    "text": "            contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),",
+    "violation": {
+      "severity": "error",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "location": {
+        "line": 58,
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "character": 57
+      },
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value"
+    }
+  },
+  {
+    "text": "        icon.widthAnchor.constraint(equalToConstant: 96).isActive = true",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error",
+      "ruleDescription": "",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 307,
+        "character": 37
+      }
+    }
+  },
+  {
+    "text": "        icon.heightAnchor.constraint(equalToConstant: 96).isActive = true",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 308,
+        "character": 38
+      },
+      "ruleDescription": ""
+    }
+  },
+  {
+    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))",
+    "violation": {
+      "ruleName": "Literal layout value",
+      "ruleDescription": "",
+      "severity": "error",
+      "location": {
+        "character": 56,
+        "line": 333,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant"
+    }
+  },
+  {
+    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))",
+    "violation": {
+      "ruleName": "Literal layout value",
+      "location": {
+        "line": 333,
+        "character": 68,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": ""
+    }
+  },
+  {
+    "text": "            identity.centerYAnchor.constraint(equalTo: content.centerYAnchor, constant: -24),",
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "location": {
+        "character": 79,
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 340
+      }
+    }
+  },
+  {
+    "text": "                constant: 24",
+    "violation": {
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "location": {
+        "character": 17,
+        "line": 343,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error"
+    }
+  },
+  {
+    "text": "            quit.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -24),",
+    "violation": {
+      "severity": "error",
+      "ruleDescription": "",
+      "location": {
+        "line": 346,
+        "character": 73,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value"
+    }
+  },
+  {
+    "violation": {
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 347,
+        "character": 84
+      },
+      "reason": "Use a local Metrics role"
+    },
+    "text": "            quit.topAnchor.constraint(greaterThanOrEqualTo: identity.bottomAnchor, constant: 24),"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "ruleDescription": "",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 377,
+        "character": 45
+      }
+    },
+    "text": "        shortcutName.widthAnchor.constraint(equalToConstant: 260).isActive = true"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "location": {
+        "character": 37,
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 423
+      },
+      "reason": "Use a local Metrics role",
+      "severity": "error",
+      "ruleDescription": ""
+    },
+    "text": "        port.widthAnchor.constraint(equalToConstant: 76).isActive = true"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 426,
+        "character": 43
+      }
+    },
+    "text": "        statusIcon.widthAnchor.constraint(equalToConstant: 9).isActive = true"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "location": {
+        "line": 427,
+        "character": 44,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "ruleName": "Literal layout value",
+      "reason": "Use a local Metrics role",
+      "severity": "error"
+    },
+    "text": "        statusIcon.heightAnchor.constraint(equalToConstant: 9).isActive = true"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "line": 467,
+        "character": 56,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "reason": "Use a local Metrics role"
+    },
+    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal layout value",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 467,
+        "character": 68
+      },
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "reason": "Use a local Metrics role",
+      "severity": "error"
+    },
+    "text": "        let content = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 600))"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal layout value",
+      "ruleIdentifier": "magic_layout_constant",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 475,
+        "character": 76
+      },
+      "reason": "Use a local Metrics role",
+      "severity": "error",
+      "ruleDescription": ""
+    },
+    "text": "            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 24),"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "character": 78,
+        "line": 476,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "reason": "Use a local Metrics role",
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant"
+    },
+    "text": "            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -24),"
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "location": {
+        "line": 477,
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "character": 68
+      },
+      "reason": "Use a local Metrics role"
+    },
+    "text": "            stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 24),"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal layout value",
+      "ruleDescription": "",
+      "reason": "Use a local Metrics role",
+      "location": {
+        "line": 492,
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "character": 82
+      },
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error"
+    },
+    "text": "                bottomBar.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -16),"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal layout value",
+      "location": {
+        "line": 495,
+        "character": 81,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": ""
+    },
+    "text": "                separator.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -12),"
+  },
+  {
+    "violation": {
+      "location": {
+        "character": 21,
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 498
+      },
+      "reason": "Use a local Metrics role",
+      "severity": "error",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "ruleDescription": ""
+    },
+    "text": "                    constant: -12"
+  },
+  {
+    "violation": {
+      "location": {
+        "character": 17,
+        "line": 504,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "ruleDescription": "",
+      "reason": "Use a local Metrics role"
+    },
+    "text": "                constant: -24"
+  },
+  {
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "character": 50,
+        "line": 514
+      },
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "severity": "error"
+    },
+    "text": "        controller.preferredContentSize = NSSize(width: 600, height: 600)"
+  },
+  {
+    "violation": {
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 514,
+        "character": 62
+      },
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "severity": "error"
+    },
+    "text": "        controller.preferredContentSize = NSSize(width: 600, height: 600)"
+  },
+  {
+    "violation": {
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 606,
+        "character": 77
+      }
+    },
+    "text": "            contents.leadingAnchor.constraint(equalTo: group.leadingAnchor, constant: 14),"
+  },
+  {
+    "violation": {
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "reason": "Use a local Metrics role",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "line": 607,
+        "character": 79,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      }
+    },
+    "text": "            contents.trailingAnchor.constraint(equalTo: group.trailingAnchor, constant: -14),"
+  },
+  {
+    "violation": {
+      "location": {
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "line": 608,
+        "character": 69
+      },
+      "reason": "Use a local Metrics role",
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleName": "Literal layout value",
+      "severity": "error"
+    },
+    "text": "            contents.topAnchor.constraint(equalTo: group.topAnchor, constant: 5),"
+  },
+  {
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_layout_constant",
+      "ruleDescription": "",
+      "ruleName": "Literal layout value",
+      "severity": "error",
+      "location": {
+        "character": 75,
+        "line": 609,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      }
+    },
+    "text": "            contents.bottomAnchor.constraint(equalTo: group.bottomAnchor, constant: -5),"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_opacity",
+      "ruleDescription": "",
+      "ruleName": "Literal opacity",
+      "severity": "error",
+      "location": {
+        "character": 32,
+        "line": 933,
+        "file": "Sources/AnyDock/SettingsController.swift"
+      },
+      "reason": "Use a local Metrics role or a semantic system color"
+    },
+    "text": "        NSColor.separatorColor.withAlphaComponent(0.5).setStroke()"
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "ruleName": "Literal border width",
+      "reason": "Use a local Metrics role",
+      "location": {
+        "line": 934,
+        "file": "Sources/AnyDock/SettingsController.swift",
+        "character": 15
+      },
+      "ruleIdentifier": "magic_border_width",
+      "ruleDescription": ""
+    },
+    "text": "        shape.lineWidth = 0.5"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_opacity",
+      "ruleDescription": "",
+      "ruleName": "Literal opacity",
+      "severity": "error",
+      "location": {
+        "character": 56,
+        "line": 175,
+        "file": "Sources/AnyDock/TrayCards.swift"
+      },
+      "reason": "Use a local Metrics role or a semantic system color"
+    },
+    "text": "                layer?.backgroundColor = NSColor.black.withAlphaComponent(0.6).cgColor"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error",
+      "ruleName": "Literal layout value",
+      "location": {
+        "line": 254,
+        "file": "Sources/AnyDock/TrayCards.swift",
+        "character": 42
+      },
+      "reason": "Use a local Metrics role",
+      "ruleDescription": ""
+    },
+    "text": "            check.widthAnchor.constraint(equalToConstant: 16),"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "magic_layout_constant",
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "location": {
+        "line": 255,
+        "file": "Sources/AnyDock/TrayCards.swift",
+        "character": 43
+      },
+      "ruleDescription": "",
+      "ruleName": "Literal layout value"
+    },
+    "text": "            check.heightAnchor.constraint(equalToConstant: 16),"
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "location": {
+        "line": 592,
+        "file": "Sources/AnyDock/TrayCards.swift",
+        "character": 20
+      },
+      "ruleDescription": "",
+      "ruleName": "Literal shadow parameter",
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_shadow_param"
+    },
+    "text": "            layer?.shadowOpacity = polaroid ? (dark ? 0.35 : 0.14) : 0"
+  },
+  {
+    "violation": {
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_shadow_param",
+      "location": {
+        "line": 593,
+        "file": "Sources/AnyDock/TrayCards.swift",
+        "character": 20
+      },
+      "ruleName": "Literal shadow parameter",
+      "reason": "Use a local Metrics role",
+      "severity": "error"
+    },
+    "text": "            layer?.shadowRadius = Space.s4"
+  },
+  {
+    "violation": {
+      "location": {
+        "line": 594,
+        "file": "Sources/AnyDock/TrayCards.swift",
+        "character": 20
+      },
+      "ruleIdentifier": "magic_shadow_param",
+      "ruleName": "Literal shadow parameter",
+      "severity": "error",
+      "reason": "Use a local Metrics role",
+      "ruleDescription": ""
+    },
+    "text": "            layer?.shadowOffset = CGSize(width: 0, height: -1)"
+  },
+  {
+    "violation": {
+      "ruleDescription": "",
+      "location": {
+        "character": 35,
+        "file": "Sources/AnyDock/TrayScopeBar.swift",
+        "line": 268
+      },
+      "ruleName": "Literal opacity",
+      "ruleIdentifier": "magic_opacity",
+      "reason": "Use a local Metrics role or a semantic system color",
+      "severity": "error"
+    },
+    "text": "            (dark ? NSColor.white.withAlphaComponent(0.18) : NSColor.white).cgColor"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal shadow parameter",
+      "reason": "Use a local Metrics role",
+      "ruleDescription": "",
+      "ruleIdentifier": "magic_shadow_param",
+      "severity": "error",
+      "location": {
+        "file": "Sources/AnyDock/TrayScopeBar.swift",
+        "line": 270,
+        "character": 16
+      }
+    },
+    "text": "        layer?.shadowOpacity = dark ? 0 : 0.08"
+  },
+  {
+    "violation": {
+      "reason": "Use a local Metrics role",
+      "location": {
+        "line": 271,
+        "character": 16,
+        "file": "Sources/AnyDock/TrayScopeBar.swift"
+      },
+      "ruleName": "Literal shadow parameter",
+      "severity": "error",
+      "ruleIdentifier": "magic_shadow_param",
+      "ruleDescription": ""
+    },
+    "text": "        layer?.shadowRadius = 2"
+  },
+  {
+    "violation": {
+      "ruleName": "Literal shadow parameter",
+      "location": {
+        "file": "Sources/AnyDock/TrayScopeBar.swift",
+        "line": 272,
+        "character": 16
+      },
+      "ruleDescription": "",
+      "reason": "Use a local Metrics role",
+      "ruleIdentifier": "magic_shadow_param",
+      "severity": "error"
+    },
+    "text": "        layer?.shadowOffset = .zero"
+  },
+  {
+    "violation": {
+      "ruleName": "Cyclomatic Complexity",
+      "ruleDescription": "Complexity of function bodies should be limited.",
+      "location": {
+        "line": 19,
+        "character": 12,
+        "file": "Sources/AnyDockCore/HTTPProtocol.swift"
+      },
+      "ruleIdentifier": "cyclomatic_complexity",
+      "severity": "warning",
+      "reason": "Function should have complexity 10 or less; currently complexity is 13"
+    },
+    "text": "    public init("
+  },
+  {
+    "violation": {
+      "ruleName": "Cyclomatic Complexity",
+      "severity": "warning",
+      "reason": "Function should have complexity 10 or less; currently complexity is 17",
+      "location": {
+        "character": 22,
+        "line": 165,
+        "file": "Sources/AnyDockCore/HTTPProtocol.swift"
+      },
+      "ruleDescription": "Complexity of function bodies should be limited.",
+      "ruleIdentifier": "cyclomatic_complexity"
+    },
+    "text": "    private mutating func parseHeader(_ header: String) throws {"
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "cyclomatic_complexity",
+      "reason": "Function should have complexity 10 or less; currently complexity is 15",
+      "ruleDescription": "Complexity of function bodies should be limited.",
+      "ruleName": "Cyclomatic Complexity",
+      "location": {
+        "file": "Sources/AnyDockCore/ImageStore.swift",
+        "line": 171,
+        "character": 12
+      },
+      "severity": "warning"
+    },
+    "text": "    public func list(in directory: URL, kind: ReceivedKind? = nil) throws -> [ReceivedItem] {"
+  },
+  {
+    "violation": {
+      "ruleName": "Function Body Length",
+      "severity": "warning",
+      "location": {
+        "line": 171,
+        "character": 12,
+        "file": "Sources/AnyDockCore/ImageStore.swift"
+      },
+      "ruleIdentifier": "function_body_length",
+      "reason": "Function body should span 80 lines or less excluding comments and whitespace: currently spans 85 lines",
+      "ruleDescription": "Function bodies should not span too many lines"
+    },
+    "text": "    public func list(in directory: URL, kind: ReceivedKind? = nil) throws -> [ReceivedItem] {"
+  },
+  {
+    "violation": {
+      "ruleDescription": "Force casts should be avoided",
+      "reason": "Force casts should be avoided",
+      "location": {
+        "character": 94,
+        "file": "Tests/ShortcutTests/InstallerChecks.swift",
+        "line": 17
+      },
+      "ruleIdentifier": "force_cast",
+      "ruleName": "Force Cast",
+      "severity": "error"
+    },
+    "text": "        let shortcut = try PropertyListSerialization.propertyList(from: result, format: nil) as! ["
+  },
+  {
+    "violation": {
+      "severity": "error",
+      "ruleIdentifier": "force_cast",
+      "ruleName": "Force Cast",
+      "ruleDescription": "Force casts should be avoided",
+      "location": {
+        "character": 53,
+        "line": 32,
+        "file": "Tests/ShortcutTests/InstallerChecks.swift"
+      },
+      "reason": "Force casts should be avoided"
+    },
+    "text": "        let actions = shortcut[\"WFWorkflowActions\"] as! [[String: Any]]"
+  },
+  {
+    "violation": {
+      "reason": "Force casts should be avoided",
+      "severity": "error",
+      "ruleDescription": "Force casts should be avoided",
+      "ruleIdentifier": "force_cast",
+      "ruleName": "Force Cast",
+      "location": {
+        "character": 83,
+        "file": "Tests/ShortcutTests/InstallerChecks.swift",
+        "line": 33
+      }
+    },
+    "text": "        let parameters = actions.prefix(2).map { $0[\"WFWorkflowActionParameters\"] as! ["
+  },
+  {
+    "violation": {
+      "ruleDescription": "Force casts should be avoided",
+      "severity": "error",
+      "ruleName": "Force Cast",
+      "ruleIdentifier": "force_cast",
+      "location": {
+        "character": 61,
+        "file": "Tests/ShortcutTests/InstallerChecks.swift",
+        "line": 40
+      },
+      "reason": "Force casts should be avoided"
+    },
+    "text": "        precondition((shortcut[\"WFWorkflowImportQuestions\"] as! [Any]).isEmpty)"
+  },
+  {
+    "violation": {
+      "location": {
+        "line": 41,
+        "file": "Tests/ShortcutTests/InstallerChecks.swift",
+        "character": 96
+      },
+      "ruleName": "Force Cast",
+      "reason": "Force casts should be avoided",
+      "ruleIdentifier": "force_cast",
+      "ruleDescription": "Force casts should be avoided",
+      "severity": "error"
+    },
+    "text": "        let original = try PropertyListSerialization.propertyList(from: template, format: nil) as! ["
+  },
+  {
+    "violation": {
+      "ruleIdentifier": "force_cast",
+      "reason": "Force casts should be avoided",
+      "severity": "error",
+      "ruleDescription": "Force casts should be avoided",
+      "ruleName": "Force Cast",
+      "location": {
+        "character": 61,
+        "line": 44,
+        "file": "Tests/ShortcutTests/InstallerChecks.swift"
+      }
+    },
+    "text": "        let originalActions = original[\"WFWorkflowActions\"] as! [[String: Any]]"
+  }
+]
