@@ -8,7 +8,7 @@ class PolaroidCardItem: TrayCardItem {
         let area = PreviewArea()
         area.setContentHuggingPriority(.defaultLow, for: .vertical)
         area.wantsLayer = true
-        area.layer?.cornerRadius = PKYShape.Radius.content
+        area.layer?.cornerRadius = TrayMetrics.polaroidPreviewRadius
         area.layer?.masksToBounds = true
         return area
     }()

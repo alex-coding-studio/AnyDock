@@ -1,13 +1,13 @@
 {
-  "originHash" : "ca839cf3f41871fa4452df29783680d9dffafac211147092f0fbcd0163de6494",
+  "originHash" : "e44586d12d9754e15fd6517a232ef9158447c8b9fefb6487b775529cb79812ce",
   "pins" : [
     {
       "identity" : "pockyfoundation",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/alex-coding-studio/PockyFoundation",
       "state" : {
-        "revision" : "962070f98497e664217cb6e61a6f73f8bcc01f85",
-        "version" : "0.1.0"
+        "revision" : "ceea1a65f8cc0f65dfef809db85c942d2307c441",
+        "version" : "0.9.0"
       }
     },
     {

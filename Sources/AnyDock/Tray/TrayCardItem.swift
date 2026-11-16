@@ -96,14 +96,14 @@ final class ImageCardItem: TrayCardItem {
     private lazy var placeholder: PreviewArea = {
         let placeholder = PreviewArea()
         placeholder.wantsLayer = true
-        placeholder.layer?.cornerRadius = PKYShape.Radius.card
+        placeholder.layer?.cornerRadius = PKYShape.Radius.tile
         return placeholder
     }()
 
     private lazy var preview: TopAlignedImageView = {
         let preview = TopAlignedImageView()
         preview.wantsLayer = true
-        preview.layer?.cornerRadius = PKYShape.Radius.card
+        preview.layer?.cornerRadius = PKYShape.Radius.tile
         preview.layer?.masksToBounds = true
         return preview
     }()

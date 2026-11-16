@@ -181,7 +181,7 @@ final class ThumbnailView: NSView {
 
     private func configure() {
         wantsLayer = true
-        layer?.cornerRadius = PKYShape.Radius.card
+        layer?.cornerRadius = PKYShape.Radius.tile
         updateColors()
     }
 

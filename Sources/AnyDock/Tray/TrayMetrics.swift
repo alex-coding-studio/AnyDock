@@ -13,4 +13,5 @@ enum TrayMetrics {
     static let scopeFade = PKYLayout.Space.s32
     static let badgeHeight: CGFloat = 16
     static let fileThumbnailSide: CGFloat = 240
+    static let polaroidPreviewRadius: CGFloat = 4
 }
