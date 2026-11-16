@@ -44,38 +44,30 @@ struct TrayEntry {
     }
 
     var badge: String {
-        switch kind {
-        case .text: return "TEXT"
-        case .link: return "URL"
-        case .image, .file:
-            let suffix =
-                url.pathExtension.isEmpty
-                    ? contentType?.preferredFilenameExtension ?? "" : url.pathExtension
-            return suffix.isEmpty ? L10n.text("File").uppercased() : suffix.uppercased()
+        if let text = kind.badgeText {
+            return text
         }
+        let suffix =
+            url.pathExtension.isEmpty
+                ? contentType?.preferredFilenameExtension ?? "" : url.pathExtension
+        return suffix.isEmpty ? ReceivedKind.file.displayName.uppercased() : suffix.uppercased()
     }
 
     var badgeStyle: BadgeView.Style {
-        switch kind {
-        case .image: .media
-        case .text: .solid(.systemGray)
-        case .link: .solid(.systemBlue)
-        case .file:
-            if contentType?.conforms(to: .pdf) == true {
-                .solid(.systemRed)
-            } else if item.isPlainText {
-                .solid(Self.plainTextBadgeColor)
-            } else {
-                .neutral
-            }
+        guard kind == .file else {
+            return kind.badgeStyle
         }
+        if contentType?.conforms(to: .pdf) == true {
+            return .solid(.systemRed)
+        }
+        return item.isPlainText ? .solid(Self.plainTextBadgeColor) : kind.badgeStyle
     }
 
     var summary: String {
         switch kind {
-        case .image: L10n.text("Image")
-        case .text: text.map { String($0.prefix(Self.summaryCharacters)) } ?? L10n.text("Text")
-        case .link: link?.absoluteString ?? L10n.text("Link")
+        case .image: kind.displayName
+        case .text: text.map { String($0.prefix(Self.summaryCharacters)) } ?? kind.displayName
+        case .link: link?.absoluteString ?? kind.displayName
         case .file: displayName
         }
     }

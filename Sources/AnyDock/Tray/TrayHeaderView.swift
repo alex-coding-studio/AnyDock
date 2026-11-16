@@ -92,16 +92,6 @@ final class TrayHeaderView: NSView {
         return hit === self ? nil : hit
     }
 
-    private static func title(of filter: TrayFilter) -> String {
-        switch filter {
-        case .all: L10n.text("All")
-        case .kind(.image): L10n.text("Images")
-        case .kind(.text): L10n.text("Text")
-        case .kind(.link): L10n.text("Links")
-        case .kind(.file): L10n.text("Files")
-        }
-    }
-
     private func subscribeEvents() {
         viewModel.list
             .sink { [weak self] _ in self?.updateFilterBar() }
@@ -115,10 +105,10 @@ final class TrayHeaderView: NSView {
             contents.availableFilters.map { filter in
                 let count = viewModel.count(of: filter)
                 return TrayScopeBar.Segment(
-                    title: "\(Self.title(of: filter)) \(count)",
+                    title: "\(filter.title) \(count)",
                     accessibilityLabel: L10n.text(
                         "filter_accessibility",
-                        Self.title(of: filter),
+                        filter.title,
                         count
                     ),
                     filter: filter

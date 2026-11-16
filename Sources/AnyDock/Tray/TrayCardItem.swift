@@ -103,8 +103,6 @@ class TrayCardItem: NSCollectionViewItem {
 
 @MainActor
 final class ImageCardItem: TrayCardItem {
-    static let identifier = NSUserInterfaceItemIdentifier("ImageCard")
-
     private static let timeFontSize: CGFloat = 9
 
     private lazy var placeholder: PreviewArea = {

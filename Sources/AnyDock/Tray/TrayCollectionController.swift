@@ -15,10 +15,9 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         collection.allowsMultipleSelection = true
         collection.allowsEmptySelection = true
         collection.backgroundColors = [.clear]
-        collection.register(ImageCardItem.self, forItemWithIdentifier: ImageCardItem.identifier)
-        collection.register(TextCardItem.self, forItemWithIdentifier: TextCardItem.identifier)
-        collection.register(LinkCardItem.self, forItemWithIdentifier: LinkCardItem.identifier)
-        collection.register(FileCardItem.self, forItemWithIdentifier: FileCardItem.identifier)
+        for kind in ReceivedKind.allCases {
+            collection.register(kind.cardItemClass, forItemWithIdentifier: kind.cardIdentifier)
+        }
         collection.dataSource = self
         collection.delegate = self
         collection.setDraggingSourceOperationMask(.copy, forLocal: false)
@@ -68,15 +67,6 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         subscribeEvents()
     }
 
-    private static func kindName(_ kind: ReceivedKind) -> String {
-        switch kind {
-        case .image: L10n.text("Image")
-        case .text: L10n.text("Text")
-        case .link: L10n.text("Link")
-        case .file: L10n.text("File")
-        }
-    }
-
     func setBottomInset(_ inset: CGFloat) {
         layout.extraBottomInset = inset
     }
@@ -105,14 +95,10 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         itemForRepresentedObjectAt indexPath: IndexPath
     ) -> NSCollectionViewItem {
         let entry = entries[indexPath.item]
-        let identifier: NSUserInterfaceItemIdentifier =
-            switch entry.kind {
-            case .image: ImageCardItem.identifier
-            case .text: TextCardItem.identifier
-            case .link: LinkCardItem.identifier
-            case .file: FileCardItem.identifier
-            }
-        let item = collectionView.makeItem(withIdentifier: identifier, for: indexPath)
+        let item = collectionView.makeItem(
+            withIdentifier: entry.kind.cardIdentifier,
+            for: indexPath
+        )
         let latest = entry.url == viewModel.latestURL
         (item as? TrayCardItem)?.configure(
             entry,
@@ -134,7 +120,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         item.view.setAccessibilityLabel(
             L10n.text(
                 latest ? "New %@: %@, %@" : "%@: %@, %@",
-                Self.kindName(entry.kind),
+                entry.kind.displayName,
                 entry.summary,
                 timestamp
             )

@@ -100,8 +100,6 @@ class PolaroidCardItem: TrayCardItem {
 
 @MainActor
 final class TextCardItem: PolaroidCardItem {
-    static let identifier = NSUserInterfaceItemIdentifier("TextCard")
-
     lazy var body = label(font: TrayCardSizing.bodyFont, lines: 0)
 
     override func buildPreview(in area: NSView) {
@@ -117,8 +115,6 @@ final class TextCardItem: PolaroidCardItem {
 
 @MainActor
 final class LinkCardItem: PolaroidCardItem {
-    static let identifier = NSUserInterfaceItemIdentifier("LinkCard")
-
     private(set) lazy var domain: NSTextField = {
         let domain = label(font: TrayCardSizing.domainFont, lines: 1)
         domain.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
@@ -146,8 +142,6 @@ final class LinkCardItem: PolaroidCardItem {
 
 @MainActor
 final class FileCardItem: PolaroidCardItem {
-    static let identifier = NSUserInterfaceItemIdentifier("FileCard")
-
     private(set) lazy var preview: NSImageView = {
         let preview = NSImageView()
         preview.imageScaling = .scaleProportionallyUpOrDown
