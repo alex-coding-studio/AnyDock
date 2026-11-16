@@ -2,26 +2,15 @@ import AnyDockCore
 import AppKit
 
 final class MasonryCollectionLayout: NSCollectionViewLayout {
-    static let margin = Space.s24
-
-    private static let spacing = Space.s12
-    private static let bottomInset: CGFloat = 64
+    private static let widthChangeTolerance: CGFloat = 0.5
 
     override var collectionViewContentSize: NSSize {
         contentSize
     }
 
-    var columnCount = 3 {
+    var columnCount = TrayMetrics.multiColumnCount {
         didSet {
             if columnCount != oldValue {
-                invalidateLayout()
-            }
-        }
-    }
-
-    var topInset: CGFloat = 24 {
-        didSet {
-            if topInset != oldValue {
                 invalidateLayout()
             }
         }
@@ -35,17 +24,18 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
         }
     }
 
-    var aspectRatio: (IndexPath) -> CGFloat = { _ in 1 }
+    private let aspectRatio: (IndexPath) -> CGFloat
 
     private var attributes = [NSCollectionViewLayoutAttributes]()
     private var contentSize = CGSize.zero
     private var preparedWidth: CGFloat = 0
 
     var availableWidth: CGFloat {
-        max(preparedWidth - Self.margin * 2, 0)
+        max(preparedWidth - TrayMetrics.margin * 2, 0)
     }
 
-    override init() {
+    init(aspectRatio: @escaping (IndexPath) -> CGFloat) {
+        self.aspectRatio = aspectRatio
         super.init()
     }
 
@@ -72,20 +62,21 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
         let placement = MasonryLayout.frames(
             heightRatios: indexPaths.map(aspectRatio),
             columns: columnCount,
-            width: width - Self.margin * 2,
-            spacing: Self.spacing
+            width: width - TrayMetrics.margin * 2,
+            spacing: TrayMetrics.cardSpacing
         )
         attributes = zip(indexPaths, placement.frames).map { indexPath, frame in
             let item = NSCollectionViewLayoutAttributes(forItemWith: indexPath)
             item.frame = collectionView.backingAlignedRect(
-                frame.offsetBy(dx: Self.margin, dy: topInset),
+                frame.offsetBy(dx: TrayMetrics.margin, dy: TrayMetrics.contentTopInset),
                 options: .alignAllEdgesNearest
             )
             return item
         }
         contentSize = CGSize(
             width: width,
-            height: topInset + placement.height + Self.bottomInset + extraBottomInset
+            height: TrayMetrics.contentTopInset + placement.height
+                + TrayMetrics.floatingControlsClearance + extraBottomInset
         )
     }
 
@@ -104,6 +95,6 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
     }
 
     override func shouldInvalidateLayout(forBoundsChange newBounds: NSRect) -> Bool {
-        abs(newBounds.width - preparedWidth) > 0.5
+        abs(newBounds.width - preparedWidth) > Self.widthChangeTolerance
     }
 }

@@ -14,6 +14,8 @@ final class TrayScopeBar: NSView {
     private static let indicatorDuration: TimeInterval = 0.2
     private static let maxFadeFraction: CGFloat = 0.5
     private static let scrollEdgeTolerance: CGFloat = 0.5
+    private static let fadeStartPoint = CGPoint(x: 0, y: 0.5)
+    private static let fadeEndPoint = CGPoint(x: 1, y: 0.5)
 
     private(set) var segments = [Segment]()
     private(set) var selected = TrayFilter.all
@@ -199,8 +201,8 @@ final class TrayScopeBar: NSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         fade.frame = scroll.bounds
-        fade.startPoint = CGPoint(x: 0, y: 0.5)
-        fade.endPoint = CGPoint(x: 1, y: 0.5)
+        fade.startPoint = Self.fadeStartPoint
+        fade.endPoint = Self.fadeEndPoint
         fade.colors = [
             leading ? NSColor.clear.cgColor : NSColor.black.cgColor,
             NSColor.black.cgColor,
@@ -247,6 +249,8 @@ private final class FlippedView: NSView {
 
 @MainActor
 private final class ScopeIndicator: NSView {
+    private static let darkFill = NSColor(white: 1, alpha: 0.18)
+
     override var wantsUpdateLayer: Bool {
         true
     }
@@ -278,7 +282,7 @@ private final class ScopeIndicator: NSView {
     override func updateLayer() {
         let dark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         layer?.backgroundColor =
-            (dark ? NSColor.white.withAlphaComponent(0.18) : NSColor.white).cgColor
+            (dark ? Self.darkFill : NSColor.white).cgColor
         layer?.apply(dark ? .none : .scopeIndicator)
     }
 }

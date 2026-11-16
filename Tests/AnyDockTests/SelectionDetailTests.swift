@@ -53,7 +53,6 @@ func singleSelectionShowsItemDetail() throws {
     let zone = tray.footer.dropZone
 
     tray.collection.selectionIndexPaths = [IndexPath(item: 0, section: 0)]
-    tray.collection.selectionChanged?()
     tray.view.layoutSubtreeIfNeeded()
     let row = try #require(zone.label.superview)
     let suffix = row.convert(zone.suffix.alignmentRect(forFrame: zone.suffix.frame), to: zone)
@@ -67,7 +66,6 @@ func singleSelectionShowsItemDetail() throws {
     #expect(zone.window != nil && !zone.isHiddenOrHasHiddenAncestor)
 
     tray.collection.selectionIndexPaths = [IndexPath(item: 1, section: 0)]
-    tray.collection.selectionChanged?()
     let shown = zone.label.stringValue + zone.suffix.stringValue
     #expect(!shown.contains(image.deletingPathExtension().lastPathComponent))
     #expect(shown.contains("PNG"))
@@ -76,11 +74,9 @@ func singleSelectionShowsItemDetail() throws {
         IndexPath(item: 0, section: 0),
         IndexPath(item: 1, section: 0),
     ]
-    tray.collection.selectionChanged?()
     #expect(zone.label.stringValue.contains("2") && zone.suffix.isHidden)
 
     tray.collection.selectionIndexPaths = []
-    tray.collection.selectionChanged?()
     #expect(zone.isHiddenOrHasHiddenAncestor)
     withExtendedLifetime(window) {}
 }

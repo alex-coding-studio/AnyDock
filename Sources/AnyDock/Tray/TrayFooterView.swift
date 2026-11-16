@@ -45,6 +45,10 @@ final class TrayFooterView: NSView {
         bottomInsetSubject.eraseToAnyPublisher()
     }
 
+    var clipboardExpansions: AnyPublisher<Bool, Never> {
+        clipboardBar.expandedChanges
+    }
+
     init(
         viewModel: TrayViewModel,
         clipboard: ClipboardMonitor,
