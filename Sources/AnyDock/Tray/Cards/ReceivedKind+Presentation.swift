@@ -28,12 +28,12 @@ extension ReceivedKind {
         }
     }
 
-    var badgeStyle: BadgeView.Style {
+    var tint: NSColor {
         switch self {
-        case .image: .media
-        case .text: .solid(.systemGray)
-        case .link: .solid(.systemBlue)
-        case .file: .neutral
+        case .image: .systemPurple
+        case .text: .systemGray
+        case .link: .systemBlue
+        case .file: .systemOrange
         }
     }
 

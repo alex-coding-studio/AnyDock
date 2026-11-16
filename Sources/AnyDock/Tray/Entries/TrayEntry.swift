@@ -7,7 +7,6 @@ struct TrayEntry {
     private static let textPrefixBytes = 8192
     private static let filePrefixBytes = 4096
     private static let summaryCharacters = 80
-    private static let plainTextBadgeColor = NSColor(white: 0.3, alpha: 1)
 
     let item: ReceivedItem
     var thumbnail: NSImage?
@@ -51,16 +50,6 @@ struct TrayEntry {
             url.pathExtension.isEmpty
                 ? contentType?.preferredFilenameExtension ?? "" : url.pathExtension
         return suffix.isEmpty ? ReceivedKind.file.displayName.uppercased() : suffix.uppercased()
-    }
-
-    var badgeStyle: BadgeView.Style {
-        guard kind == .file else {
-            return kind.badgeStyle
-        }
-        if contentType?.conforms(to: .pdf) == true {
-            return .solid(.systemRed)
-        }
-        return item.isPlainText ? .solid(Self.plainTextBadgeColor) : kind.badgeStyle
     }
 
     var summary: String {
