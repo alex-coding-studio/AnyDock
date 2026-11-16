@@ -175,6 +175,30 @@ func floatingDetailLeavesContentFrameUnchanged() throws {
     let clipboard = try frame(of: tray.footer.clipboardSurface, in: tray)
     #expect(pill.minY >= clipboard.maxY)
     #expect(abs(pill.midX - tray.view.bounds.midX) < 1)
+    let activeBottomCount = {
+        tray.footer.constraints.count {
+            $0.isActive && ($0.firstItem as? NSView) === tray.footer.dropZoneSurface
+                && $0.firstAttribute == .bottom
+        }
+    }
+    let initialBottomCount = activeBottomCount()
+    #expect(initialBottomCount > 0)
+    for _ in 0 ..< 3 {
+        tray.footer.replaceClips([])
+        settle(tray)
+        #expect(activeBottomCount() == initialBottomCount)
+        #expect(scroll.frame == before)
+        tray.footer.replaceClips([ClipboardClip(text: "clip", copiedAt: Date())])
+        for expanded in [false, true, false] {
+            tray.footer.clipboardBar.setExpanded(expanded, animated: false)
+            settle(tray)
+            #expect(activeBottomCount() == initialBottomCount)
+            #expect(scroll.frame == before)
+            let detail = try frame(of: tray.footer.dropZoneSurface, in: tray)
+            let history = try frame(of: tray.footer.clipboardSurface, in: tray)
+            #expect(detail.minY >= history.maxY)
+        }
+    }
     tray.clearSelection()
     settle(tray)
     #expect(tray.footer.dropZoneSurface.isHidden == true)

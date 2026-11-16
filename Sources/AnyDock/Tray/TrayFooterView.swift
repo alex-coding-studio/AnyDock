@@ -1,30 +1,27 @@
 import AppKit
 import Combine
 import PockyFoundation
+import SnapKit
 
 @MainActor
 final class TrayFooterView: NSView {
     private static let dropZoneHeight: CGFloat = 34
+    private static let expandedClipboardCornerRadius: CGFloat = 16
     private static let releasePollInterval: TimeInterval = 1.0 / 60
     private static let primaryButtonMask = 1
 
     private(set) lazy var dropZone = TrayDropZone()
     private(set) lazy var clipboardBar = ClipboardBar()
 
-    private(set) lazy var dropZoneSurface: NSView = {
-        let surface = TrayGlass.surface(dropZone, cornerRadius: Self.dropZoneHeight / 2)
-        surface.translatesAutoresizingMaskIntoConstraints = false
-        return surface
-    }()
+    private(set) lazy var dropZoneSurface = TrayGlass.surface(
+        dropZone,
+        cornerRadius: Self.dropZoneHeight / 2
+    )
 
-    private(set) lazy var clipboardSurface: NSView = {
-        let surface = TrayGlass.surface(
-            clipboardBar,
-            cornerRadius: ClipboardBar.collapsedHeight / 2
-        )
-        surface.translatesAutoresizingMaskIntoConstraints = false
-        return surface
-    }()
+    private(set) lazy var clipboardSurface = TrayGlass.surface(
+        clipboardBar,
+        cornerRadius: ClipboardBar.collapsedHeight / 2
+    )
 
     private let viewModel: TrayViewModel
     private let clipboard: ClipboardMonitor
@@ -34,13 +31,7 @@ final class TrayFooterView: NSView {
     private var releaseWatch: Timer?
     private var subscriptions = Set<AnyCancellable>()
 
-    private lazy var dropZoneAtBottom = dropZoneSurface.bottomAnchor.constraint(
-        equalTo: bottomAnchor
-    )
-    private lazy var dropZoneAboveClipboard = dropZoneSurface.bottomAnchor.constraint(
-        equalTo: clipboardSurface.topAnchor,
-        constant: -PKYLayout.Space.s8
-    )
+    private var dropZoneBottom: Constraint?
 
     var bottomInsets: AnyPublisher<CGFloat, Never> {
         bottomInsetSubject.eraseToAnyPublisher()
@@ -63,16 +54,13 @@ final class TrayFooterView: NSView {
         super.init(frame: .zero)
         addSubview(clipboardSurface)
         addSubview(dropZoneSurface)
-        NSLayoutConstraint.activate([
-            clipboardSurface.leadingAnchor.constraint(equalTo: leadingAnchor),
-            clipboardSurface.trailingAnchor.constraint(equalTo: trailingAnchor),
-            clipboardSurface.bottomAnchor.constraint(equalTo: bottomAnchor),
-            dropZoneSurface.heightAnchor.constraint(equalToConstant: Self.dropZoneHeight),
-            dropZoneSurface.centerXAnchor.constraint(equalTo: centerXAnchor),
-            dropZoneSurface.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor),
-            dropZoneSurface.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
-            dropZoneSurface.topAnchor.constraint(equalTo: topAnchor),
-        ])
+        clipboardSurface.snp.makeConstraints { $0.leading.trailing.bottom.equalToSuperview() }
+        dropZoneSurface.snp.makeConstraints { make in
+            make.height.equalTo(Self.dropZoneHeight)
+            make.top.centerX.equalToSuperview()
+            make.leading.greaterThanOrEqualToSuperview()
+            make.trailing.lessThanOrEqualToSuperview()
+        }
         subscribeEvents()
     }
 
@@ -157,13 +145,21 @@ final class TrayFooterView: NSView {
     private func updateClipboardSurface() {
         let visible = !clipboardBar.clips.isEmpty
         clipboardSurface.isHidden = !visible
-        dropZoneAtBottom.isActive = !visible
-        dropZoneAboveClipboard.isActive = visible
-        let radius = clipboardBar.isExpanded ? PKYLayout.Space.s16 : ClipboardBar.collapsedHeight / 2
+        dropZoneBottom?.deactivate()
+        dropZoneSurface.snp.makeConstraints { make in
+            if visible {
+                dropZoneBottom = make.bottom.equalTo(clipboardSurface.snp.top)
+                    .offset(-PKYLayout.Gap.group(.compact)).constraint
+            } else {
+                dropZoneBottom = make.bottom.equalToSuperview().constraint
+            }
+        }
+        let radius = clipboardBar.isExpanded
+            ? Self.expandedClipboardCornerRadius : ClipboardBar.collapsedHeight / 2
         TrayGlass.setCornerRadius(radius, of: clipboardSurface)
         let height =
             clipboardBar.isExpanded ? ClipboardBar.expandedHeight : ClipboardBar.collapsedHeight
-        bottomInsetSubject.send(visible ? height + PKYLayout.Space.s8 : 0)
+        bottomInsetSubject.send(visible ? height + PKYLayout.Gap.group(.compact) : 0)
     }
 
     private func draggedChanged(_ urls: [URL]) {
