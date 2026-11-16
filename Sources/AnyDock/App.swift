@@ -1,11 +1,12 @@
 import AppKit
+import PockyFoundation
 
 @main
 @MainActor
 enum AnyDockApp {
     static func main() {
         let app = NSApplication.shared
-        AppAppearance.current.apply()
+        app.appearance = Preferences.appearance.storedMode().nsAppearance
         let delegate = AppDelegate()
         app.delegate = delegate
         app.setActivationPolicy(.accessory)

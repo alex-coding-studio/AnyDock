@@ -16,13 +16,13 @@ final class TrayEmptyStateView: NSStackView {
         let icon = NSImageView(
             image: NSImage(systemSymbolName: "tray", accessibilityDescription: nil) ?? NSImage()
         )
-        icon.contentTintColor = .secondaryLabelColor
+        icon.contentTintColor = .pkyContent(.secondary)
         return icon
     }()
 
     private lazy var title: NSTextField = {
         let title = NSTextField(labelWithString: L10n.text("Nothing received yet"))
-        title.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
+        title.font = PKYTypographyRole.heading.nsFont(in: PKYThemeFallback.system)
         return title
     }()
 
@@ -32,8 +32,8 @@ final class TrayEmptyStateView: NSStackView {
                 "Share content on your iPhone and choose your Mac’s shortcut."
             )
         )
-        detail.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        detail.textColor = .secondaryLabelColor
+        detail.font = PKYTypographyRole.supporting.nsFont(in: PKYThemeFallback.system)
+        detail.textColor = .pkyContent(.secondary)
         detail.alignment = .center
         return detail
     }()

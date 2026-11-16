@@ -31,6 +31,7 @@ let package = Package(
             dependencies: [
                 "AnyDock",
                 "AnyDockCore",
+                .product(name: "PockyFoundation", package: "PockyFoundation"),
                 .product(name: "SnapKit", package: "SnapKit"),
             ]
         ),

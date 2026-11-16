@@ -14,4 +14,7 @@ enum TrayMetrics {
     static let badgeHeight: CGFloat = 16
     static let fileThumbnailSide: CGFloat = 240
     static let polaroidPreviewRadius: CGFloat = 4
+    static let cardBodyFontSize: CGFloat = 12
+    static let denseBadgeFontSize: CGFloat = 9
+    static let fileLinesFontSize: CGFloat = 9
 }

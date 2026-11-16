@@ -5,8 +5,6 @@ import SnapKit
 
 @MainActor
 final class ClipboardCell: NSView, NSDraggingSource {
-    private static let textFontSize: CGFloat = 10
-    private static let timeFontSize: CGFloat = 9
     private static let previewLength = 200
     private static let accessibilityLength = 80
 
@@ -21,7 +19,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
     private lazy var text: NSTextField = {
         let text = NSTextField(wrappingLabelWithString: "")
         text.isSelectable = false
-        text.font = .systemFont(ofSize: Self.textFontSize)
+        text.font = PKYTypographyRole.caption.nsFont(in: PKYThemeFallback.system)
         text.maximumNumberOfLines = 2
         text.lineBreakMode = .byWordWrapping
         text.cell?.truncatesLastVisibleLine = true
@@ -32,8 +30,8 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private lazy var time: NSTextField = {
         let time = NSTextField(labelWithString: "")
-        time.font = .monospacedDigitSystemFont(ofSize: Self.timeFontSize, weight: .regular)
-        time.textColor = .secondaryLabelColor
+        time.font = PKYTypographyRole.caption.monospacedDigits.nsFont(in: PKYThemeFallback.system)
+        time.textColor = .pkyContent(.secondary)
         time.lineBreakMode = .byTruncatingTail
         time.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return time
@@ -88,7 +86,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     override func updateLayer() {
         layer?.cornerRadius = PKYShape.Radius.tile
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        layer?.backgroundColor = NSColor.pkyBackground(.standard(.secondary)).cgColor
     }
 
     override func accessibilityPerformPress() -> Bool {
