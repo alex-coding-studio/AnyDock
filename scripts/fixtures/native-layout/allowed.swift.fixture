@@ -1,0 +1,13 @@
+view.snp.makeConstraints { $0.edges.equalToSuperview() }
+NSLayoutConstraint.activate(constraints)
+NSLayoutConstraint.deactivate(constraints)
+let placeholder = NSLayoutConstraint()
+let generated = layout.constraints(for: parts)
+let model = ItemModel.init(item: value)
+let contextualModel: ItemModel = .init(item: value)
+// view.topAnchor.constraint(equalTo: guide.topAnchor)
+/* outer /* view.addConstraint(constraint) */ comment */
+let example = #"view.topAnchor.constraint(equalTo: guide.topAnchor)"#
+let multiline = """
+NSLayoutConstraint(item: view)
+"""

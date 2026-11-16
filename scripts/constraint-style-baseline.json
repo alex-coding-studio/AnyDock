@@ -1,0 +1,41 @@
+{
+  "Sources/AnyDock/Clipboard/ClipboardBar.swift": {
+    "activate-block": 1
+  },
+  "Sources/AnyDock/Clipboard/ClipboardCell.swift": {
+    "activate-block": 1
+  },
+  "Sources/AnyDock/SettingsController.swift": {
+    "activate-block": 4
+  },
+  "Sources/AnyDock/Tray/TrayCardItem.swift": {
+    "activate-block": 3
+  },
+  "Sources/AnyDock/Tray/TrayCardViews.swift": {
+    "activate-block": 2
+  },
+  "Sources/AnyDock/Tray/TrayDropZone.swift": {
+    "activate-block": 1
+  },
+  "Sources/AnyDock/Tray/TrayEmptyStateView.swift": {
+    "activate-block": 1
+  },
+  "Sources/AnyDock/Tray/TrayFooterView.swift": {
+    "activate-block": 1
+  },
+  "Sources/AnyDock/Tray/TrayGlass.swift": {
+    "activate-block": 1
+  },
+  "Sources/AnyDock/Tray/TrayHeaderView.swift": {
+    "activate-block": 2
+  },
+  "Sources/AnyDock/Tray/TrayPolaroidCards.swift": {
+    "activate-block": 3
+  },
+  "Sources/AnyDock/Tray/TrayScopeBar.swift": {
+    "activate-block": 1
+  },
+  "Sources/AnyDock/Tray/TrayViewController.swift": {
+    "activate-block": 1
+  }
+}
