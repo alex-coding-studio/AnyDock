@@ -1,6 +1,7 @@
 import AnyDockCore
 import AppKit
 import Combine
+import PockyFoundation
 import Quartz
 
 @MainActor
@@ -100,7 +101,10 @@ final class TrayViewController: NSViewController {
                 equalTo: content.trailingAnchor,
                 constant: -TrayMetrics.margin
             ),
-            footer.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -Space.s16),
+            footer.bottomAnchor.constraint(
+                equalTo: content.bottomAnchor,
+                constant: -PKYLayout.Space.s16
+            ),
             header.leadingAnchor.constraint(
                 equalTo: content.leadingAnchor,
                 constant: TrayMetrics.margin

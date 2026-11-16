@@ -1,5 +1,6 @@
 import AnyDockCore
 import AppKit
+import PockyFoundation
 import UniformTypeIdentifiers
 
 @MainActor
@@ -17,9 +18,9 @@ final class TrayCardSizing {
     static let fileLinesFont = NSFont.monospacedSystemFont(ofSize: 9, weight: .regular)
     static let captionFont = NSFont.systemFont(ofSize: 11, weight: .medium)
     static let timeFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
-    static let textTop = Space.s24
-    static let textInset = Space.s8
-    static let lineGap = Space.s4
+    static let textTop = PKYLayout.Space.s24
+    static let textInset = PKYLayout.Space.s8
+    static let lineGap = PKYLayout.Space.s4
 
     private static let squareRatio: CGFloat = 1
     private static let documentCardRatio: CGFloat = 1.4

@@ -1,16 +1,16 @@
 import AppKit
 import Combine
+import PockyFoundation
 
 @MainActor
 final class ClipboardBar: NSView {
-    static let collapsedHeight = Space.s8 + headerHeight + Space.s8
-    static let expandedHeight = collapsedHeight + cellRowHeight + Space.s8
+    static let collapsedHeight = PKYLayout.Space.s8 + headerHeight + PKYLayout.Space.s8
+    static let expandedHeight = collapsedHeight + cellRowHeight + PKYLayout.Space.s8
 
     private static let headerHeight: CGFloat = 24
     private static let cellRowHeight: CGFloat = 52
     private static let iconPointSize: CGFloat = 11
     private static let chevronPointSize: CGFloat = 10
-    private static let expandDuration: TimeInterval = 0.15
 
     private(set) var isExpanded = false
     private(set) var clips = [ClipboardClip]()
@@ -47,7 +47,7 @@ final class ClipboardBar: NSView {
     private(set) lazy var header: NSStackView = {
         let header = NSStackView()
         header.setViews([icon, title, NSView(), clearButton, chevron], in: .leading)
-        header.spacing = Space.s8
+        header.spacing = PKYLayout.Space.s8
         header.alignment = .centerY
         header.translatesAutoresizingMaskIntoConstraints = false
         return header
@@ -76,7 +76,7 @@ final class ClipboardBar: NSView {
     private lazy var cellRow: NSStackView = {
         let row = NSStackView(views: cells)
         row.distribution = .fillEqually
-        row.spacing = Space.s8
+        row.spacing = PKYLayout.Space.s8
         row.detachesHiddenViews = false
         row.translatesAutoresizingMaskIntoConstraints = false
         return row
@@ -103,14 +103,23 @@ final class ClipboardBar: NSView {
         addSubview(cellRow)
         NSLayoutConstraint.activate([
             height,
-            header.topAnchor.constraint(equalTo: topAnchor, constant: Space.s8),
+            header.topAnchor.constraint(equalTo: topAnchor, constant: PKYLayout.Space.s8),
             header.heightAnchor.constraint(equalToConstant: Self.headerHeight),
-            header.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
-            header.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
-            cellRow.topAnchor.constraint(equalTo: header.bottomAnchor, constant: Space.s8),
+            header.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s12),
+            header.trailingAnchor.constraint(
+                equalTo: trailingAnchor,
+                constant: -PKYLayout.Space.s12
+            ),
+            cellRow.topAnchor.constraint(
+                equalTo: header.bottomAnchor,
+                constant: PKYLayout.Space.s8
+            ),
             cellRow.heightAnchor.constraint(equalToConstant: Self.cellRowHeight),
-            cellRow.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Space.s12),
-            cellRow.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Space.s12),
+            cellRow.leadingAnchor.constraint(equalTo: leadingAnchor, constant: PKYLayout.Space.s12),
+            cellRow.trailingAnchor.constraint(
+                equalTo: trailingAnchor,
+                constant: -PKYLayout.Space.s12
+            ),
         ])
     }
 
@@ -143,7 +152,7 @@ final class ClipboardBar: NSView {
         let target = expanded ? Self.expandedHeight : Self.collapsedHeight
         if animated {
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = Self.expandDuration
+                context.duration = PKYMotion.Duration.quick
                 context.allowsImplicitAnimation = true
                 height.animator().constant = target
                 window?.contentView?.layoutSubtreeIfNeeded()

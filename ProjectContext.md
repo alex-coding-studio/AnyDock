@@ -7,7 +7,7 @@ AnyDock receives images, UTF-8 text snippets, HTTP/HTTPS links and arbitrary fil
 ## Technical foundation
 
 - Swift 6 language mode, SwiftPM tools version 6.0, macOS 14+ deployment target. The development toolchain is Xcode 27.2 / Apple Swift 6.4.2; source builds need a compatible compiler and an SDK containing the macOS 26 glass APIs. `Package.swift` is the package source of truth.
-- Native AppKit controls, materials, selection, dragging, Quick Look and sharing APIs. No third-party package dependencies and no external UI foundation: AnyDock does not use CXDesignKit; the tray's spacing scale and Metrics take Pocky's values without depending on Pocky.
+- Native AppKit controls, materials, selection, dragging, Quick Look and sharing APIs. The public MIT PockyFoundation package supplies shared spacing, matching macOS shape and motion roles, elevation, and pure masonry/grid placement. Product-specific Metrics remain local; AnyDock does not use CXDesignKit. The committed Package.resolved pins the resolved release.
 - Network.framework HTTP receiver on default TCP port 8765, configurable in Settings, with no automatic port switching.
 - Received originals live in the user-selected receive folder, outside the checkout. Connection configuration lives in Application Support; the other preferences use UserDefaults (see Naming in `AGENTS.md`).
 - English is the development language; strings, plural rules and localized privacy text ship as English and Simplified Chinese `.lproj` resources embedded in the app by `build.sh`. System errors keep the platform's localized descriptions.

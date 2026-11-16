@@ -1,5 +1,5 @@
-import AnyDockCore
 import AppKit
+import PockyFoundation
 
 final class MasonryCollectionLayout: NSCollectionViewLayout {
     private static let widthChangeTolerance: CGFloat = 0.5
@@ -35,11 +35,11 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
     }
 
     var columnWidth: CGFloat {
-        MasonryLayout.columnWidth(
+        PKYGridPlacementInput(
             width: availableWidth,
-            columns: columnCount,
+            columns: .fixed(columnCount),
             spacing: TrayMetrics.cardSpacing
-        )
+        ).resolve().itemWidth
     }
 
     init(aspectRatio: @escaping (IndexPath) -> CGFloat) {
@@ -67,11 +67,13 @@ final class MasonryCollectionLayout: NSCollectionViewLayout {
             inSection: 0
         ) : 0
         let indexPaths = (0 ..< count).map { IndexPath(item: $0, section: 0) }
-        let placement = MasonryLayout.frames(
-            heightRatios: indexPaths.map(aspectRatio),
-            columns: columnCount,
+        let placement = PKYMasonryPlacement.frames(
+            aspectRatios: indexPaths.map { 1 / aspectRatio($0) },
             width: width - TrayMetrics.margin * 2,
-            spacing: TrayMetrics.cardSpacing
+            columns: columnCount,
+            spacing: TrayMetrics.cardSpacing,
+            rounding: nil,
+            maximumHeightRatio: 2.5
         )
         attributes = zip(indexPaths, placement.frames).map { indexPath, frame in
             let item = NSCollectionViewLayoutAttributes(forItemWith: indexPath)

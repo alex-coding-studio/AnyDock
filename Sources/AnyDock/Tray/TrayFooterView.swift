@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import PockyFoundation
 
 @MainActor
 final class TrayFooterView: NSView {
@@ -38,7 +39,7 @@ final class TrayFooterView: NSView {
     )
     private lazy var dropZoneAboveClipboard = dropZoneSurface.bottomAnchor.constraint(
         equalTo: clipboardSurface.topAnchor,
-        constant: -Space.s8
+        constant: -PKYLayout.Space.s8
     )
 
     var bottomInsets: AnyPublisher<CGFloat, Never> {
@@ -158,11 +159,11 @@ final class TrayFooterView: NSView {
         clipboardSurface.isHidden = !visible
         dropZoneAtBottom.isActive = !visible
         dropZoneAboveClipboard.isActive = visible
-        let radius = clipboardBar.isExpanded ? Space.s16 : ClipboardBar.collapsedHeight / 2
+        let radius = clipboardBar.isExpanded ? PKYLayout.Space.s16 : ClipboardBar.collapsedHeight / 2
         TrayGlass.setCornerRadius(radius, of: clipboardSurface)
         let height =
             clipboardBar.isExpanded ? ClipboardBar.expandedHeight : ClipboardBar.collapsedHeight
-        bottomInsetSubject.send(visible ? height + Space.s8 : 0)
+        bottomInsetSubject.send(visible ? height + PKYLayout.Space.s8 : 0)
     }
 
     private func draggedChanged(_ urls: [URL]) {

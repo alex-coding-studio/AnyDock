@@ -1,0 +1,15 @@
+{
+  "originHash" : "74f940fc1657a0e9c31ab653f5ead6aa3230974c10c66794a2c3521c900c7080",
+  "pins" : [
+    {
+      "identity" : "pockyfoundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/alex-coding-studio/PockyFoundation",
+      "state" : {
+        "revision" : "962070f98497e664217cb6e61a6f73f8bcc01f85",
+        "version" : "0.1.0"
+      }
+    }
+  ],
+  "version" : 3
+}
