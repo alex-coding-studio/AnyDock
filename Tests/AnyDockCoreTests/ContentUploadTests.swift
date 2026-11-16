@@ -66,7 +66,7 @@ func storesTypedContentWithQuarantine() async throws {
         decodeContent(kind: "file", name: "clip.mp4", body: Data([0, 1, 255])),
         in: directory
     )
-    let image = try await store.save(makeImage(), in: directory)
+    let image = try await store.save(UploadRequest(body: makeImage(), kind: .image), in: directory)
     #expect(text.url.deletingLastPathComponent().lastPathComponent == "Text")
     #expect(text.url.pathExtension == "txt")
     #expect(link.url.deletingLastPathComponent().lastPathComponent == "Links")
@@ -97,7 +97,7 @@ func storesTypedContentWithQuarantine() async throws {
     #expect(second.url != file.url)
     #expect(try Data(contentsOf: file.url) == Data("{}".utf8))
     #expect(try await store.list(in: directory).count == 6)
-    #expect(try await store.listImages(in: directory).count == 1)
+    #expect(try await store.list(in: directory, kind: .image).count == 1)
 }
 
 @Test("图片按实际内容识别，伪装扩展名不能绕过声明校验")

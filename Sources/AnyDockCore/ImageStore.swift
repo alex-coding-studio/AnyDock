@@ -2,16 +2,6 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-public struct ReceivedImage: Sendable, Identifiable {
-    public let url: URL
-    public let thumbnail: Data
-    public let receivedAt: Date
-
-    public var id: URL {
-        url
-    }
-}
-
 public actor ImageStore {
     public init() {}
 
@@ -100,14 +90,6 @@ public actor ImageStore {
         return (output as Data, fileExtension)
     }
 
-    public func save(_ data: Data, in directory: URL) throws -> ReceivedImage {
-        let item = try save(UploadRequest(body: data, kind: .image), in: directory)
-        guard let image = item.image else {
-            throw UploadError.unsupportedImage
-        }
-        return image
-    }
-
     public func save(_ request: UploadRequest, in directory: URL) throws -> ReceivedItem {
         var kind = request.kind
         var thumbnail: Data?
@@ -159,10 +141,6 @@ public actor ImageStore {
             receivedAt: Date(),
             isPlainText: kind == .file && Self.isPlainText(data, filename: url.lastPathComponent)
         )
-    }
-
-    public func listImages(in directory: URL) throws -> [ReceivedImage] {
-        try list(in: directory, kind: .image).compactMap(\.image)
     }
 
     public func list(in directory: URL, kind: ReceivedKind? = nil) throws -> [ReceivedItem] {

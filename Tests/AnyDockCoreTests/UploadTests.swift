@@ -42,13 +42,14 @@ func storesOriginalsWithoutOverwriting() async throws {
     defer { try? FileManager.default.removeItem(at: directory) }
     let image = try makeImage()
     let store = ImageStore()
-    let first = try await store.save(image, in: directory)
-    let second = try await store.save(image, in: directory)
+    let first = try await store.save(UploadRequest(body: image, kind: .image), in: directory)
+    let second = try await store.save(UploadRequest(body: image, kind: .image), in: directory)
     #expect(first.url != second.url)
     #expect(try Data(contentsOf: first.url) == image)
     #expect(try Data(contentsOf: second.url) == image)
+    let invalid = try UploadRequest(body: Data("not an image".utf8), kind: .image)
     await #expect(throws: UploadError.self) {
-        try await store.save(Data("not an image".utf8), in: directory)
+        try await store.save(invalid, in: directory)
     }
     #expect(try await store.list(in: directory).count == 2)
 }
@@ -59,7 +60,7 @@ func listsOnlyAnyDockOriginals() async throws {
     defer { try? FileManager.default.removeItem(at: directory) }
     let data = try makeImage()
     let store = ImageStore()
-    let received = try await store.save(data, in: directory)
+    let received = try await store.save(UploadRequest(body: data, kind: .image), in: directory)
     try data.write(to: directory.appendingPathComponent("holiday.png"))
     #expect(received.url.lastPathComponent.hasPrefix("AnyDock-"))
     let listed = try await store.list(in: directory)
