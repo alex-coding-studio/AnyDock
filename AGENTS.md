@@ -21,6 +21,8 @@ Read `ProjectContext.md` and `docs/PROJECT.md` before changing the project. Thes
 
 ## Validation
 
+Enable the committed Git hooks once per clone with `git config core.hooksPath .githooks`. The pre-commit hook refuses commits on `main` and runs `./scripts/lint.sh` in check mode.
+
 Run the project entry points from the project root:
 
 - `./scripts/lint.sh`: check SwiftFormat formatting, SwiftLint, script syntax and bundle metadata. Formatting rules live in `.swiftformat` and `.swift-version`, lint rules in `.swiftlint.yml`; both tool versions are pinned in `.github/workflows/ci.yml`. Existing SwiftLint violations are recorded in `.swiftlint-baseline.json`; new code must not add violations, and the baseline is never re-recorded to accept them. File and type line counts are not a lint gate; keep magic values in local Metrics roles such as `TrayMetrics`. Use check mode while other contributors may be editing; `--fix` rewrites sources across the project.
