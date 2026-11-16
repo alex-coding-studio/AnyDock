@@ -2,9 +2,6 @@
   "Sources/AnyDock/Clipboard/ClipboardBar.swift": {
     "activate-block": 1
   },
-  "Sources/AnyDock/SettingsController.swift": {
-    "activate-block": 4
-  },
   "Sources/AnyDock/Tray/TrayFooterView.swift": {
     "activate-block": 1
   },
