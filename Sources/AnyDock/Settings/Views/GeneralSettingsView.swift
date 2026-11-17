@@ -20,17 +20,21 @@ struct GeneralSettingsView: View {
                 appearanceCard
                 SettingsMessageText(error: viewModel.state.restartMessage)
             }
-            HStack(alignment: .top, spacing: PKYLayout.Gap.group()) {
-                SettingsGroup(title: L10n.text("Tray")) {
-                    trayCard
+            SettingsGroup(title: L10n.text("Tray")) {
+                SettingsCard {
+                    copyNewItemsRow
+                    Divider()
+                    clipboardHistoryRow
                 }
-                .frame(maxWidth: .infinity)
-                SettingsGroup(title: L10n.text("Startup & Keyboard")) {
-                    startupCard
-                    SettingsMessageText(error: viewModel.state.loginMessage)
-                    SettingsMessageText(error: viewModel.state.hotKeyMessage)
+            }
+            SettingsGroup(title: L10n.text("Startup & Keyboard")) {
+                SettingsCard {
+                    launchAtLoginRow
+                    Divider()
+                    wakeShortcutRow
                 }
-                .frame(maxWidth: .infinity)
+                SettingsMessageText(error: viewModel.state.loginMessage)
+                SettingsMessageText(error: viewModel.state.hotKeyMessage)
             }
         }
     }
@@ -88,54 +92,54 @@ struct GeneralSettingsView: View {
         )
     }
 
-    private var trayCard: some View {
-        SettingsCard {
-            SettingsRow(title: L10n.text("Copy new items automatically")) {
-                Toggle(
-                    L10n.text("Copy new items automatically"),
-                    isOn: Binding(
-                        get: { viewModel.state.copiesNewItems },
-                        set: { viewModel.setCopiesNewItems($0) }
-                    )
+    private var copyNewItemsRow: some View {
+        SettingsRow(title: L10n.text("Copy new items automatically")) {
+            Toggle(
+                L10n.text("Copy new items automatically"),
+                isOn: Binding(
+                    get: { viewModel.state.copiesNewItems },
+                    set: { viewModel.setCopiesNewItems($0) }
                 )
-                .toggleStyle(.switch)
-                .labelsHidden()
-            }
-            Divider()
-            SettingsRow(
-                title: L10n.text("Keep last 4 clipboard texts"),
-                detail: L10n.text("settings.clipboardHistory.note")
-            ) {
-                Toggle(
-                    L10n.text("Keep last 4 clipboard texts"),
-                    isOn: Binding(
-                        get: { viewModel.state.keepsClipboardHistory },
-                        set: { viewModel.setKeepsClipboardHistory($0) }
-                    )
-                )
-                .toggleStyle(.switch)
-                .labelsHidden()
-            }
+            )
+            .toggleStyle(.switch)
+            .labelsHidden()
         }
     }
 
-    private var startupCard: some View {
-        SettingsCard {
-            SettingsRow(title: L10n.text("Launch at login")) {
-                Toggle(
-                    L10n.text("Launch at login"),
-                    isOn: Binding(
-                        get: { viewModel.state.launchesAtLogin },
-                        set: { viewModel.setLaunchesAtLogin($0) }
-                    )
+    private var clipboardHistoryRow: some View {
+        SettingsRow(
+            title: L10n.text("Keep last 4 clipboard texts"),
+            detail: L10n.text("settings.clipboardHistory.note")
+        ) {
+            Toggle(
+                L10n.text("Keep last 4 clipboard texts"),
+                isOn: Binding(
+                    get: { viewModel.state.keepsClipboardHistory },
+                    set: { viewModel.setKeepsClipboardHistory($0) }
                 )
-                .toggleStyle(.switch)
-                .labelsHidden()
-            }
-            Divider()
-            SettingsRow(title: L10n.text("Wake shortcut")) {
-                ShortcutField(viewModel: viewModel)
-            }
+            )
+            .toggleStyle(.switch)
+            .labelsHidden()
+        }
+    }
+
+    private var launchAtLoginRow: some View {
+        SettingsRow(title: L10n.text("Launch at login")) {
+            Toggle(
+                L10n.text("Launch at login"),
+                isOn: Binding(
+                    get: { viewModel.state.launchesAtLogin },
+                    set: { viewModel.setLaunchesAtLogin($0) }
+                )
+            )
+            .toggleStyle(.switch)
+            .labelsHidden()
+        }
+    }
+
+    private var wakeShortcutRow: some View {
+        SettingsRow(title: L10n.text("Wake shortcut")) {
+            ShortcutField(viewModel: viewModel)
         }
     }
 

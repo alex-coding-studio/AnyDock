@@ -11,23 +11,52 @@ import Testing
     .enabled(if: ProcessInfo.processInfo.environment["ANYDOCK_RENDER_SETTINGS"] != nil)
 )
 func renderSettingsPages() throws {
+    let language = ProcessInfo.processInfo.environment["ANYDOCK_RENDER_LANGUAGE"] ?? "en"
+    let localization = try #require(Bundle.settingsLocalization(language))
+    try L10n.$bundle.withValue(localization) {
+        try renderPages(language: language)
+    }
+}
+
+@MainActor
+private func renderPages(language: String) throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
         "anydock-settings-renders"
     )
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    let receiver = FakeReceiver()
-    receiver.statusSubject.send(.listening(port: 8766))
-    let preferences = FakePreferences()
-    preferences.wakeHotKey = KeyCombination(keyCode: 49, modifiers: [.control, .option])
-    let hotKeys = FakeHotKeys()
-    _ = hotKeys.register(preferences.wakeHotKey)
-    let general = GeneralSettingsViewModel(
+    for (appearance, suffix) in [(NSAppearance.Name.aqua, "light"), (.darkAqua, "dark")] {
+        for (name, view, size) in makePages() {
+            let data = try render(view, size: size, appearance: appearance)
+            try data.write(
+                to: directory.appendingPathComponent("\(name)-\(language)-\(suffix).png")
+            )
+        }
+    }
+}
+
+@MainActor
+private func makeGeneral(
+    _ preferences: FakePreferences,
+    hotKeys: FakeHotKeys = FakeHotKeys()
+) -> GeneralSettingsViewModel {
+    GeneralSettingsViewModel(
         preferences: preferences,
         loginItem: FakeLoginItem(),
         hotKeys: hotKeys,
         restarter: FakeRestarter(),
         sharing: Just(false).eraseToAnyPublisher()
     )
+}
+
+@MainActor
+private func makePages() -> [(String, AnyView, NSSize)] {
+    let receiver = FakeReceiver()
+    receiver.statusSubject.send(.listening(port: 8766))
+    let preferences = FakePreferences()
+    preferences.wakeHotKey = KeyCombination(keyCode: 49, modifiers: [.control, .option])
+    let hotKeys = FakeHotKeys()
+    _ = hotKeys.register(preferences.wakeHotKey)
+    let general = makeGeneral(preferences, hotKeys: hotKeys)
     general.selectLanguage(.simplifiedChinese)
     let connection = ConnectionSettingsViewModel(
         receiver: receiver,
@@ -54,15 +83,16 @@ func renderSettingsPages() throws {
         keyCode: 49,
         modifiers: [.control, .option, .shift, .command]
     )
-    let generalNarrow = GeneralSettingsViewModel(
-        preferences: longHotKeys,
-        loginItem: FakeLoginItem(),
-        hotKeys: FakeHotKeys(),
-        restarter: FakeRestarter(),
-        sharing: Just(false).eraseToAnyPublisher()
-    )
-    let pages: [(String, AnyView, NSSize)] = [
+    let generalNarrow = makeGeneral(longHotKeys)
+    let generalEmpty = makeGeneral(FakePreferences())
+    return [
         ("general-minimum", AnyView(GeneralSettingsView(viewModel: generalNarrow)), narrow),
+        ("general-no-shortcut", AnyView(GeneralSettingsView(viewModel: generalEmpty)), detail),
+        (
+            "general-no-shortcut-minimum",
+            AnyView(GeneralSettingsView(viewModel: generalEmpty)),
+            narrow
+        ),
         ("sidebar", AnyView(SettingsSidebar(viewModel: settings)), NSSize(
             width: SettingsMetrics.sidebarWidth,
             height: SettingsMetrics.windowContentHeight
@@ -72,11 +102,11 @@ func renderSettingsPages() throws {
         ("receiving", AnyView(ReceivingSettingsView(viewModel: receiving)), detail),
         ("about", AnyView(AboutSettingsView(about: settings.about)), detail),
     ]
-    for (appearance, suffix) in [(NSAppearance.Name.aqua, "light"), (.darkAqua, "dark")] {
-        for (name, view, size) in pages {
-            let data = try render(view, size: size, appearance: appearance)
-            try data.write(to: directory.appendingPathComponent("\(name)-\(suffix).png"))
-        }
+}
+
+private extension Bundle {
+    static func settingsLocalization(_ language: String) -> Bundle? {
+        L10n.bundle.path(forResource: language, ofType: "lproj").flatMap(Bundle.init(path:))
     }
 }
 

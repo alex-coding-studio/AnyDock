@@ -33,15 +33,37 @@ struct SettingsGroup<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: PKYLayout.Gap.content()) {
-            Text(title)
-                .font(Font(PKYTypographyRole.supporting.semibold.nsFont(
-                    in: PKYThemeFallback.system,
-                    referenceSize: SettingsMetrics.compactLabelPointSize
-                )))
-                .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
-                .padding(.leading, PKYLayout.Gap.content(.compact))
+            SettingsGroupTitle(title: title)
             content
         }
+    }
+}
+
+struct SettingsGroupTitle: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(Font(PKYTypographyRole.supporting.semibold.nsFont(
+                in: PKYThemeFallback.system,
+                referenceSize: SettingsMetrics.compactLabelPointSize
+            )))
+            .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
+            .padding(.leading, PKYLayout.Gap.content(.compact))
+    }
+}
+
+struct SettingsCardBackground: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: PKYShape.Radius.compact, style: .continuous)
+            .fill(Color(nsColor: .pkyBackground(.grouped(.secondary))))
+            .overlay(
+                RoundedRectangle(cornerRadius: PKYShape.Radius.compact, style: .continuous)
+                    .strokeBorder(
+                        Color(nsColor: .pkySeparator(.standard)),
+                        lineWidth: PKYShape.Stroke.standard
+                    )
+            )
     }
 }
 
@@ -67,17 +89,7 @@ struct SettingsCard<Content: View>: View {
             padding == .rows ? PKYLayout.Inset.row.vertical(.compact) : PKYLayout.Inset.container()
         )
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: PKYShape.Radius.compact, style: .continuous)
-                .fill(Color(nsColor: .pkyBackground(.grouped(.secondary))))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: PKYShape.Radius.compact, style: .continuous)
-                .strokeBorder(
-                    Color(nsColor: .pkySeparator(.standard)),
-                    lineWidth: PKYShape.Stroke.standard
-                )
-        )
+        .background(SettingsCardBackground())
     }
 }
 
