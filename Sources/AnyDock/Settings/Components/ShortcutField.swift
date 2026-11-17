@@ -15,7 +15,7 @@ struct ShortcutField: View {
             field
                 .overlay(HotKeyRecorderBridge(viewModel: viewModel))
             if viewModel.state.hotKey != nil {
-                Button(action: viewModel.clearHotKey) {
+                Button(action: { viewModel.clearHotKey() }) {
                     Image(systemName: "xmark")
                         .font(typography.supporting.semibold.font)
                         .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))

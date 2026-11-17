@@ -8,7 +8,7 @@ struct GeneralSettingsView: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
     private var languageBinding: Binding<AppLanguage> {
-        Binding(get: { viewModel.state.language }, set: viewModel.selectLanguage)
+        Binding(get: { viewModel.state.language }, set: { viewModel.selectLanguage($0) })
     }
 
     var body: some View {
@@ -76,7 +76,7 @@ struct GeneralSettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(Color(nsColor: .pkyAccent(.primary)))
-            Button(L10n.text("Restart Now"), action: viewModel.restart)
+            Button(L10n.text("Restart Now"), action: { viewModel.restart() })
                 .settingsButton(.primary)
         }
         .font(typography.body.font)

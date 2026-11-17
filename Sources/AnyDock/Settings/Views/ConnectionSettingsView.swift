@@ -8,7 +8,7 @@ struct ConnectionSettingsView: View {
     @ObservedObject var viewModel: ConnectionSettingsViewModel
 
     private var nameBinding: Binding<String> {
-        Binding(get: { viewModel.state.shortcutName }, set: viewModel.setShortcutName)
+        Binding(get: { viewModel.state.shortcutName }, set: { viewModel.setShortcutName($0) })
     }
 
     var body: some View {
@@ -49,7 +49,7 @@ struct ConnectionSettingsView: View {
                             .textFieldStyle(.roundedBorder)
                             .labelsHidden()
                             .disabled(viewModel.state.isSending)
-                        Button(action: viewModel.send) {
+                        Button(action: { viewModel.send() }) {
                             Label(
                                 L10n.text("Send to iPhone…"),
                                 systemImage: "antenna.radiowaves.left.and.right"
@@ -109,7 +109,7 @@ struct ConnectionSettingsView: View {
                 .truncationMode(.middle)
                 .help(viewModel.state.receiveAddress)
         } action: {
-            Button(L10n.text("Copy"), action: viewModel.copyReceiveAddress)
+            Button(L10n.text("Copy"), action: { viewModel.copyReceiveAddress() })
                 .settingsButton(.secondary)
                 .accessibilityLabel(L10n.text("Copy receive address"))
         }
@@ -117,7 +117,7 @@ struct ConnectionSettingsView: View {
         manualRow(L10n.text("Connection key")) {
             Text(verbatim: "•••• •••• •••• ••••")
         } action: {
-            Button(L10n.text("Copy"), action: viewModel.copyConnectionKey)
+            Button(L10n.text("Copy"), action: { viewModel.copyConnectionKey() })
                 .settingsButton(.secondary)
                 .accessibilityLabel(L10n.text("Copy connection key"))
         }

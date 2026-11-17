@@ -136,7 +136,10 @@ struct ReceivingSettingsView: View {
             ) {
                 TextField(
                     String(ConnectionConfiguration.Receiver.defaultPort),
-                    text: Binding(get: { viewModel.state.portText }, set: viewModel.setPortText)
+                    text: Binding(
+                        get: { viewModel.state.portText },
+                        set: { viewModel.setPortText($0) }
+                    )
                 )
                 .textFieldStyle(.roundedBorder)
                 .font(typography.body.font.monospaced())
@@ -156,10 +159,10 @@ struct ReceivingSettingsView: View {
                 .font(typography.body.font)
                 .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button(L10n.text("Revert"), action: viewModel.revert)
+            Button(L10n.text("Revert"), action: { viewModel.revert() })
                 .settingsButton(.secondary)
                 .disabled(viewModel.state.isApplying)
-            Button(L10n.text("Apply"), action: viewModel.apply)
+            Button(L10n.text("Apply"), action: { viewModel.apply() })
                 .settingsButton(.primary)
                 .keyboardShortcut(.defaultAction)
                 .disabled(!viewModel.state.canApply)
