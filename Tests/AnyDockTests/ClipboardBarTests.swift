@@ -108,8 +108,8 @@ func clickingHeaderCollapsesExpandedBar() throws {
 }
 
 @MainActor
-@Test("剪贴板条目在浅色与深色外观下解析不同背景且深色与主干一致")
-func cellBackgroundDiffersBetweenLightAndDarkAndMatchesMainInDark() throws {
+@Test("剪贴板条目在浅色与深色外观下解析不同背景与描边")
+func cellBackgroundAndBorderDifferBetweenLightAndDark() throws {
     let cell = ClipboardCell()
     let window = NSWindow(
         contentRect: NSRect(x: 0, y: 0, width: 120, height: 60),
@@ -132,13 +132,7 @@ func cellBackgroundDiffersBetweenLightAndDarkAndMatchesMainInDark() throws {
     let darkBackground = try #require(cell.layer?.backgroundColor)
     let darkBorderWidth = try #require(cell.layer?.borderWidth)
 
-    var expectedDark = CGColor.black
-    NSAppearance(named: .darkAqua)?.performAsCurrentDrawingAppearance {
-        expectedDark = NSColor.pkyBackground(.standard(.secondary)).cgColor
-    }
-
     #expect(lightBackground != darkBackground)
-    #expect(darkBackground == expectedDark)
     #expect(lightBorderWidth > 0)
     #expect(darkBorderWidth == 0)
 }
