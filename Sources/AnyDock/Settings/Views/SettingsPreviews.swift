@@ -103,16 +103,22 @@
             ReceivingSettingsViewModel(receiver: receiver)
         }
 
-        static var root: SettingsRootView {
-            SettingsRootView(
-                viewModel: SettingsViewModel(
-                    status: receiver.status,
-                    about: AboutInfo(version: "Version 1.0.1 (2)")
-                ),
-                general: general,
-                connection: connection,
-                receiving: receiving
+        static var root: some View {
+            let settings = SettingsViewModel(
+                status: receiver.status,
+                about: AboutInfo(version: "Version 1.0.1 (2)")
             )
+            return HStack(spacing: 0) {
+                SettingsSidebar(viewModel: settings)
+                    .frame(width: SettingsMetrics.sidebarWidth)
+                    .background(.regularMaterial)
+                SettingsDetailView(
+                    viewModel: settings,
+                    general: general,
+                    connection: connection,
+                    receiving: receiving
+                )
+            }
         }
     }
 

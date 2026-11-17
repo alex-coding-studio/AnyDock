@@ -40,7 +40,14 @@ struct AppearanceTile: View {
                     )
                 Text(Self.title(of: mode))
                     .font(
-                        (isSelected ? typography.supporting.semibold : typography.supporting).font
+                        Font(
+                            (
+                                isSelected ? PKYTypographyRole.supporting.semibold : .supporting
+                            ).nsFont(
+                                in: PKYThemeFallback.system,
+                                referenceSize: SettingsMetrics.compactLabelPointSize
+                            )
+                        )
                     )
                     .foregroundStyle(
                         Color(nsColor: .pkyContent(isSelected ? .primary : .secondary))

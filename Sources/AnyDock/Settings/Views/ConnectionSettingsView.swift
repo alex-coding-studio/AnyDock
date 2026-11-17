@@ -91,32 +91,43 @@ struct ConnectionSettingsView: View {
 
     private var manualCard: some View {
         SettingsCard {
-            manualRow(L10n.text("Receive address")) {
-                Text(viewModel.state.receiveAddress)
-                    .textSelection(.enabled)
-                    .truncationMode(.middle)
-                    .help(viewModel.state.receiveAddress)
-            } action: {
-                Button(L10n.text("Copy"), action: viewModel.copyReceiveAddress)
-                    .settingsButton(.secondary)
-                    .accessibilityLabel(L10n.text("Copy receive address"))
+            Grid(
+                alignment: .leading,
+                horizontalSpacing: PKYLayout.Gap.group(.compact),
+                verticalSpacing: 0
+            ) {
+                manualRows
             }
-            Divider()
-            manualRow(L10n.text("Connection key")) {
-                Text(verbatim: "•••• •••• •••• ••••")
-            } action: {
-                Button(L10n.text("Copy"), action: viewModel.copyConnectionKey)
-                    .settingsButton(.secondary)
-                    .accessibilityLabel(L10n.text("Copy connection key"))
-            }
-            Divider()
-            manualRow(L10n.text("Generic shortcut")) {
-                Text(L10n.text("Send to Mac"))
-                    .font(typography.body.font)
-            } action: {
-                Button(L10n.text("Export…"), action: exportShortcut)
-                    .settingsButton(.secondary)
-            }
+        }
+    }
+
+    @ViewBuilder
+    private var manualRows: some View {
+        manualRow(L10n.text("Receive address")) {
+            Text(viewModel.state.receiveAddress)
+                .textSelection(.enabled)
+                .truncationMode(.middle)
+                .help(viewModel.state.receiveAddress)
+        } action: {
+            Button(L10n.text("Copy"), action: viewModel.copyReceiveAddress)
+                .settingsButton(.secondary)
+                .accessibilityLabel(L10n.text("Copy receive address"))
+        }
+        Divider()
+        manualRow(L10n.text("Connection key")) {
+            Text(verbatim: "•••• •••• •••• ••••")
+        } action: {
+            Button(L10n.text("Copy"), action: viewModel.copyConnectionKey)
+                .settingsButton(.secondary)
+                .accessibilityLabel(L10n.text("Copy connection key"))
+        }
+        Divider()
+        manualRow(L10n.text("Generic shortcut")) {
+            Text(L10n.text("Send to Mac"))
+                .font(typography.body.font)
+        } action: {
+            Button(L10n.text("Export…"), action: exportShortcut)
+                .settingsButton(.secondary)
         }
     }
 
@@ -125,18 +136,19 @@ struct ConnectionSettingsView: View {
         @ViewBuilder value: () -> some View,
         @ViewBuilder action: () -> some View
     ) -> some View {
-        HStack(spacing: PKYLayout.Gap.group(.compact)) {
+        GridRow {
             Text(title)
                 .font(typography.body.font)
-                .frame(width: SettingsMetrics.manualLabelWidth, alignment: .leading)
+                .fixedSize()
+                .frame(minHeight: PKYLayout.Size.row(.compact))
             value()
                 .font(typography.supporting.font.monospaced())
                 .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
             action()
+                .gridColumnAlignment(.trailing)
         }
-        .frame(minHeight: PKYLayout.Size.row(.compact))
     }
 
     private func exportShortcut() {

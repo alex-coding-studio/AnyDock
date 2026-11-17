@@ -60,7 +60,10 @@ struct ShortcutField: View {
 
     private func prompt(_ text: String) -> some View {
         Text(text)
-            .font(typography.supporting.font)
+            .font(Font(PKYTypographyRole.supporting.nsFont(
+                in: PKYThemeFallback.system,
+                referenceSize: SettingsMetrics.compactLabelPointSize
+            )))
             .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
             .padding(.vertical, PKYLayout.Inset.control.vertical(.compact))
             .padding(.horizontal, PKYLayout.Inset.control.horizontal(.compact))
@@ -69,7 +72,10 @@ struct ShortcutField: View {
     private func keyCap(_ key: String) -> some View {
         let recipe = PKYElevation.Style.subtle.recipe(for: colorScheme == .dark ? .dark : .light)
         return Text(key)
-            .font(typography.supporting.font)
+            .font(Font(PKYTypographyRole.supporting.nsFont(
+                in: PKYThemeFallback.system,
+                referenceSize: SettingsMetrics.compactLabelPointSize
+            )))
             .padding(.vertical, PKYLayout.Inset.control.vertical(.compact))
             .padding(.horizontal, PKYLayout.Inset.control.horizontal(.compact))
             .frame(minWidth: SettingsMetrics.keyCapMinWidth)

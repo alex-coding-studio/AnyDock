@@ -2,11 +2,18 @@ import AnyDockCore
 import AppKit
 import PockyFoundation
 import SwiftUI
+import UniformTypeIdentifiers
 
 private let typography = PKYThemeFallback.system.typography
 
 struct ReceivingSettingsView: View {
     @ObservedObject var viewModel: ReceivingSettingsViewModel
+
+    private var folderIcon: NSImage {
+        let path = viewModel.state.folder.path
+        return FileManager.default.fileExists(atPath: path)
+            ? NSWorkspace.shared.icon(forFile: path) : NSWorkspace.shared.icon(for: .folder)
+    }
 
     var body: some View {
         SettingsPage(
@@ -44,7 +51,10 @@ struct ReceivingSettingsView: View {
                 .overlay(StatusDot(tone: status.tone, side: SettingsMetrics.statusBadgeDotSide))
             VStack(alignment: .leading, spacing: PKYLayout.Gap.content(.compact)) {
                 Text(status.title)
-                    .font(typography.heading.font)
+                    .font(Font(PKYTypographyRole.heading.nsFont(
+                        in: PKYThemeFallback.system,
+                        referenceSize: SettingsMetrics.emphasisTitlePointSize
+                    )))
                     .foregroundStyle(
                         Color(
                             nsColor: status.tone == .failed ? .pkyStatus(.destructive) : .pkyContent(
@@ -77,7 +87,7 @@ struct ReceivingSettingsView: View {
     private var folderCard: some View {
         SettingsCard(padding: .content) {
             HStack(spacing: PKYLayout.Gap.group(.compact)) {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: viewModel.state.folder.path))
+                Image(nsImage: folderIcon)
                     .resizable()
                     .frame(
                         width: SettingsMetrics.folderIconSide,
@@ -85,7 +95,10 @@ struct ReceivingSettingsView: View {
                     )
                 VStack(alignment: .leading, spacing: PKYLayout.Gap.content(.compact)) {
                     Text(viewModel.state.folderName)
-                        .font(typography.heading.font)
+                        .font(Font(PKYTypographyRole.heading.nsFont(
+                            in: PKYThemeFallback.system,
+                            referenceSize: SettingsMetrics.emphasisTitlePointSize
+                        )))
                     Text(viewModel.state.folderPath)
                         .font(typography.body.font)
                         .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))

@@ -13,7 +13,7 @@ struct SettingsPage<Content: View>: View {
             VStack(alignment: .leading, spacing: PKYLayout.Gap.section()) {
                 VStack(alignment: .leading, spacing: PKYLayout.Gap.content(.compact)) {
                     Text(title)
-                        .font(typography.pageTitle.bold.font)
+                        .font(typography.display.bold.font)
                     Text(subtitle)
                         .font(typography.body.font)
                         .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
@@ -23,6 +23,7 @@ struct SettingsPage<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(PKYLayout.Inset.page(.wide))
         }
+        .ignoresSafeArea(.container, edges: .top)
     }
 }
 
@@ -33,7 +34,10 @@ struct SettingsGroup<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: PKYLayout.Gap.content()) {
             Text(title)
-                .font(typography.supporting.semibold.font)
+                .font(Font(PKYTypographyRole.supporting.semibold.nsFont(
+                    in: PKYThemeFallback.system,
+                    referenceSize: SettingsMetrics.compactLabelPointSize
+                )))
                 .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
                 .padding(.leading, PKYLayout.Gap.content(.compact))
             content

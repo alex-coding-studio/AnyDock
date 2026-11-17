@@ -9,8 +9,8 @@ struct AboutSettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: PKYLayout.Gap.section())
             identity
+                .padding(.top, SettingsMetrics.aboutIconTopOffset)
             Spacer(minLength: PKYLayout.Gap.section())
             Divider()
             HStack {
@@ -27,7 +27,9 @@ struct AboutSettingsView: View {
             .padding(.vertical, PKYLayout.Inset.page())
         }
         .padding(.horizontal, PKYLayout.Inset.page(.wide))
+        .padding(.top, PKYLayout.Inset.page(.wide))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea(.container, edges: .top)
     }
 
     private var identity: some View {
@@ -44,10 +46,16 @@ struct AboutSettingsView: View {
                         .blur(radius: SettingsMetrics.aboutIconGlowRadius)
                 )
             Text(L10n.text("AnyDock"))
-                .font(typography.display.bold.font)
+                .font(Font(PKYTypographyRole.display.bold.nsFont(
+                    in: PKYThemeFallback.system,
+                    referenceSize: SettingsMetrics.aboutNamePointSize
+                )))
                 .padding(.top, PKYLayout.Gap.group())
             Text(L10n.text("about.tagline"))
-                .font(typography.title.regular.font)
+                .font(Font(PKYTypographyRole.body.nsFont(
+                    in: PKYThemeFallback.system,
+                    referenceSize: SettingsMetrics.aboutTaglinePointSize
+                )))
                 .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
                 .padding(.top, PKYLayout.Gap.content(.compact))
             if let version = about.version {
