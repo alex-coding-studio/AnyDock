@@ -7,6 +7,12 @@ import SnapKit
 final class ClipboardCell: NSView, NSDraggingSource {
     private static let previewLength = 200
     private static let accessibilityLength = 80
+    private static let cardBackground = NSColor(name: nil) { appearance in
+        if appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {
+            return .pkyBackground(.standard(.secondary))
+        }
+        return PKYThemeFallback.system.color.filled.quiet(.secondary)
+    }
 
     override var wantsUpdateLayer: Bool {
         true
@@ -14,12 +20,11 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private(set) var clip: ClipboardClip?
 
-    private let copySubject = PassthroughSubject<ClipboardClip, Never>()
-
     private lazy var text: NSTextField = {
         let text = NSTextField(wrappingLabelWithString: "")
         text.isSelectable = false
         text.font = PKYTypographyRole.caption.nsFont(in: PKYThemeFallback.system)
+        text.textColor = .pkyContent(.primary)
         text.maximumNumberOfLines = 2
         text.lineBreakMode = .byWordWrapping
         text.cell?.truncatesLastVisibleLine = true
@@ -36,6 +41,8 @@ final class ClipboardCell: NSView, NSDraggingSource {
         time.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return time
     }()
+
+    private let copySubject = PassthroughSubject<ClipboardClip, Never>()
 
     private lazy var dot = LatestDot()
 
@@ -85,8 +92,13 @@ final class ClipboardCell: NSView, NSDraggingSource {
     }
 
     override func updateLayer() {
-        layer?.cornerRadius = PKYShape.Radius.tile
-        layer?.backgroundColor = NSColor.pkyBackground(.standard(.secondary)).cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let dark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            layer?.cornerRadius = PKYShape.Radius.tile
+            layer?.backgroundColor = Self.cardBackground.cgColor
+            layer?.borderWidth = dark ? 0 : PKYShape.Stroke.standard
+            layer?.borderColor = dark ? nil : NSColor.pkySeparator(.standard).cgColor
+        }
     }
 
     override func accessibilityPerformPress() -> Bool {

@@ -106,3 +106,33 @@ func clickingHeaderCollapsesExpandedBar() throws {
     try click(NSPoint(x: bar.title.frame.midX, y: bar.title.frame.midY))
     #expect(!bar.isExpanded)
 }
+
+@MainActor
+@Test("剪贴板条目在浅色与深色外观下解析不同背景与描边")
+func cellBackgroundAndBorderDifferBetweenLightAndDark() throws {
+    let cell = ClipboardCell()
+    let window = NSWindow(
+        contentRect: NSRect(x: 0, y: 0, width: 120, height: 60),
+        styleMask: [],
+        backing: .buffered,
+        defer: true
+    )
+    window.contentView?.addSubview(cell)
+    cell.snp.makeConstraints { $0.edges.equalToSuperview() }
+
+    window.appearance = NSAppearance(named: .aqua)
+    window.contentView?.layoutSubtreeIfNeeded()
+    cell.updateLayer()
+    let lightBackground = try #require(cell.layer?.backgroundColor)
+    let lightBorderWidth = try #require(cell.layer?.borderWidth)
+
+    window.appearance = NSAppearance(named: .darkAqua)
+    window.contentView?.layoutSubtreeIfNeeded()
+    cell.updateLayer()
+    let darkBackground = try #require(cell.layer?.backgroundColor)
+    let darkBorderWidth = try #require(cell.layer?.borderWidth)
+
+    #expect(lightBackground != darkBackground)
+    #expect(lightBorderWidth > 0)
+    #expect(darkBorderWidth == 0)
+}
