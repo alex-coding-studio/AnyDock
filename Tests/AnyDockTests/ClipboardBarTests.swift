@@ -108,8 +108,8 @@ func clickingHeaderCollapsesExpandedBar() throws {
 }
 
 @MainActor
-@Test("浅色窗口中剪贴板条目仍沿用深色外观解析背景与文字")
-func cellResolvesDarkAppearanceInsideLightWindow() throws {
+@Test("剪贴板条目在浅色与深色外观下解析不同背景且深色与主干一致")
+func cellBackgroundDiffersBetweenLightAndDarkAndMatchesMainInDark() throws {
     let cell = ClipboardCell()
     let window = NSWindow(
         contentRect: NSRect(x: 0, y: 0, width: 120, height: 60),
@@ -117,25 +117,28 @@ func cellResolvesDarkAppearanceInsideLightWindow() throws {
         backing: .buffered,
         defer: true
     )
-    window.appearance = NSAppearance(named: .aqua)
     window.contentView?.addSubview(cell)
     cell.snp.makeConstraints { $0.edges.equalToSuperview() }
+
+    window.appearance = NSAppearance(named: .aqua)
     window.contentView?.layoutSubtreeIfNeeded()
     cell.updateLayer()
+    let lightBackground = try #require(cell.layer?.backgroundColor)
+    let lightBorderWidth = try #require(cell.layer?.borderWidth)
 
-    #expect(cell.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
-    #expect(cell.text.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
-    #expect(cell.time.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
+    window.appearance = NSAppearance(named: .darkAqua)
+    window.contentView?.layoutSubtreeIfNeeded()
+    cell.updateLayer()
+    let darkBackground = try #require(cell.layer?.backgroundColor)
+    let darkBorderWidth = try #require(cell.layer?.borderWidth)
 
     var expectedDark = CGColor.black
     NSAppearance(named: .darkAqua)?.performAsCurrentDrawingAppearance {
         expectedDark = NSColor.pkyBackground(.standard(.secondary)).cgColor
     }
-    var lightBackground = CGColor.white
-    NSAppearance(named: .aqua)?.performAsCurrentDrawingAppearance {
-        lightBackground = NSColor.pkyBackground(.standard(.secondary)).cgColor
-    }
-    let actual = try #require(cell.layer?.backgroundColor)
-    #expect(actual == expectedDark)
-    #expect(actual != lightBackground)
+
+    #expect(lightBackground != darkBackground)
+    #expect(darkBackground == expectedDark)
+    #expect(lightBorderWidth > 0)
+    #expect(darkBorderWidth == 0)
 }

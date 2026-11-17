@@ -7,6 +7,12 @@ import SnapKit
 final class ClipboardCell: NSView, NSDraggingSource {
     private static let previewLength = 200
     private static let accessibilityLength = 80
+    private static let cardBackground = NSColor(name: nil) { appearance in
+        if appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {
+            return .pkyBackground(.standard(.secondary))
+        }
+        return PKYThemeFallback.system.color.filled.quiet(.tertiary)
+    }
 
     override var wantsUpdateLayer: Bool {
         true
@@ -14,10 +20,11 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private(set) var clip: ClipboardClip?
 
-    private(set) lazy var text: NSTextField = {
+    private lazy var text: NSTextField = {
         let text = NSTextField(wrappingLabelWithString: "")
         text.isSelectable = false
         text.font = PKYTypographyRole.caption.nsFont(in: PKYThemeFallback.system)
+        text.textColor = .pkyContent(.primary)
         text.maximumNumberOfLines = 2
         text.lineBreakMode = .byWordWrapping
         text.cell?.truncatesLastVisibleLine = true
@@ -26,7 +33,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
         return text
     }()
 
-    private(set) lazy var time: NSTextField = {
+    private lazy var time: NSTextField = {
         let time = NSTextField(labelWithString: "")
         time.font = PKYTypographyRole.caption.monospacedDigits.nsFont(in: PKYThemeFallback.system)
         time.textColor = .pkyContent(.secondary)
@@ -86,8 +93,11 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     override func updateLayer() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
+            let dark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
             layer?.cornerRadius = PKYShape.Radius.tile
-            layer?.backgroundColor = NSColor.pkyBackground(.standard(.secondary)).cgColor
+            layer?.backgroundColor = Self.cardBackground.cgColor
+            layer?.borderWidth = dark ? 0 : PKYShape.Stroke.standard
+            layer?.borderColor = dark ? nil : NSColor.pkySeparator(.standard).cgColor
         }
     }
 
@@ -140,10 +150,8 @@ final class ClipboardCell: NSView, NSDraggingSource {
 
     private func configure() {
         wantsLayer = true
-        appearance = NSAppearance(named: .darkAqua)
         setAccessibilityElement(true)
         setAccessibilityRole(.button)
         setAccessibilityHelp(L10n.text("Double-click to copy"))
-        updateLayer()
     }
 }
