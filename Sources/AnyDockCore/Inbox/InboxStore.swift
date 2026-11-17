@@ -21,7 +21,7 @@ public actor InboxStore {
         )
     }
 
-    public func list(in directory: URL, kind: ReceivedKind? = nil) throws -> [ReceivedItem] {
+    public func list(in directory: URL) throws -> [ReceivedItem] {
         guard FileManager.default.fileExists(atPath: directory.path) else {
             return []
         }
@@ -31,13 +31,11 @@ public actor InboxStore {
                     (directory.appendingPathComponent($0.directoryName, isDirectory: true), $0)
                 }
         var candidates = [Candidate]()
-        for (folder, category) in folders where kind == nil || kind == category {
+        for (folder, category) in folders {
             candidates += try Self.candidates(in: folder, kind: category)
         }
-        if kind == nil || kind == .image {
-            let present = Set(candidates.map(\.url))
-            aspectRatios = aspectRatios.filter { present.contains($0.key) }
-        }
+        let present = Set(candidates.map(\.url))
+        aspectRatios = aspectRatios.filter { present.contains($0.key) }
         return candidates.sorted { $0.date > $1.date }.compactMap(item)
     }
 

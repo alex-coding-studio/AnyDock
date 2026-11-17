@@ -96,8 +96,9 @@ func storesTypedContentWithQuarantine() async throws {
     )
     #expect(second.url != file.url)
     #expect(try Data(contentsOf: file.url) == Data("{}".utf8))
-    #expect(try await store.list(in: directory).count == 6)
-    #expect(try await store.list(in: directory, kind: .image).count == 1)
+    let listed = try await store.list(in: directory)
+    #expect(listed.count == 6)
+    #expect(listed.count(where: { $0.kind == .image }) == 1)
 }
 
 @Test("图片按实际内容识别，伪装扩展名不能绕过声明校验")
