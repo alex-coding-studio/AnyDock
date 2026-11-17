@@ -17,6 +17,8 @@
             )
         )
 
+        let folderReadError = Just<String?>(nil).eraseToAnyPublisher()
+
         var status: AnyPublisher<InboxStatus, Never> {
             Just(.listening(
                 port: ConnectionConfiguration.Receiver.defaultPort

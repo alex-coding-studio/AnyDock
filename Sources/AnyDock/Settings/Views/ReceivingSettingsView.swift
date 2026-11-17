@@ -23,6 +23,7 @@ struct ReceivingSettingsView: View {
             statusBanner
             SettingsGroup(title: L10n.text("Save Location")) {
                 folderCard
+                SettingsMessageText(error: viewModel.state.folderReadError)
                 SettingsNote(symbol: "info.circle", text: L10n.text("settings.folder.note"))
                     .padding(.horizontal, PKYLayout.Gap.content(.compact))
             }

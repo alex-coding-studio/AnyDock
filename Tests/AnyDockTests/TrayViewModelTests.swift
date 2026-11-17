@@ -53,3 +53,32 @@ func viewModelFollowsInboxEvents() {
     #expect(model.contents.items.first?.url == arrival.url)
     #expect(model.latestURL == arrival.url)
 }
+
+@MainActor
+@Test("新图片先提供即时预览，列表和自动复制仅收到元数据")
+func imageArrivalPublishesPreviewBeforeMetadata() {
+    let inbox = TestInbox()
+    let model = TrayViewModel(inbox: inbox)
+    var image = item("arrival.png", .image)
+    let payload = Data([1, 2, 3])
+    image.thumbnail = payload
+    var previews = [Data]()
+    let preview = model.incomingThumbnails.sink {
+        #expect($0.url == image.url)
+        previews.append($0.data)
+    }
+    var arrivals = [ReceivedItem]()
+    let arrival = model.arrivals.sink { item in
+        #expect(previews == [payload])
+        arrivals.append(item)
+    }
+    defer {
+        preview.cancel()
+        arrival.cancel()
+    }
+    inbox.receivedSubject.send(image)
+    #expect(model.contents.items.count == 1)
+    #expect(model.contents.items.first?.thumbnail == nil)
+    #expect(arrivals.map(\.url) == [image.url])
+    #expect(arrivals.first?.thumbnail == nil)
+}

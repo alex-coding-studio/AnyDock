@@ -4,6 +4,7 @@ import Foundation
 
 struct ReceivingSettingsState: Equatable {
     var status: ListenerStatus
+    var folderReadError: String?
     var folder: URL
     var portText: String
     var hasChanges: Bool
@@ -52,6 +53,9 @@ final class ReceivingSettingsViewModel: ObservableObject {
             hasChanges: false,
             isApplying: false
         )
+        receiver.folderReadError
+            .sink { [weak self] message in self?.update { $0.folderReadError = message } }
+            .store(in: &subscriptions)
         receiver.status
             .map(ListenerStatus.init)
             .sink { [weak self] status in self?.update { $0.status = status } }

@@ -7,6 +7,7 @@ import PockyFoundation
 protocol ReceiverSettings: AnyObject {
     var configuration: ConnectionConfiguration { get }
     var status: AnyPublisher<InboxStatus, Never> { get }
+    var folderReadError: AnyPublisher<String?, Never> { get }
     func apply(receiver: ConnectionConfiguration.Receiver) async throws
     func apply(sender: ConnectionConfiguration.Sender) throws
 }

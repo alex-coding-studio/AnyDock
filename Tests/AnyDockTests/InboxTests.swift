@@ -23,3 +23,34 @@ func savingSenderKeepsCurrentReceiver() throws {
     #expect(saved.sender.shortcutName == "Send to Test")
     #expect(inbox.configuration.receiver == receiver)
 }
+
+@MainActor
+@Test("接收目录恢复可读后清除目录提示，重列失败和恢复都不改监听状态")
+func folderReadErrorClearsIndependentlyOfListener() async throws {
+    let folder = URL.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    let images = folder.appendingPathComponent("Images")
+    let manager = FileManager.default
+    try manager.createDirectory(at: images, withIntermediateDirectories: true)
+    defer {
+        try? manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: images.path)
+        try? manager.removeItem(at: folder)
+    }
+    let inbox = Inbox(
+        configuration: ConnectionConfiguration(receiver: .init(
+            directory: folder,
+            token: String(repeating: "a", count: 32)
+        )),
+        store: ConnectionConfigurationStore(
+            file: folder.appendingPathComponent("configuration.json")
+        )
+    )
+    try manager.setAttributes([.posixPermissions: 0], ofItemAtPath: images.path)
+    await inbox.reload()
+    let settings = ReceivingSettingsViewModel(receiver: inbox)
+    #expect(settings.state.folderReadError != nil)
+    #expect(settings.state.status == ListenerStatus(.starting))
+    try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: images.path)
+    await inbox.reload()
+    #expect(settings.state.folderReadError == nil)
+    #expect(settings.state.status == ListenerStatus(.starting))
+}
