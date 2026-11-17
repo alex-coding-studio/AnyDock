@@ -11,7 +11,7 @@ final class ClipboardCell: NSView, NSDraggingSource {
         if appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {
             return .pkyBackground(.standard(.secondary))
         }
-        return PKYThemeFallback.system.color.filled.quiet(.tertiary)
+        return PKYThemeFallback.system.color.filled.quiet(.secondary)
     }
 
     override var wantsUpdateLayer: Bool {
