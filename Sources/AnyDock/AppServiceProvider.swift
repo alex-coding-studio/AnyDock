@@ -22,7 +22,7 @@ final class AppServiceProvider {
         statusItem: statusItem
     )
 
-    private lazy var settings = SettingsController(inbox: inbox, hotKeys: hotKeys)
+    private lazy var settings = makeSettings()
 
     init(configuration: ConnectionConfiguration, store: ConnectionConfigurationStore) {
         inbox = Inbox(configuration: configuration, store: store)
@@ -63,6 +63,29 @@ final class AppServiceProvider {
         NSApp.activate(ignoringOtherApps: true)
         settings.showWindow(nil)
         settings.window?.makeKeyAndOrderFront(nil)
+    }
+
+    private func makeSettings() -> SettingsWindowController {
+        let about = AboutInfo(bundle: .main)
+        let connection = ConnectionSettingsViewModel(
+            receiver: inbox,
+            host: SystemHostInformation(),
+            sharing: AirDropShortcutSharing(),
+            pasteboard: SettingsPasteboardWriter()
+        )
+        let general = GeneralSettingsViewModel(
+            preferences: UserSettingsPreferences(),
+            loginItem: SystemLoginItem(),
+            hotKeys: hotKeys,
+            restarter: ApplicationRestarter(),
+            sharing: connection.isSending
+        )
+        return SettingsWindowController(
+            viewModel: SettingsViewModel(status: inbox.status, about: about),
+            general: general,
+            connection: connection,
+            receiving: ReceivingSettingsViewModel(receiver: inbox)
+        )
     }
 
     private func subscribeEvents() {

@@ -73,20 +73,17 @@ struct KeyCombination: Equatable {
     }
 
     var displayString: String {
-        var symbols = ""
-        if modifiers.contains(.control) {
-            symbols += "⌃"
-        }
-        if modifiers.contains(.option) {
-            symbols += "⌥"
-        }
-        if modifiers.contains(.shift) {
-            symbols += "⇧"
-        }
-        if modifiers.contains(.command) {
-            symbols += "⌘"
-        }
-        return symbols + keyName
+        displayKeys.joined()
+    }
+
+    var displayKeys: [String] {
+        let symbols: [(NSEvent.ModifierFlags, String)] = [
+            (.control, "⌃"),
+            (.option, "⌥"),
+            (.shift, "⇧"),
+            (.command, "⌘"),
+        ]
+        return symbols.filter { modifiers.contains($0.0) }.map(\.1) + [keyName]
     }
 
     private var keyName: String {

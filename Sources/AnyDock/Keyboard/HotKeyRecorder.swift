@@ -105,7 +105,6 @@ final class HotKeyRecorder: NSButton {
     }
 
     private func configure() {
-        bezelStyle = .rounded
         target = self
         action = #selector(beginRecording)
         setAccessibilityLabel(L10n.text("Wake shortcut"))
@@ -113,10 +112,9 @@ final class HotKeyRecorder: NSButton {
     }
 
     private func updateTitle() {
-        title =
-            isRecording
-                ? L10n.text("Type shortcut…") : hotKey?.displayString ?? L10n.text(
-                    "Record Shortcut"
-                )
+        title = isRecording ? L10n.text("Type shortcut…") : hotKey?.displayString ?? L10n.text(
+            "hotkey.placeholder"
+        )
+        setAccessibilityValue(hotKey?.displayString)
     }
 }

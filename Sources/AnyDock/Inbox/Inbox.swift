@@ -139,8 +139,8 @@ final class Inbox: TrayInbox {
             statusSubject.send(.listening(port: receiver.port))
         } catch {
             fail(L10n.text(
-                "Unable to listen on port %d: %@",
-                Int(receiver.port),
+                "Unable to listen on port %@: %@",
+                String(receiver.port),
                 error.localizedDescription
             ))
         }
