@@ -96,7 +96,6 @@
 "New %@: %@, %@" = "New %1$@: %2$@, %3$@";
 "%@: %@, %@" = "%1$@: %2$@, %3$@";
 "meta_separator" = "%1$@ · %2$@";
-"Clipboard" = "Clipboard";
 "settings.clipboardHistory.note" = "Memory only, cleared on quit.";
 "Keep last 4 clipboard texts" = "Keep last 4 clipboard texts";
 "Clear" = "Clear";

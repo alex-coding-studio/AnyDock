@@ -6,11 +6,14 @@ struct ReceivingSettingsState: Equatable {
     var status: ListenerStatus
     var folder: URL
     var portText: String
-    var hasChanges: Bool
     var isApplying: Bool
     var errorMessage: String?
     var folderChanged = false
     var portChanged = false
+
+    var hasChanges: Bool {
+        folderChanged || portChanged
+    }
 
     var canApply: Bool {
         hasChanges && !isApplying
@@ -49,7 +52,6 @@ final class ReceivingSettingsViewModel: ObservableObject {
             status: ListenerStatus(.starting),
             folder: applied.directory,
             portText: String(applied.port),
-            hasChanges: false,
             isApplying: false
         )
         receiver.status
@@ -119,7 +121,6 @@ final class ReceivingSettingsViewModel: ObservableObject {
         let applied = receiver.configuration.receiver
         next.folderChanged = next.folder != applied.directory
         next.portChanged = Self.port(from: next.portText) != applied.port
-        next.hasChanges = next.folderChanged || next.portChanged
         if next != state {
             state = next
         }
