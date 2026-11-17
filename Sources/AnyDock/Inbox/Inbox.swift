@@ -16,6 +16,7 @@ final class Inbox: TrayInbox {
     private let store: ConnectionConfigurationStore
     private let inboxStore = InboxStore()
     private let statusSubject = CurrentValueSubject<InboxStatus, Never>(.starting)
+    private let folderReadErrorSubject = CurrentValueSubject<String?, Never>(nil)
     private let receivedSubject = PassthroughSubject<ReceivedItem, Never>()
     private let itemsSubject = PassthroughSubject<[ReceivedItem], Never>()
     private let logger = Logger(subsystem: "com.cuxiao.mac.anydock", category: "Receiver")
@@ -24,6 +25,10 @@ final class Inbox: TrayInbox {
 
     var status: AnyPublisher<InboxStatus, Never> {
         statusSubject.eraseToAnyPublisher()
+    }
+
+    var folderReadError: AnyPublisher<String?, Never> {
+        folderReadErrorSubject.removeDuplicates().eraseToAnyPublisher()
     }
 
     var received: AnyPublisher<ReceivedItem, Never> {
@@ -51,9 +56,16 @@ final class Inbox: TrayInbox {
             guard directory == configuration.receiver.directory else {
                 return
             }
+            folderReadErrorSubject.send(nil)
             itemsSubject.send(listed)
         } catch {
-            fail(L10n.text("Unable to read the receive folder: %@", error.localizedDescription))
+            guard directory == configuration.receiver.directory else {
+                return
+            }
+            folderReadErrorSubject.send(L10n.text(
+                "Unable to read the receive folder: %@",
+                error.localizedDescription
+            ))
         }
     }
 

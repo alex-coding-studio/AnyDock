@@ -21,10 +21,15 @@ final class TrayViewController: NSViewController {
     private let clipboard: ClipboardMonitor
     private let pasteboard: TrayPasteboardWriter
     private let cache = TrayEntryCache()
+    private let previews = TrayPreviewCache()
     private let presentationHoldSubject = PassthroughSubject<Bool, Never>()
     private var subscriptions = Set<AnyCancellable>()
 
-    private lazy var collections = TrayCollectionController(viewModel: viewModel, cache: cache)
+    private lazy var collections = TrayCollectionController(
+        viewModel: viewModel,
+        cache: cache,
+        previews: previews
+    )
     private lazy var emptyState = TrayEmptyStateView(viewModel: viewModel)
     private lazy var quickLook = TrayQuickLookController(owner: self, focusTarget: collection)
 
@@ -57,6 +62,9 @@ final class TrayViewController: NSViewController {
         self.clipboard = clipboard
         pasteboard = TrayPasteboardWriter(clipboard: clipboard)
         super.init(nibName: nil, bundle: nil)
+        viewModel.incomingThumbnails
+            .sink { [previews] in previews.store($0.data, for: $0.url) }
+            .store(in: &subscriptions)
     }
 
     @available(*, unavailable)

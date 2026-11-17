@@ -12,6 +12,8 @@ final class FakeReceiver: ReceiverSettings {
     var savedSenders = [ConnectionConfiguration.Sender]()
     var applyError: (any Error)?
 
+    let folderReadError = Just<String?>(nil).eraseToAnyPublisher()
+
     var status: AnyPublisher<InboxStatus, Never> {
         statusSubject.eraseToAnyPublisher()
     }

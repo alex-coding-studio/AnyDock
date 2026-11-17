@@ -43,7 +43,7 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
 
     private let viewModel: TrayViewModel
     private let cache: TrayEntryCache
-    private let previews = TrayPreviewCache()
+    private let previews: TrayPreviewCache
     private let sizing = TrayCardSizing()
     private var entries = [TrayEntry]()
     private var renderedLatestURL: URL?
@@ -59,7 +59,8 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
         return entries.filter { selected.contains($0.url) }
     }
 
-    init(viewModel: TrayViewModel, cache: TrayEntryCache) {
+    init(viewModel: TrayViewModel, cache: TrayEntryCache, previews: TrayPreviewCache) {
+        self.previews = previews
         self.viewModel = viewModel
         self.cache = cache
         super.init()
@@ -193,12 +194,8 @@ final class TrayCollectionController: NSObject, NSCollectionViewDataSource,
     }
 
     private func render(_ list: TrayList) {
-        if let latest = list.latestURL, latest != renderedLatestURL,
-           let item = list.contents.items.first(where: { $0.url == latest }) {
+        if let latest = list.latestURL, latest != renderedLatestURL {
             cache.invalidate(latest)
-            if let thumbnail = item.thumbnail {
-                previews.store(thumbnail, for: latest)
-            }
         }
         renderedLatestURL = list.latestURL
         let removed = cache.keep(only: Set(list.contents.items.map(\.url)))
