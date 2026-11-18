@@ -10,6 +10,14 @@
 "Connection" = "连接";
 "Connection key" = "连接密钥";
 "Copy" = "复制";
+"Close" = "关闭";
+"Cut" = "剪切";
+"Edit" = "编辑";
+"Paste" = "粘贴";
+"Redo" = "重做";
+"Select All" = "全选";
+"Undo" = "撤销";
+"Window" = "窗口";
 "Copy connection key" = "复制连接密钥";
 "Copy receive address" = "复制接收地址";
 "Creating and signing the shortcut…" = "正在生成并签名快捷指令…";

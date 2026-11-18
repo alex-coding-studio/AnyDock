@@ -10,6 +10,14 @@
 "Connection" = "Connection";
 "Connection key" = "Connection key";
 "Copy" = "Copy";
+"Close" = "Close";
+"Cut" = "Cut";
+"Edit" = "Edit";
+"Paste" = "Paste";
+"Redo" = "Redo";
+"Select All" = "Select All";
+"Undo" = "Undo";
+"Window" = "Window";
 "Copy connection key" = "Copy connection key";
 "Copy receive address" = "Copy receive address";
 "Creating and signing the shortcut…" = "Creating and signing the shortcut…";

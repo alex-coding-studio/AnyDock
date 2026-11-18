@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 @MainActor
@@ -26,7 +27,7 @@ final class SettingsWindowController: NSWindowController {
         let split = NSSplitViewController()
         split.addSplitViewItem(sidebar)
         split.addSplitViewItem(detail)
-        let window = NSWindow(contentViewController: split)
+        let window = SettingsWindow(contentViewController: split)
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
@@ -46,5 +47,20 @@ final class SettingsWindowController: NSWindowController {
         let controller = NSHostingController(rootView: view)
         controller.sizingOptions = []
         return controller
+    }
+}
+
+final class SettingsWindow: NSWindow {
+    override func keyDown(with event: NSEvent) {
+        guard Int(event.keyCode) == kVK_Escape,
+              event.modifierFlags.isDisjoint(with: [.command, .control, .option, .shift])
+        else {
+            return super.keyDown(with: event)
+        }
+        cancelOperation(nil)
+    }
+
+    override func cancelOperation(_ sender: Any?) {
+        performClose(sender)
     }
 }

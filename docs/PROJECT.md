@@ -21,6 +21,7 @@ User-visible behaviour that must not regress, and release and operations procedu
 - Space or double-click opens Quick Look for the selection; arrows navigate and Space closes it. The tray stays open meanwhile, and closing only Quick Look keeps the selection.
 - Command-C copies images as file plus PNG, text and links as plain values, files as the file. Finder reveal uses the selected originals.
 - Esc collapses an expanded clipboard bar first; otherwise it clears the selection.
+- When the tray is the key window, ⌘Q quits AnyDock. It uses the standard macOS Quit key equivalent, following the keyboard layout rather than a physical key.
 - The context menu shows the same shortcuts the tray handles (⌘C copy, ⌘⌫ move to Trash). ⌘C and Space match the character of the current keyboard layout, so ⌘⇧C does not copy; ⌘⌫ and Esc match the physical key.
 - Every actual tray close clears the selection.
 
@@ -60,6 +61,8 @@ Recycling is limited to the generated items listed for the current receive folde
 ## Settings
 
 A sidebar lists General, Connection, Receiving and About, General first, below the app icon, localized product name and the listener status (listening port or failure) on every page, with the bundle version at its bottom. While an update is available, an accent "New Version Available" capsule button follows the version, its tooltip naming the new version; clicking it opens Sparkle's update window. Footnotes appear only for security, privacy or a required action. Hidden rows leave no gap.
+
+With Settings as the key window, ⌘Q quits AnyDock and ⌘W closes Settings. Esc closes Settings just like its close button when no control consumes the key. The wake shortcut recorder uses Esc to cancel recording, and controls such as open menus or text editors can handle Esc first. Editable fields use standard macOS editing shortcuts.
 
 - **General:** Appearance (Follow System, Light and Dark preview tiles; a Follow System, English and 简体中文 language segmented control with an inline restart notice and Restart Now), Tray (copy new items; keep clipboard texts), Startup & Keyboard (login startup and its errors; wake shortcut). Appearance follows the system or forces Light or Dark, applied immediately. Language follows the system or selects English or Simplified Chinese for this app only, never globally, after a restart; Restart Now reopens the same app once the current process exits.
 - **Connection:** one-step AirDrop setup with an editable shortcut name, manual receive-address copying, masked key copying and generic shortcut export; no Apply button. The name defaults to localized "Send to" plus the computer name, else "Send to Mac"; it is validated before signing and saved after a successful send. Saved custom names are never translated or replaced. Each Mac sends its own named shortcut so the Share Sheet can tell them apart.
@@ -111,7 +114,7 @@ Icons are approved rendered exports; replace them directly rather than regenerat
 
 ## Operation
 
-- The app runs as an accessory without a Dock icon and quits through Settings. No LaunchAgent is installed; login startup is a user setting. Reopening the running app opens Settings.
+- The app runs as an accessory without a Dock icon. Quit with ⌘Q while the tray or Settings is key, or with Quit in Settings → About. No LaunchAgent is installed; login startup is a user setting. Reopening the running app opens Settings.
 - `open dist/AnyDock.app --args --settings` opens Settings on launch; `--tray` opens the tray for authorized local UI checks.
 - Debug with Console filtered to the AnyDock process, or run the built executable from a terminal.
 

@@ -57,7 +57,7 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         guard !popover.isShown, let button = statusItem.button else {
             return
         }
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         tray.focusCollection()
         if reloading {

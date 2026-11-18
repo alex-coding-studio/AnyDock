@@ -137,6 +137,7 @@ final class TrayViewController: NSViewController {
     }
 
     func focusCollection() {
+        view.window?.makeKey()
         view.window?.makeFirstResponder(collection)
     }
 
