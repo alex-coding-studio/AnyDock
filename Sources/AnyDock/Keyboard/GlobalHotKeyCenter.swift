@@ -1,14 +1,11 @@
 import Carbon.HIToolbox
 import Combine
-import Foundation
 
 @MainActor
 final class GlobalHotKeyCenter {
     private let pressSubject = PassthroughSubject<Void, Never>()
     private var registration: EventHotKeyRef?
     private var handler: EventHandlerRef?
-    private var requestedHotKey: KeyCombination?
-    private var inputSourceChanges: AnyCancellable?
 
     var presses: AnyPublisher<Void, Never> {
         pressSubject.eraseToAnyPublisher()
@@ -18,23 +15,7 @@ final class GlobalHotKeyCenter {
         registration != nil
     }
 
-    init() {
-        let inputSourceChanged = Notification.Name(
-            kTISNotifySelectedKeyboardInputSourceChanged as String
-        )
-        inputSourceChanges = DistributedNotificationCenter.default()
-            .publisher(for: inputSourceChanged)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self, let hotKey = requestedHotKey, hotKey.modifiers == .command else {
-                    return
-                }
-                _ = register(hotKey)
-            }
-    }
-
     func register(_ hotKey: KeyCombination?) -> Bool {
-        requestedHotKey = hotKey
         if let registration {
             UnregisterEventHotKey(registration)
             self.registration = nil
@@ -42,7 +23,7 @@ final class GlobalHotKeyCenter {
         guard let hotKey else {
             return true
         }
-        guard !hotKey.isReservedForQuit, installHandler() else {
+        guard installHandler() else {
             return false
         }
         var reference: EventHotKeyRef?

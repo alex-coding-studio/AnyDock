@@ -39,13 +39,33 @@ func hotKeyRequiresCommandOptionOrControl() {
     #expect(KeyCombination(keyCode: UInt32(kVK_ANSI_K), modifiers: [.shift, .control]) != nil)
 }
 
-@Test("退出保留键按键盘布局字符匹配，只接受单独的 ⌘ 修饰键")
-func quitReservationMatchesTheLayoutCharacter() throws {
-    let movedQ = try #require(KeyCombination(keyCode: UInt32(kVK_ANSI_X), modifiers: .command))
-    let shifted = try #require(
-        KeyCombination(keyCode: UInt32(kVK_ANSI_Q), modifiers: [.command, .shift])
+@MainActor
+@Test("Dvorak - QWERTY ⌘ 下只保留实际的 ⌘Q", arguments: [
+    (kVK_ANSI_X, "x", "q", NSEvent.ModifierFlags.command, false),
+    (kVK_ANSI_Q, "q", "'", NSEvent.ModifierFlags.command, true),
+    (kVK_ANSI_Q, "Q", "\"", NSEvent.ModifierFlags([.command, .shift]), false),
+])
+func quitReservationMatchesCommandCharacter(
+    keyCode: Int,
+    character: String,
+    plainCharacter: String,
+    modifiers: NSEvent.ModifierFlags,
+    reserved: Bool
+) throws {
+    let candidate = try #require(KeyCombination(keyCode: UInt32(keyCode), modifiers: modifiers))
+    let event = try #require(
+        NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: modifiers,
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            characters: character,
+            charactersIgnoringModifiers: plainCharacter,
+            isARepeat: false,
+            keyCode: UInt16(keyCode)
+        )
     )
-    #expect(movedQ.matchesQuit(character: "q"))
-    #expect(!movedQ.matchesQuit(character: "x"))
-    #expect(!shifted.matchesQuit(character: "q"))
+    #expect(candidate.matchesQuit(in: event) == reserved)
 }

@@ -136,12 +136,8 @@ final class TrayViewController: NSViewController {
         footer.trayDidClose()
     }
 
-    func focusCollection() -> Bool {
-        guard let window = view.window else {
-            return false
-        }
-        window.makeKey()
-        return window.isKeyWindow && window.makeFirstResponder(collection)
+    func focusCollection() {
+        view.window?.makeFirstResponder(collection)
     }
 
     func clearSelection() {
