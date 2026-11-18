@@ -15,7 +15,8 @@
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSLocalNetworkUsageDescription</key><string>Receive images shared from an iPhone on the same local network.</string>
-<key>SUEnableAutomaticChecks</key><false/>
+<key>SUAllowsAutomaticUpdates</key><false/>
+<key>SUEnableAutomaticChecks</key><true/>
 <key>SUFeedURL</key><string>https://github.com/alex-coding-studio/AnyDock/releases/latest/download/appcast.xml</string>
 <key>SUPublicEDKey</key><string>gcJ2dNPY/LEXwEaVWrwfeinYmYY2c6o2VbT+4QXx16I=</string>
 <key>SURequireSignedFeed</key><true/>

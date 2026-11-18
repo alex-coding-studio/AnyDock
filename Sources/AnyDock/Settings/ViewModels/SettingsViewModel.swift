@@ -3,6 +3,7 @@ import Combine
 @MainActor
 protocol UpdateChecking: AnyObject {
     var availability: AnyPublisher<Bool, Never> { get }
+    var availableUpdate: AnyPublisher<String?, Never> { get }
     func checkForUpdates()
 }
 
@@ -12,6 +13,7 @@ final class SettingsViewModel: ObservableObject {
     @Published private(set) var listenerStatus = ListenerStatus(.starting)
 
     @Published private(set) var canCheckForUpdates = false
+    @Published private(set) var availableUpdate: String?
 
     let about: AboutInfo
 
@@ -27,6 +29,7 @@ final class SettingsViewModel: ObservableObject {
         self.updates = updates
         self.about = about
         updates?.availability.assign(to: &$canCheckForUpdates)
+        updates?.availableUpdate.assign(to: &$availableUpdate)
         status
             .map(ListenerStatus.init)
             .sink { [weak self] in self?.listenerStatus = $0 }

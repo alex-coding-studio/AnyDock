@@ -12,6 +12,7 @@ enum TrayMetrics {
         + PKYLayout.Size.button(.compact) + PKYLayout.Gap.group(.standard)
     static let scopeFade = PKYLayout.Space.s32
     static let badgeHeight: CGFloat = 16
+    static let updateDotOffset = PKYIcon.Size.control.pointSize / 2
     static let fileThumbnailSide: CGFloat = 240
     static let polaroidPreviewRadius: CGFloat = 4
     static let cardBodyFontSize: CGFloat = 12

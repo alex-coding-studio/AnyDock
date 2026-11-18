@@ -12,6 +12,7 @@ final class AppServiceProvider {
     private let inbox: Inbox
     private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
     private let hotKeys = GlobalHotKeyCenter()
+    private let updates = SparkleUpdates(bundle: .main)
     private var subscriptions = Set<AnyCancellable>()
 
     private lazy var statusItem = StatusItemController(status: inbox.status)
@@ -19,7 +20,8 @@ final class AppServiceProvider {
     private lazy var trayPopover = TrayPopoverController(
         inbox: inbox,
         clipboard: clipboard,
-        statusItem: statusItem
+        statusItem: statusItem,
+        updates: updates
     )
 
     private lazy var settings = makeSettings()
@@ -84,7 +86,7 @@ final class AppServiceProvider {
             viewModel: SettingsViewModel(
                 status: inbox.status,
                 about: about,
-                updates: SparkleUpdates()
+                updates: updates
             ),
             general: general,
             connection: connection,

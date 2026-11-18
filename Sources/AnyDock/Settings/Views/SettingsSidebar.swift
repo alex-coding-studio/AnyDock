@@ -18,17 +18,38 @@ struct SettingsSidebar: View {
             header
             navigation
             Spacer(minLength: 0)
-            if let version = viewModel.about.version {
-                Text(version)
-                    .font(typography.supporting.font)
-                    .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
-                    .padding(.horizontal, PKYLayout.Inset.control.horizontal())
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: PKYLayout.Gap.content()) {
+                    footer
+                }
+                VStack(alignment: .leading, spacing: PKYLayout.Gap.content()) {
+                    footer
+                }
             }
+            .padding(.horizontal, PKYLayout.Inset.control.horizontal())
         }
         .padding(.horizontal, PKYLayout.Inset.row.horizontal(.compact))
         .padding(.top, PKYLayout.Gap.content())
         .padding(.bottom, PKYLayout.Inset.page())
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    @ViewBuilder
+    private var footer: some View {
+        if let version = viewModel.about.version {
+            Text(version)
+                .font(typography.supporting.font)
+                .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
+                .fixedSize()
+        }
+        if let update = viewModel.availableUpdate {
+            Button(L10n.text("New Version Available"), action: viewModel.checkForUpdates)
+                .settingsButton(.primary)
+                .buttonBorderShape(.capsule)
+                .controlSize(.small)
+                .fixedSize()
+                .help(L10n.text("settings.update.available", update))
+        }
     }
 
     private var header: some View {

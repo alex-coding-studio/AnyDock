@@ -19,19 +19,26 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
     private let inbox: any TrayInbox
     private let clipboard: ClipboardMonitor
     private let statusItem: StatusItemController
+    private let updates: (any UpdateChecking)?
     private var appearance: NSKeyValueObservation?
     private var subscriptions = Set<AnyCancellable>()
 
-    private lazy var viewModel = TrayViewModel(inbox: inbox)
+    private lazy var viewModel = TrayViewModel(inbox: inbox, updates: updates)
 
     var settingsRequests: AnyPublisher<Void, Never> {
         tray.settingsRequests
     }
 
-    init(inbox: any TrayInbox, clipboard: ClipboardMonitor, statusItem: StatusItemController) {
+    init(
+        inbox: any TrayInbox,
+        clipboard: ClipboardMonitor,
+        statusItem: StatusItemController,
+        updates: (any UpdateChecking)? = nil
+    ) {
         self.inbox = inbox
         self.clipboard = clipboard
         self.statusItem = statusItem
+        self.updates = updates
         super.init()
         subscribeEvents()
     }

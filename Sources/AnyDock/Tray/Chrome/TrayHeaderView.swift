@@ -25,6 +25,26 @@ final class TrayHeaderView: NSView {
         return TrayGlass.surface(buttons, cornerRadius: PKYLayout.Size.button(.compact) / 2)
     }()
 
+    private(set) lazy var settingsButton: NSButton = {
+        let button = iconButton(
+            symbol: "gearshape",
+            title: L10n.text("Settings"),
+            action: #selector(settingsClicked)
+        )
+        button.addSubview(updateDot)
+        updateDot.snp.makeConstraints { make in
+            make.centerX.equalToSuperview().offset(TrayMetrics.updateDotOffset)
+            make.centerY.equalToSuperview().offset(-TrayMetrics.updateDotOffset)
+        }
+        return button
+    }()
+
+    private(set) lazy var updateDot: LatestDot = {
+        let dot = LatestDot()
+        dot.isHidden = true
+        return dot
+    }()
+
     private let viewModel: TrayViewModel
     private let folderSubject = PassthroughSubject<Void, Never>()
     private let settingsSubject = PassthroughSubject<Void, Never>()
@@ -34,12 +54,6 @@ final class TrayHeaderView: NSView {
         symbol: "folder",
         title: L10n.text("Open Folder"),
         action: #selector(folderClicked)
-    )
-
-    private lazy var settingsButton = iconButton(
-        symbol: "gearshape",
-        title: L10n.text("Settings"),
-        action: #selector(settingsClicked)
     )
 
     var filterSelections: AnyPublisher<TrayFilter, Never> {
@@ -89,6 +103,9 @@ final class TrayHeaderView: NSView {
         viewModel.list
             .sink { [weak self] _ in self?.updateFilterBar() }
             .store(in: &subscriptions)
+        viewModel.availableUpdate
+            .sink { [weak self] in self?.showAvailableUpdate($0) }
+            .store(in: &subscriptions)
     }
 
     private func updateFilterBar() {
@@ -109,6 +126,11 @@ final class TrayHeaderView: NSView {
             },
             selected: contents.filter
         )
+    }
+
+    private func showAvailableUpdate(_ version: String?) {
+        updateDot.isHidden = version == nil
+        settingsButton.setAccessibilityValue(version.map { L10n.text("tray.update.available", $0) })
     }
 
     private func iconButton(symbol: String, title: String, action: Selector) -> NSButton {

@@ -20,6 +20,7 @@ struct TrayList {
 @MainActor
 final class TrayViewModel {
     private let inbox: any TrayInbox
+    private let updates: (any UpdateChecking)?
     private let listSubject = CurrentValueSubject<TrayList, Never>(TrayList())
     private let selectionSubject = CurrentValueSubject<[URL], Never>([])
     private let draggedSubject = CurrentValueSubject<[URL], Never>([])
@@ -68,6 +69,10 @@ final class TrayViewModel {
         arrivalSubject.eraseToAnyPublisher()
     }
 
+    var availableUpdate: AnyPublisher<String?, Never> {
+        updates?.availableUpdate ?? Just(nil).eraseToAnyPublisher()
+    }
+
     var contents: TrayContents {
         listSubject.value.contents
     }
@@ -96,8 +101,9 @@ final class TrayViewModel {
         contents.filter == .kind(.text)
     }
 
-    init(inbox: any TrayInbox) {
+    init(inbox: any TrayInbox, updates: (any UpdateChecking)? = nil) {
         self.inbox = inbox
+        self.updates = updates
         subscribeEvents()
     }
 

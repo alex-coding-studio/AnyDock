@@ -147,3 +147,22 @@ final class FakeSharing: ShortcutSharing {
 
     func exportGenericShortcut(to _: URL) throws {}
 }
+
+@MainActor
+final class FakeUpdates: UpdateChecking {
+    let ready = CurrentValueSubject<Bool, Never>(false)
+    let update = CurrentValueSubject<String?, Never>(nil)
+    var checks = 0
+
+    var availability: AnyPublisher<Bool, Never> {
+        ready.eraseToAnyPublisher()
+    }
+
+    var availableUpdate: AnyPublisher<String?, Never> {
+        update.eraseToAnyPublisher()
+    }
+
+    func checkForUpdates() {
+        checks += 1
+    }
+}
