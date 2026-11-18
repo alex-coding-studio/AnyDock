@@ -131,3 +131,6 @@
 "settings.pending.port" = "Port has unapplied changes";
 "settings.oneStep.illustration" = "iPhone connects to this Mac via AirDrop";
 "Check for Updates…" = "Check for Updates…";
+"New Version Available" = "New Version Available";
+"settings.update.available" = "Version %@ is available";
+"tray.update.available" = "New version %@ available";

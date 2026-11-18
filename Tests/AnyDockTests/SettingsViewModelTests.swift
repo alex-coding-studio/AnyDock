@@ -224,18 +224,7 @@ func aboutVersionComesFromBundle() throws {
 @MainActor
 @Test("关于页只在更新器允许检查时转发用户操作")
 func updateAvailabilityGatesUserRequests() {
-    final class Updates: UpdateChecking {
-        let ready = CurrentValueSubject<Bool, Never>(false)
-        var checks = 0
-        var availability: AnyPublisher<Bool, Never> {
-            ready.eraseToAnyPublisher()
-        }
-
-        func checkForUpdates() {
-            checks += 1
-        }
-    }
-    let updates = Updates()
+    let updates = FakeUpdates()
     let model = SettingsViewModel(
         status: FakeReceiver().status,
         about: AboutInfo(version: nil),
@@ -250,4 +239,28 @@ func updateAvailabilityGatesUserRequests() {
     #expect(!model.canCheckForUpdates)
     model.checkForUpdates()
     #expect(updates.checks == 1)
+}
+
+@MainActor
+@Test("后台发现的新版本显示在设置侧栏和托盘设置按钮上，更新会话结束后消失")
+func availableUpdateReachesSettingsAndTray() {
+    let updates = FakeUpdates()
+    let model = SettingsViewModel(
+        status: FakeReceiver().status,
+        about: AboutInfo(version: nil),
+        updates: updates
+    )
+    let header = TrayHeaderView(viewModel: TrayViewModel(inbox: TestInbox(), updates: updates))
+    #expect(model.availableUpdate == nil)
+    #expect(header.updateDot.isHidden)
+    updates.update.send("1.0.5")
+    #expect(model.availableUpdate == "1.0.5")
+    #expect(!header.updateDot.isHidden)
+    #expect(header.settingsButton.accessibilityValue() as? String
+        == L10n.text("tray.update.available", "1.0.5"))
+    #expect(header.settingsButton.accessibilityLabel() == L10n.text("Settings"))
+    updates.update.send(nil)
+    #expect(model.availableUpdate == nil)
+    #expect(header.updateDot.isHidden)
+    #expect(header.settingsButton.accessibilityValue() == nil)
 }
