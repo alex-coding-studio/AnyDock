@@ -100,7 +100,7 @@ private func makePages() -> [(String, AnyView, NSSize)] {
         ("general", AnyView(GeneralSettingsView(viewModel: general)), detail),
         ("connection", AnyView(ConnectionSettingsView(viewModel: connection)), detail),
         ("receiving", AnyView(ReceivingSettingsView(viewModel: receiving)), detail),
-        ("about", AnyView(AboutSettingsView(about: settings.about)), detail),
+        ("about", AnyView(AboutSettingsView(viewModel: settings)), detail),
     ]
 }
 

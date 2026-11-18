@@ -105,11 +105,15 @@
             ReceivingSettingsViewModel(receiver: receiver)
         }
 
-        static var root: some View {
-            let settings = SettingsViewModel(
+        static var settings: SettingsViewModel {
+            SettingsViewModel(
                 status: receiver.status,
                 about: AboutInfo(version: "Version 1.0.1 (2)")
             )
+        }
+
+        static var root: some View {
+            let settings = Self.settings
             return HStack(spacing: 0) {
                 SettingsSidebar(viewModel: settings)
                     .frame(width: SettingsMetrics.sidebarWidth)
@@ -167,14 +171,10 @@
     }
 
     #Preview("About · Light") {
-        AboutSettingsView(about: AboutInfo(
-            version: "Version 1.0.1 (2)"
-        )).preferredColorScheme(.light)
+        AboutSettingsView(viewModel: PreviewModels.settings).preferredColorScheme(.light)
     }
 
     #Preview("About · Dark") {
-        AboutSettingsView(about: AboutInfo(
-            version: "Version 1.0.1 (2)"
-        )).preferredColorScheme(.dark)
+        AboutSettingsView(viewModel: PreviewModels.settings).preferredColorScheme(.dark)
     }
 #endif

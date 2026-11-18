@@ -12,7 +12,7 @@ struct SettingsDetailView: View {
         case .general: GeneralSettingsView(viewModel: general)
         case .connection: ConnectionSettingsView(viewModel: connection)
         case .receiving: ReceivingSettingsView(viewModel: receiving)
-        case .about: AboutSettingsView(about: viewModel.about)
+        case .about: AboutSettingsView(viewModel: viewModel)
         }
     }
 }
