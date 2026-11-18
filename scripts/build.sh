@@ -5,7 +5,10 @@ python3 scripts/make_shortcut.py --output Resources/Shortcuts/Template.shortcut 
 swift build --configuration release --product AnyDock
 anydock_bin="$(swift build --configuration release --show-bin-path)"
 anydock_app="$PWD/dist/AnyDock.app"
-mkdir -p "$anydock_app/Contents/MacOS" "$anydock_app/Contents/Resources"
+mkdir -p "$anydock_app/Contents/MacOS" "$anydock_app/Contents/Resources" "$anydock_app/Contents/Frameworks"
+rm -rf "$anydock_app/Contents/Frameworks/Sparkle.framework"
+ditto "$anydock_bin/Sparkle.framework" "$anydock_app/Contents/Frameworks/Sparkle.framework"
+cp .build/artifacts/sparkle/Sparkle/LICENSE "$anydock_app/Contents/Resources/Sparkle-LICENSE.txt"
 cp "$anydock_bin/AnyDock" "$anydock_app/Contents/MacOS/AnyDock"
 ditto "$anydock_bin/AnyDock_AnyDock.bundle" "$anydock_app/Contents/Resources/AnyDock_AnyDock.bundle"
 ditto "$anydock_bin/SnapKit_SnapKit.bundle" "$anydock_app/Contents/Resources/SnapKit_SnapKit.bundle"
