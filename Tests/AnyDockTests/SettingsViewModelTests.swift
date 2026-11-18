@@ -220,3 +220,34 @@ func aboutVersionComesFromBundle() throws {
     #expect(AboutInfo(bundle: versioned).version == L10n.text("Version %@ (%@)", "9.8.7", "42"))
     #expect(try AboutInfo(bundle: bundle([:])).version == nil)
 }
+
+@MainActor
+@Test("关于页只在更新器允许检查时转发用户操作")
+func updateAvailabilityGatesUserRequests() {
+    final class Updates: UpdateChecking {
+        let ready = CurrentValueSubject<Bool, Never>(false)
+        var checks = 0
+        var availability: AnyPublisher<Bool, Never> {
+            ready.eraseToAnyPublisher()
+        }
+
+        func checkForUpdates() {
+            checks += 1
+        }
+    }
+    let updates = Updates()
+    let model = SettingsViewModel(
+        status: FakeReceiver().status,
+        about: AboutInfo(version: nil),
+        updates: updates
+    )
+    model.checkForUpdates()
+    #expect(updates.checks == 0)
+    updates.ready.send(true)
+    #expect(model.canCheckForUpdates)
+    model.checkForUpdates()
+    updates.ready.send(false)
+    #expect(!model.canCheckForUpdates)
+    model.checkForUpdates()
+    #expect(updates.checks == 1)
+}

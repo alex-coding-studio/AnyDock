@@ -5,7 +5,7 @@ import SwiftUI
 private let typography = PKYThemeFallback.system.typography
 
 struct AboutSettingsView: View {
-    let about: AboutInfo
+    @ObservedObject var viewModel: SettingsViewModel
 
     var body: some View {
         VStack(spacing: 0) {
@@ -58,7 +58,7 @@ struct AboutSettingsView: View {
                 )))
                 .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
                 .padding(.top, PKYLayout.Gap.content(.compact))
-            if let version = about.version {
+            if let version = viewModel.about.version {
                 Text(version)
                     .font(typography.supporting.medium.font)
                     .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
@@ -72,6 +72,10 @@ struct AboutSettingsView: View {
                     )
                     .padding(.top, PKYLayout.Gap.group(.compact))
             }
+            Button(L10n.text("Check for Updates…"), action: viewModel.checkForUpdates)
+                .settingsButton(.primary)
+                .disabled(!viewModel.canCheckForUpdates)
+                .padding(.top, PKYLayout.Gap.group(.compact))
             HStack(spacing: PKYLayout.Gap.content()) {
                 link(
                     L10n.text("GitHub Project"),

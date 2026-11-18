@@ -81,7 +81,11 @@ final class AppServiceProvider {
             sharing: connection.isSending
         )
         return SettingsWindowController(
-            viewModel: SettingsViewModel(status: inbox.status, about: about),
+            viewModel: SettingsViewModel(
+                status: inbox.status,
+                about: about,
+                updates: SparkleUpdates()
+            ),
             general: general,
             connection: connection,
             receiving: ReceivingSettingsViewModel(receiver: inbox)
