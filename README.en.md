@@ -17,7 +17,7 @@ Send images, text, links, and files from your iPhone to your Mac menu bar with a
 
 ## Install
 
-Download the `.dmg` under **Assets** on the release page and drag AnyDock into **Applications**. Open it, then click the menu bar icon. In-app updates are under **Settings → About**.
+Download the `.dmg` under **Assets** on the release page and drag AnyDock into **Applications**. Open it, then click the menu bar icon. AnyDock checks for new versions in the background and shows a hint in the Settings sidebar and on the tray's Settings button; you can also check manually under **Settings → About**.
 
 ## Send from your iPhone
 
