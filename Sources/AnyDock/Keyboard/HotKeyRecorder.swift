@@ -81,8 +81,8 @@ final class HotKeyRecorder: NSButton {
             rejectionSubject.send(.modifierRequired)
             return
         }
-        guard !candidate.matchesQuit(in: event) else {
-            rejectionSubject.send(.reservedForQuit)
+        guard !candidate.matchesReservedMenuShortcut(in: event) else {
+            rejectionSubject.send(.reservedForMenu)
             return
         }
         endRecording()

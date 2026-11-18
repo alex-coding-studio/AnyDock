@@ -3,11 +3,14 @@ import Carbon.HIToolbox
 
 enum HotKeyRejection: String {
     case modifierRequired = "hotkey.modifierRequired"
-    case reservedForQuit = "hotkey.reservedForQuit"
+    case reservedForMenu = "hotkey.reservedForMenu"
 }
 
 struct KeyCombination: Equatable {
     static let quitCharacter = "q"
+    static let settingsCharacter = ","
+
+    private static let reservedMenuCharacters: Set<String> = [quitCharacter, settingsCharacter]
 
     private static let supportedModifiers: NSEvent.ModifierFlags = [
         .control,
@@ -155,7 +158,10 @@ struct KeyCombination: Equatable {
         return text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : text
     }
 
-    func matchesQuit(in event: NSEvent) -> Bool {
-        modifiers == .command && event.characters?.lowercased() == Self.quitCharacter
+    func matchesReservedMenuShortcut(in event: NSEvent) -> Bool {
+        guard modifiers == .command, let character = event.characters?.lowercased() else {
+            return false
+        }
+        return Self.reservedMenuCharacters.contains(character)
     }
 }

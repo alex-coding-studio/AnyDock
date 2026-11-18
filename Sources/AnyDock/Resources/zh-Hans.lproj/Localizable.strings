@@ -54,6 +54,7 @@
 "Send to iPhone…" = "发送到 iPhone…";
 "settings.shortcut.note" = "快捷指令含连接密钥，系统签名会将副本交给 Apple 验证，请仅发送给自己的 iPhone。";
 "Settings" = "设置";
+"Settings…" = "设置…";
 "Share content on your iPhone and choose your Mac’s shortcut." = "在 iPhone 上分享内容，选择这台 Mac 的快捷指令。";
 "Shortcut name" = "快捷指令名称";
 "shortcut.airdrop.sent" = "快捷指令已发送；请在 iPhone 上添加后分享内容试用。";
@@ -117,7 +118,7 @@
 "hotkey.clear" = "清除";
 "hotkey.clear.accessibility" = "清除唤醒快捷键";
 "hotkey.modifierRequired" = "快捷键需要包含 ⌘、⌥ 或 ⌃，只按 ⇧ 不够。";
-"hotkey.reservedForQuit" = "⌘Q 保留用于退出。";
+"hotkey.reservedForMenu" = "⌘Q 和 ⌘, 分别保留用于退出和打开设置。";
 "hotkey.unavailable" = "%@ 已被 macOS 或其他 App 占用，请换一个快捷键。";
 "about.tagline" = "从 iPhone 到 Mac，随手一递。";
 "About" = "关于";

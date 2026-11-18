@@ -54,6 +54,7 @@
 "Send to iPhone…" = "Send to iPhone…";
 "settings.shortcut.note" = "The shortcut contains your connection key, and system signing sends a copy to Apple for validation. Send it only to your own iPhone.";
 "Settings" = "Settings";
+"Settings…" = "Settings…";
 "Share content on your iPhone and choose your Mac’s shortcut." = "Share content on your iPhone and choose your Mac’s shortcut.";
 "Shortcut name" = "Shortcut name";
 "shortcut.airdrop.sent" = "Shortcut sent. Add it on your iPhone, then share content to try it.";
@@ -117,7 +118,7 @@
 "hotkey.clear" = "Clear";
 "hotkey.clear.accessibility" = "Clear wake shortcut";
 "hotkey.modifierRequired" = "Include ⌘, ⌥ or ⌃ in the shortcut. ⇧ alone is not enough.";
-"hotkey.reservedForQuit" = "⌘Q is reserved for Quit.";
+"hotkey.reservedForMenu" = "⌘Q and ⌘, are reserved for Quit and Settings.";
 "hotkey.unavailable" = "%@ is already in use by macOS or another app. Choose a different shortcut.";
 "about.tagline" = "From iPhone to Mac, in one easy hand-over.";
 "About" = "About";

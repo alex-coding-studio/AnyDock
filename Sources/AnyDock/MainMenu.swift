@@ -1,10 +1,24 @@
 import AppKit
+import Combine
 
 @MainActor
-enum MainMenu {
-    static func make() -> NSMenu {
+final class MainMenu: NSObject {
+    private let settingsRequestSubject = PassthroughSubject<Void, Never>()
+
+    var settingsRequests: AnyPublisher<Void, Never> {
+        settingsRequestSubject.eraseToAnyPublisher()
+    }
+
+    func make() -> NSMenu {
         let menu = NSMenu()
         let application = addMenu("AnyDock", to: menu)
+        let settings = application.addItem(
+            withTitle: L10n.text("Settings…"),
+            action: #selector(requestSettings),
+            keyEquivalent: KeyCombination.settingsCharacter
+        )
+        settings.target = self
+        application.addItem(.separator())
         let quit = application.addItem(
             withTitle: L10n.text("Quit AnyDock"),
             action: #selector(NSApplication.terminate(_:)),
@@ -34,7 +48,11 @@ enum MainMenu {
         return menu
     }
 
-    private static func addMenu(_ title: String, to menu: NSMenu) -> NSMenu {
+    @objc private func requestSettings() {
+        settingsRequestSubject.send()
+    }
+
+    private func addMenu(_ title: String, to menu: NSMenu) -> NSMenu {
         let title = L10n.text(title)
         let submenu = NSMenu(title: title)
         menu.addItem(withTitle: title, action: nil, keyEquivalent: "").submenu = submenu

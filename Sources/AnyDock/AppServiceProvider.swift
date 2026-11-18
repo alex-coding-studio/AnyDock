@@ -13,6 +13,7 @@ final class AppServiceProvider {
     private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
     private let hotKeys = GlobalHotKeyCenter()
     private let updates = SparkleUpdates(bundle: .main)
+    private let mainMenu = MainMenu()
     private var subscriptions = Set<AnyCancellable>()
 
     private lazy var statusItem = StatusItemController(status: inbox.status)
@@ -50,6 +51,7 @@ final class AppServiceProvider {
     }
 
     func start(arguments: [String]) {
+        NSApp.mainMenu = mainMenu.make()
         _ = hotKeys.register(Preferences.wakeHotKey)
         Task { await inbox.start() }
         if arguments.contains(Self.settingsArgument) {
@@ -96,6 +98,7 @@ final class AppServiceProvider {
 
     private func subscribeEvents() {
         trayPopover.settingsRequests
+            .merge(with: mainMenu.settingsRequests)
             .sink { [weak self] in self?.showSettings() }
             .store(in: &subscriptions)
         hotKeys.presses

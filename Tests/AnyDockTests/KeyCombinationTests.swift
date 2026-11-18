@@ -40,12 +40,14 @@ func hotKeyRequiresCommandOptionOrControl() {
 }
 
 @MainActor
-@Test("Dvorak - QWERTY ⌘ 下只保留实际的 ⌘Q", arguments: [
+@Test("菜单保留键按住 ⌘ 后实际产生的字符匹配", arguments: [
     (kVK_ANSI_X, "x", "q", NSEvent.ModifierFlags.command, false),
     (kVK_ANSI_Q, "q", "'", NSEvent.ModifierFlags.command, true),
     (kVK_ANSI_Q, "Q", "\"", NSEvent.ModifierFlags([.command, .shift]), false),
+    (kVK_ANSI_Comma, ",", "w", NSEvent.ModifierFlags.command, true),
+    (kVK_ANSI_W, "w", ",", NSEvent.ModifierFlags.command, false),
 ])
-func quitReservationMatchesCommandCharacter(
+func reservedMenuShortcutMatchesCommandCharacter(
     keyCode: Int,
     character: String,
     plainCharacter: String,
@@ -67,5 +69,5 @@ func quitReservationMatchesCommandCharacter(
             keyCode: UInt16(keyCode)
         )
     )
-    #expect(candidate.matchesQuit(in: event) == reserved)
+    #expect(candidate.matchesReservedMenuShortcut(in: event) == reserved)
 }
