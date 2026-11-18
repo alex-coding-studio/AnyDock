@@ -10,6 +10,14 @@
 "Connection" = "连接";
 "Connection key" = "连接密钥";
 "Copy" = "复制";
+"Close" = "关闭";
+"Cut" = "剪切";
+"Edit" = "编辑";
+"Paste" = "粘贴";
+"Redo" = "重做";
+"Select All" = "全选";
+"Undo" = "撤销";
+"Window" = "窗口";
 "Copy connection key" = "复制连接密钥";
 "Copy receive address" = "复制接收地址";
 "Creating and signing the shortcut…" = "正在生成并签名快捷指令…";
@@ -46,6 +54,7 @@
 "Send to iPhone…" = "发送到 iPhone…";
 "settings.shortcut.note" = "快捷指令含连接密钥，系统签名会将副本交给 Apple 验证，请仅发送给自己的 iPhone。";
 "Settings" = "设置";
+"Settings…" = "设置…";
 "Share content on your iPhone and choose your Mac’s shortcut." = "在 iPhone 上分享内容，选择这台 Mac 的快捷指令。";
 "Shortcut name" = "快捷指令名称";
 "shortcut.airdrop.sent" = "快捷指令已发送；请在 iPhone 上添加后分享内容试用。";
@@ -109,6 +118,7 @@
 "hotkey.clear" = "清除";
 "hotkey.clear.accessibility" = "清除唤醒快捷键";
 "hotkey.modifierRequired" = "快捷键需要包含 ⌘、⌥ 或 ⌃，只按 ⇧ 不够。";
+"hotkey.reservedForMenu" = "⌘Q 和 ⌘, 分别保留用于退出和打开设置。";
 "hotkey.unavailable" = "%@ 已被 macOS 或其他 App 占用，请换一个快捷键。";
 "about.tagline" = "从 iPhone 到 Mac，随手一递。";
 "About" = "关于";

@@ -153,8 +153,8 @@ final class GeneralSettingsViewModel: ObservableObject {
         }
     }
 
-    func rejectHotKey() {
-        update { $0.hotKeyMessage = L10n.text("hotkey.modifierRequired") }
+    func rejectHotKey(_ rejection: HotKeyRejection) {
+        update { $0.hotKeyMessage = L10n.text(rejection.rawValue) }
     }
 
     func clearHotKey() {

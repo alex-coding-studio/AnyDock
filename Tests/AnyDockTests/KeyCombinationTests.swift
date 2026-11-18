@@ -38,3 +38,36 @@ func hotKeyRequiresCommandOptionOrControl() {
     #expect(KeyCombination(keyCode: UInt32(kVK_ANSI_K), modifiers: [.shift, .capsLock]) == nil)
     #expect(KeyCombination(keyCode: UInt32(kVK_ANSI_K), modifiers: [.shift, .control]) != nil)
 }
+
+@MainActor
+@Test("菜单保留键按住 ⌘ 后实际产生的字符匹配", arguments: [
+    (kVK_ANSI_X, "x", "q", NSEvent.ModifierFlags.command, false),
+    (kVK_ANSI_Q, "q", "'", NSEvent.ModifierFlags.command, true),
+    (kVK_ANSI_Q, "Q", "\"", NSEvent.ModifierFlags([.command, .shift]), false),
+    (kVK_ANSI_Comma, ",", "w", NSEvent.ModifierFlags.command, true),
+    (kVK_ANSI_W, "w", ",", NSEvent.ModifierFlags.command, false),
+])
+func reservedMenuShortcutMatchesCommandCharacter(
+    keyCode: Int,
+    character: String,
+    plainCharacter: String,
+    modifiers: NSEvent.ModifierFlags,
+    reserved: Bool
+) throws {
+    let candidate = try #require(KeyCombination(keyCode: UInt32(keyCode), modifiers: modifiers))
+    let event = try #require(
+        NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: modifiers,
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            characters: character,
+            charactersIgnoringModifiers: plainCharacter,
+            isARepeat: false,
+            keyCode: UInt16(keyCode)
+        )
+    )
+    #expect(candidate.matchesReservedMenuShortcut(in: event) == reserved)
+}

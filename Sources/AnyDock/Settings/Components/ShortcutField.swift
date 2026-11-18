@@ -115,7 +115,7 @@ private struct HotKeyRecorderBridge: NSViewRepresentable {
                 .sink { [weak viewModel] in viewModel?.record($0) }
                 .store(in: &subscriptions)
             recorder.rejections
-                .sink { [weak viewModel] in viewModel?.rejectHotKey() }
+                .sink { [weak viewModel] in viewModel?.rejectHotKey($0) }
                 .store(in: &subscriptions)
         }
     }
