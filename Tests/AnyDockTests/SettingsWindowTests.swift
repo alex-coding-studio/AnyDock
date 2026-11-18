@@ -4,7 +4,7 @@ import Testing
 @testable import AnyDock
 
 @MainActor
-@Test("录制快捷键时 Esc 只取消录制，窗口收到 Esc 时使用原生关闭操作")
+@Test("长按 Esc 只取消录制，松开后再按 Esc 才关闭设置")
 func escapeCancelsRecordingBeforeClosingSettings() throws {
     let window = SettingsWindow(
         contentRect: NSRect(x: 0, y: 0, width: 200, height: 100),
@@ -20,25 +20,30 @@ func escapeCancelsRecordingBeforeClosingSettings() throws {
     recorder.performClick(nil)
     #expect(window.firstResponder === recorder)
     #expect(recorder.isRecording)
-    let escape = try #require(NSEvent.keyEvent(
-        with: .keyDown,
-        location: .zero,
-        modifierFlags: [],
-        timestamp: 0,
-        windowNumber: window.windowNumber,
-        context: nil,
-        characters: "\u{1B}",
-        charactersIgnoringModifiers: "\u{1B}",
-        isARepeat: false,
-        keyCode: UInt16(kVK_Escape)
-    ))
+    func escapeEvent(isARepeat: Bool = false) throws -> NSEvent {
+        try #require(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: window.windowNumber,
+            context: nil,
+            characters: "\u{1B}",
+            charactersIgnoringModifiers: "\u{1B}",
+            isARepeat: isARepeat,
+            keyCode: UInt16(kVK_Escape)
+        ))
+    }
 
-    window.sendEvent(escape)
+    try window.sendEvent(escapeEvent())
     #expect(!recorder.isRecording)
     #expect(!closeRequest.wasRequested)
 
-    window.makeFirstResponder(window)
-    window.sendEvent(escape)
+    #expect(window.firstResponder === recorder)
+    try window.sendEvent(escapeEvent(isARepeat: true))
+    #expect(!closeRequest.wasRequested)
+
+    try window.sendEvent(escapeEvent())
     #expect(closeRequest.wasRequested)
 }
 

@@ -57,7 +57,9 @@ final class SettingsWindow: NSWindow {
         else {
             return super.keyDown(with: event)
         }
-        cancelOperation(nil)
+        if !event.isARepeat {
+            cancelOperation(nil)
+        }
     }
 
     override func cancelOperation(_ sender: Any?) {
