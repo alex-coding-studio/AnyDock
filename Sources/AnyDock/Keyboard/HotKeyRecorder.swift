@@ -16,7 +16,7 @@ final class HotKeyRecorder: NSButton {
 
     private let recordingChangeSubject = PassthroughSubject<Bool, Never>()
     private let recordSubject = PassthroughSubject<KeyCombination, Never>()
-    private let rejectionSubject = PassthroughSubject<Void, Never>()
+    private let rejectionSubject = PassthroughSubject<HotKeyRejection, Never>()
     private var resignSubscription: AnyCancellable?
 
     var recordingChanges: AnyPublisher<Bool, Never> {
@@ -27,7 +27,7 @@ final class HotKeyRecorder: NSButton {
         recordSubject.eraseToAnyPublisher()
     }
 
-    var rejections: AnyPublisher<Void, Never> {
+    var rejections: AnyPublisher<HotKeyRejection, Never> {
         rejectionSubject.eraseToAnyPublisher()
     }
 
@@ -78,7 +78,13 @@ final class HotKeyRecorder: NSButton {
             keyCode: UInt32(event.keyCode),
             modifiers: modifiers
         ) else {
-            rejectionSubject.send()
+            rejectionSubject.send(.modifierRequired)
+            return
+        }
+        guard !candidate.matchesQuit(character: event.charactersIgnoringModifiers),
+              !candidate.isReservedForQuit
+        else {
+            rejectionSubject.send(.reservedForQuit)
             return
         }
         endRecording()

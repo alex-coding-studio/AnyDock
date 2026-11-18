@@ -1,7 +1,14 @@
 import AppKit
 import Carbon.HIToolbox
 
+enum HotKeyRejection: String {
+    case modifierRequired = "hotkey.modifierRequired"
+    case reservedForQuit = "hotkey.reservedForQuit"
+}
+
 struct KeyCombination: Equatable {
+    static let quitCharacter = "q"
+
     private static let supportedModifiers: NSEvent.ModifierFlags = [
         .control,
         .option,
@@ -50,6 +57,17 @@ struct KeyCombination: Equatable {
 
     let keyCode: UInt32
     let modifiers: NSEvent.ModifierFlags
+
+    var isReservedForQuit: Bool {
+        guard modifiers == .command else {
+            return false
+        }
+        return matchesQuit(character: Self.layoutCharacter(for: keyCode))
+            || matchesQuit(character: Self.layoutCharacter(
+                for: keyCode,
+                modifierKeyState: UInt32(cmdKey) >> 8
+            ))
+    }
 
     var preference: [String: Int] {
         ["keyCode": Int(keyCode), "modifiers": Int(modifiers.rawValue)]
@@ -112,8 +130,12 @@ struct KeyCombination: Equatable {
         self.init(keyCode: code, modifiers: NSEvent.ModifierFlags(rawValue: flags))
     }
 
-    private static func layoutCharacter(for keyCode: UInt32) -> String? {
-        guard let source = TISCopyCurrentKeyboardLayoutInputSource()?.takeRetainedValue(),
+    private static func layoutCharacter(
+        for keyCode: UInt32,
+        modifierKeyState: UInt32 = 0
+    ) -> String? {
+        guard let virtualKey = UInt16(exactly: keyCode),
+              let source = TISCopyCurrentKeyboardLayoutInputSource()?.takeRetainedValue(),
               let pointer = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)
         else {
             return nil
@@ -130,9 +152,9 @@ struct KeyCombination: Equatable {
             }
             return UCKeyTranslate(
                 layout,
-                UInt16(keyCode),
-                UInt16(kUCKeyActionDisplay),
-                0,
+                virtualKey,
+                UInt16(modifierKeyState == 0 ? kUCKeyActionDisplay : kUCKeyActionDown),
+                modifierKeyState,
                 UInt32(LMGetKbdType()),
                 OptionBits(kUCKeyTranslateNoDeadKeysBit),
                 &deadKeys,
@@ -146,5 +168,9 @@ struct KeyCombination: Equatable {
         }
         let text = String(utf16CodeUnits: characters, count: length)
         return text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : text
+    }
+
+    func matchesQuit(character: String?) -> Bool {
+        modifiers == .command && character == Self.quitCharacter
     }
 }

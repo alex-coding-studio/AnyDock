@@ -117,6 +117,7 @@
 "hotkey.clear" = "Clear";
 "hotkey.clear.accessibility" = "Clear wake shortcut";
 "hotkey.modifierRequired" = "Include ⌘, ⌥ or ⌃ in the shortcut. ⇧ alone is not enough.";
+"hotkey.reservedForQuit" = "⌘Q is reserved for Quit.";
 "hotkey.unavailable" = "%@ is already in use by macOS or another app. Choose a different shortcut.";
 "about.tagline" = "From iPhone to Mac, in one easy hand-over.";
 "About" = "About";

@@ -4,6 +4,8 @@ import Combine
 
 @MainActor
 final class TrayPopoverController: NSObject, NSPopoverDelegate {
+    private static let activationTimeout = RunLoop.SchedulerTimeType.Stride.seconds(1)
+
     private(set) lazy var tray = TrayViewController(viewModel: viewModel, clipboard: clipboard)
 
     private(set) lazy var popover: NSPopover = {
@@ -20,6 +22,7 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
     private let clipboard: ClipboardMonitor
     private let statusItem: StatusItemController
     private let updates: (any UpdateChecking)?
+    private var activationRequest: AnyCancellable?
     private var appearance: NSKeyValueObservation?
     private var subscriptions = Set<AnyCancellable>()
 
@@ -53,19 +56,8 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         }
     }
 
-    func show(reloading: Bool = true) {
-        guard !popover.isShown, let button = statusItem.button else {
-            return
-        }
-        NSApp.activate()
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        tray.focusCollection()
-        if reloading {
-            Task { await inbox.reload() }
-        }
-    }
-
     func close() {
+        activationRequest = nil
         tray.closePreview()
         popover.performClose(nil)
     }
@@ -78,7 +70,57 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         tray.trayDidClose()
     }
 
+    private func show(reloading: Bool = true) {
+        guard !popover.isShown else {
+            return
+        }
+        if NSApp.isActive {
+            presentTray()
+        } else {
+            activationRequest = NotificationCenter.default
+                .publisher(for: NSApplication.didBecomeActiveNotification, object: NSApp)
+                .prefix(1)
+                .timeout(Self.activationTimeout, scheduler: RunLoop.main)
+                .sink { [weak self] _ in
+                    MainActor.assumeIsolated { self?.presentTray() }
+                }
+            NSApp.activate()
+        }
+        if reloading {
+            Task { await inbox.reload() }
+        }
+    }
+
+    private func presentTray() {
+        activationRequest = nil
+        guard NSApp.isActive, !popover.isShown, let button = statusItem.button else {
+            return
+        }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        if !tray.focusCollection() || !NSApp.isActive {
+            dismissTrayImmediately()
+        }
+    }
+
+    private func dismissTrayImmediately() {
+        activationRequest = nil
+        guard popover.isShown else {
+            return
+        }
+        tray.closePreview()
+        let animates = popover.animates
+        popover.animates = false
+        popover.close()
+        popover.animates = animates
+    }
+
     private func subscribeEvents() {
+        NotificationCenter.default
+            .publisher(for: NSApplication.willResignActiveNotification, object: NSApp)
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated { self?.dismissTrayImmediately() }
+            }
+            .store(in: &subscriptions)
         statusItem.clicks
             .sink { [weak self] in self?.toggle() }
             .store(in: &subscriptions)

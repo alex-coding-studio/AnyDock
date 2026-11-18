@@ -8,7 +8,7 @@ enum MainMenu {
         let quit = application.addItem(
             withTitle: L10n.text("Quit AnyDock"),
             action: #selector(NSApplication.terminate(_:)),
-            keyEquivalent: "q"
+            keyEquivalent: KeyCombination.quitCharacter
         )
         quit.target = NSApp
 

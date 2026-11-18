@@ -38,3 +38,14 @@ func hotKeyRequiresCommandOptionOrControl() {
     #expect(KeyCombination(keyCode: UInt32(kVK_ANSI_K), modifiers: [.shift, .capsLock]) == nil)
     #expect(KeyCombination(keyCode: UInt32(kVK_ANSI_K), modifiers: [.shift, .control]) != nil)
 }
+
+@Test("退出保留键按键盘布局字符匹配，只接受单独的 ⌘ 修饰键")
+func quitReservationMatchesTheLayoutCharacter() throws {
+    let movedQ = try #require(KeyCombination(keyCode: UInt32(kVK_ANSI_X), modifiers: .command))
+    let shifted = try #require(
+        KeyCombination(keyCode: UInt32(kVK_ANSI_Q), modifiers: [.command, .shift])
+    )
+    #expect(movedQ.matchesQuit(character: "q"))
+    #expect(!movedQ.matchesQuit(character: "x"))
+    #expect(!shifted.matchesQuit(character: "q"))
+}

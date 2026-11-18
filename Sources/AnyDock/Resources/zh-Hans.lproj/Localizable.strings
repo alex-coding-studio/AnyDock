@@ -117,6 +117,7 @@
 "hotkey.clear" = "清除";
 "hotkey.clear.accessibility" = "清除唤醒快捷键";
 "hotkey.modifierRequired" = "快捷键需要包含 ⌘、⌥ 或 ⌃，只按 ⇧ 不够。";
+"hotkey.reservedForQuit" = "⌘Q 保留用于退出。";
 "hotkey.unavailable" = "%@ 已被 macOS 或其他 App 占用，请换一个快捷键。";
 "about.tagline" = "从 iPhone 到 Mac，随手一递。";
 "About" = "关于";

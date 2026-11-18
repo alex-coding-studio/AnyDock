@@ -54,9 +54,10 @@ Recycling is limited to the generated items listed for the current receive folde
 
 ## Wake shortcut
 
-- General's Keyboard section has a wake shortcut recorder and Clear; none is set by default. Clicking starts recording: the next key with ⌘, ⌥ or ⌃ is saved immediately, Esc without them cancels, and a key with no modifier or ⇧ alone is rejected with a hint while recording continues. Recording ends when the recorder loses focus or Settings stops being key. It shows symbols in Apple order (⌃⌥⇧⌘) and the key name from the current keyboard layout.
-- No Accessibility permission is required. While recording, the saved shortcut is suspended so it reaches the recorder. A new shortcut that cannot be registered is not saved, the previous one stays active and General says it is already in use; a saved shortcut failing at launch shows the same message when Settings first opens. A combination taken by a system shortcut may register without error and never fire.
-- Pressing it acts like clicking the menu bar icon: closes Quick Look when the tray is held, closes an open tray, or shows the tray, activates AnyDock, rereads the receive folder and focuses the cards so arrows, Space, ⌘C and Esc work immediately.
+- General's Keyboard section has a wake shortcut recorder and Clear; none is set by default. Clicking starts recording: the next eligible key with ⌘, ⌥ or ⌃ is saved immediately, Esc without them cancels, and a key with no modifier or ⇧ alone is rejected with a hint while recording continues. Recording ends when the recorder loses focus or Settings stops being key. It shows symbols in Apple order (⌃⌥⇧⌘) and the key name from the current keyboard layout.
+- ⌘Q is reserved for Quit. Recording a combination that matches it on the current keyboard layout shows a hint and keeps recording. A saved shortcut that matches ⌘Q stays in preferences and is unavailable as a wake shortcut while it conflicts.
+- No Accessibility permission is required. While recording, the saved shortcut is suspended so it reaches the recorder. A new shortcut that cannot be registered is not saved, the previous one stays active and General says it is already in use. Any saved shortcut that fails at launch, including a reserved ⌘Q, shows the same unavailable message when Settings first opens. A combination taken by a system shortcut may register without error and never fire.
+- Pressing it acts like clicking the menu bar icon: closes Quick Look when the tray is held, closes an open tray, or activates AnyDock, rereads the receive folder and opens the tray with the cards focused for arrows, Space, ⌘C and Esc. The tray opens only with AnyDock active and keyboard focus available. Switching to another app closes the tray and its Quick Look preview.
 
 ## Settings
 
