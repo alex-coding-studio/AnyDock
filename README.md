@@ -7,40 +7,38 @@
 <p align="center">从 iPhone 到 Mac，随手一递。</p>
 
 <p align="center">
-  <a href="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml"><img src="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/alex-coding-studio/AnyDock/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
-  <a href="https://github.com/alex-coding-studio/AnyDock"><img src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey" alt="Platform: macOS 14+"></a>
+  <a href="https://github.com/alex-coding-studio/AnyDock/releases/latest"><strong>下载最新版 DMG</strong></a>
+  · Apple 芯片 Mac · macOS 14+
 </p>
 
-- 分享菜单一键发送
-- 从菜单栏托盘拖进聊天
-- 不需要同一个 Apple ID，多台手机都能发
-- 只走局域网，不经过云端
+用 iPhone 快捷指令把图片、文字、链接和文件发到 Mac 菜单栏。传输走同一局域网，多台 iPhone 可以用各自的 Apple ID。
+
+<p align="center"><img src="docs/images/anydock-tray.png" alt="随手坞菜单栏托盘，展示内容分类和接收的示例卡片" width="460"></p>
 
 ## 安装
 
-需要 macOS 14+。从 [GitHub Releases](https://github.com/alex-coding-studio/AnyDock/releases) 下载 DMG，把 AnyDock 拖进「应用程序」。
+在发布页的 **Assets** 下载 `.dmg`，把随手坞拖进「应用程序」。打开后，点菜单栏图标进入托盘。应用内更新入口在「设置 → 关于」。
 
-从源码构建需要 Xcode 26+：
+## 从 iPhone 发送
 
-```sh
-./scripts/run.sh
-```
+1. 从 Mac 托盘的齿轮进入「设置 → 连接 → 发送到 iPhone…」，通过隔空投送发给自己的 iPhone。
+2. 在 iPhone 上点「添加快捷指令」。接收地址和密钥已填好。
+3. 在同一局域网下，从 iPhone 的分享菜单运行这条指令。若系统询问，请允许局域网访问。Mac 收到后，从托盘拖出、按 ⌘C 复制，或按空格快速查看。
 
-## 连接 iPhone
+隔空投送不可用时，可以在「连接 → 手动设置」导出通用快捷指令，在 iPhone 导入时填写接收地址和密钥。
 
-在设置的「连接」里点「发送到 iPhone…」，用 AirDrop 发到手机并添加快捷指令。之后在任意 App 的分享菜单里选它。
+## 常用设置
 
-## 安全
+- **收到后自动复制**。在 Mac 的「设置 → 通用 → 托盘」开启，收到后可以直接粘贴。
+- **轻点背面发送**。在 iPhone 的「设置 → 辅助功能（或无障碍）→ 触控 → 轻点背面」选中快捷指令，复制内容后轻点背面即可发送。[Apple 使用指南](https://support.apple.com/zh-cn/guide/iphone/iphaa57e7885/ios)
+- **查看接收文件**。在「设置 → 接收」点「在 Finder 中显示」。默认保存到 `~/Downloads/AnyDock`。
 
-只在可信局域网使用：传输不加密，不要把端口暴露到公网。快捷指令里有连接密钥，只发给自己的设备。
+发送失败时，先检查 Mac 是否显示「监听中」、两台设备是否在同一局域网、iPhone 是否允许局域网访问。更改端口后请重新发送快捷指令。单项上限为 50 MB。
+
+局域网 HTTP 传输不加密，请在可信网络中使用。接收端口不要暴露到公网，含密钥的个性化快捷指令请勿公开。
 
 ## 开发
 
-```sh
-./scripts/lint.sh && ./scripts/test.sh
-```
+使用 Xcode 26 或更新版本，运行 `./scripts/run.sh`。构建环境和检查命令见 [ProjectContext.md](ProjectContext.md)。
 
-个人维护，不接受外部 issue 和 PR，欢迎 fork。MIT 许可证，见 [LICENSE](LICENSE)。
-
-布局使用 [SnapKit](https://github.com/SnapKit/SnapKit)（MIT）；完整第三方许可证随应用资源分发。
+个人维护，不接受外部 issue 和 PR，欢迎 fork。[MIT 许可证](LICENSE) · [CI](https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml) · [SnapKit](https://github.com/SnapKit/SnapKit)。第三方许可证随应用分发。

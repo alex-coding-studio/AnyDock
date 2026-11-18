@@ -7,40 +7,38 @@
 <p align="center">From iPhone to Mac, in one easy hand-over.</p>
 
 <p align="center">
-  <a href="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml"><img src="https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/alex-coding-studio/AnyDock/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
-  <a href="https://github.com/alex-coding-studio/AnyDock"><img src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey" alt="Platform: macOS 14+"></a>
+  <a href="https://github.com/alex-coding-studio/AnyDock/releases/latest"><strong>Download the latest DMG</strong></a>
+  · Apple silicon Mac · macOS 14+
 </p>
 
-- One tap from the iPhone Share Sheet
-- Drag straight from the menu bar tray into chats
-- No shared Apple ID needed; any number of phones can send
-- Local network only, no cloud
+Send images, text, links, and files from your iPhone to your Mac menu bar with a shortcut. Transfers stay on your local network, and each iPhone can use its own Apple ID.
+
+<p align="center"><img src="docs/images/anydock-tray.png" alt="AnyDock menu bar tray showing content filters and sample items" width="460"></p>
 
 ## Install
 
-Requires macOS 14+. Download the DMG from [GitHub Releases](https://github.com/alex-coding-studio/AnyDock/releases) and drag AnyDock into Applications.
+Download the `.dmg` under **Assets** on the release page and drag AnyDock into **Applications**. Open it, then click the menu bar icon. In-app updates are under **Settings → About**.
 
-To build from source, use Xcode 26+:
+## Send from your iPhone
 
-```sh
-./scripts/run.sh
-```
+1. Use the gear in the Mac tray to open **Settings → Connection → Send to iPhone…**, then AirDrop the shortcut to your own iPhone.
+2. Tap **Add Shortcut** on your iPhone. The address and connection key are already filled in.
+3. With both devices on the same local network, run the shortcut from the iPhone Share Sheet. Allow local network access if prompted. On your Mac, drag the received item out of the tray, copy it with ⌘C, or press Space to preview it.
 
-## Connect your iPhone
+If AirDrop is unavailable, export the generic shortcut from **Connection → Manual Setup**. Enter the receive address and key when importing it on the iPhone.
 
-In Settings → Connection, choose "Send to iPhone…", AirDrop it to your phone and add the shortcut. Then pick it from any app's Share Sheet.
+## Useful settings
 
-## Security
+- **Copy on arrival.** Enable **Copy new items automatically** under **Settings → General → Tray**, then paste in your destination app.
+- **Send with Back Tap.** On iPhone, assign the shortcut in **Settings → Accessibility → Touch → Back Tap**. Copy an item, then tap the back of your iPhone to send it. [Apple's Back Tap guide](https://support.apple.com/en-ca/guide/shortcuts/apd897693606/ios)
+- **Find received files.** Click **Show in Finder** under **Settings → Receiving**. The default folder is `~/Downloads/AnyDock`.
 
-Use only on a trusted local network: traffic is unencrypted, so never expose the port to the Internet. The shortcut contains your connection key; send it only to your own devices.
+If a transfer fails, check that AnyDock is listening on the Mac, both devices are on the same local network, and Shortcuts has local network access. Resend the shortcut if you change the port. The limit is 50 MB per item.
+
+Transfers use unencrypted HTTP on the local network. Use a trusted network, keep the receiving port off the public internet, and keep personalized shortcuts private because they contain your connection key.
 
 ## Development
 
-```sh
-./scripts/lint.sh && ./scripts/test.sh
-```
+Run `./scripts/run.sh` with Xcode 26 or later. See [ProjectContext.md](ProjectContext.md) for the development environment and checks.
 
-Personally maintained; external issues and pull requests are not accepted. Forks welcome. MIT License, see [LICENSE](LICENSE).
-
-Auto Layout uses [SnapKit](https://github.com/SnapKit/SnapKit) (MIT); its full license is included in the app resources.
+Personally maintained. External issues and pull requests are closed to contributions. Forks are welcome. [MIT License](LICENSE) · [CI](https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml) · [SnapKit](https://github.com/SnapKit/SnapKit). Third-party licenses ship with the app.
