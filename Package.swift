@@ -9,6 +9,7 @@ let package = Package(
     products: [.executable(name: "AnyDock", targets: ["AnyDock"])],
     dependencies: [
         .package(url: "https://github.com/SnapKit/SnapKit", exact: "6.0.0"),
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.1"),
         .package(
             url: "https://github.com/alex-coding-studio/PockyFoundation",
             .upToNextMinor(from: "0.9.0")
@@ -20,10 +21,14 @@ let package = Package(
             name: "AnyDock",
             dependencies: [
                 "AnyDockCore",
+                .product(name: "Sparkle", package: "Sparkle"),
                 .product(name: "SnapKit", package: "SnapKit"),
                 .product(name: "PockyFoundation", package: "PockyFoundation"),
             ],
-            resources: [.process("Resources")]
+            resources: [.process("Resources")],
+            linkerSettings: [
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"]),
+            ]
         ),
         .testTarget(name: "AnyDockCoreTests", dependencies: ["AnyDockCore"]),
         .testTarget(

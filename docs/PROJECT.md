@@ -101,7 +101,7 @@ The receive address is `http://<LocalHostName>.local:<port>/upload` from the Bon
 
 Defaults: identity `Developer ID Application: Cunqi Xiao (2PQ63WGMNP)`, team `2PQ63WGMNP`, notary profile `MyQuickFinderApi`; override with `ANYDOCK_SIGN_IDENTITY`, `ANYDOCK_TEAM_ID`, `ANYDOCK_NOTARY_PROFILE`. A missing identity stops before building; a missing or invalid profile stops after the signed DMG exists and prints the `xcrun notarytool store-credentials` command. Credentials are never printed. Create a profile once with `xcrun notarytool store-credentials <profile> --apple-id <Apple ID> --team-id 2PQ63WGMNP` and an app-specific password.
 
-The app ships with no entitlements and no sandbox; add the smallest set only when a new capability requires one. Publishing a GitHub Release, tagging and uploading are separate, user-approved steps.
+The app ships with no entitlements and no sandbox; add the smallest set only when a new capability requires one. The release script also creates `dist/appcast.xml` after stapling, signs the feed and verifies both the feed and DMG signatures. The release Mac needs the Sparkle EdDSA key for the `com.cuxiao.mac.anydock` keychain account. Keep its private key in secure custody. The app embeds its public key. Stage the DMG and appcast together on the same GitHub Release tagged `v<version>` before publishing it as the latest stable release. The permanent feed URL uses GitHub's latest-release asset redirect. Publishing a GitHub Release, tagging and uploading are separate, user-approved steps.
 
 Icons are approved rendered exports; replace them directly rather than regenerating. Provenance is in `Resources/Brand/README.md`.
 
