@@ -38,9 +38,15 @@ grep -qx "TeamIdentifier=$team_id" <<<"$signature" ||
 
 staging="$(mktemp -d)"
 trap 'rm -rf "$staging"' EXIT
-ditto "$app" "$staging/AnyDock.app"
-ln -s /Applications "$staging/Applications"
-hdiutil create -volname AnyDock -srcfolder "$staging" -fs HFS+ -format UDZO -ov "$dmg" >/dev/null
+installer="$PWD/Resources/Installer"
+tools="$PWD/.build/dmg-tools"
+python3 -m venv "$tools"
+"$tools/bin/python" -m pip install --disable-pip-version-check --only-binary=:all: --require-hashes \
+  -r "$installer/requirements.txt"
+sips -s format png "$installer/Background.svg" --out "$staging/Background@2x.png" >/dev/null
+sips -Z 640 "$staging/Background@2x.png" --out "$staging/Background.png" >/dev/null
+"$tools/bin/dmgbuild" -s "$installer/layout.py" -D "app=$app" \
+  -D "background=$staging/Background.png" AnyDock "$dmg"
 sign "$dmg"
 codesign --verify --verbose=2 "$dmg"
 printf 'Signed %s\n' "$dmg"

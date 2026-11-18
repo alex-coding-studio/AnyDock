@@ -22,7 +22,7 @@ Run from the project root. Development scripts use system Python 3. `lint.sh` ne
 - `./scripts/test.sh`: Swift and shortcut checks.
 - `./scripts/build.sh`: build and ad-hoc sign `dist/AnyDock.app`. Build products are disposable.
 - `./scripts/run.sh`: build and open the menu bar app.
-- `./scripts/release.sh`: Developer ID signing, DMG, notarization and Gatekeeper checks; local only (see Release in `docs/PROJECT.md`).
+- `./scripts/release.sh`: Developer ID signing, DMG, notarization and Gatekeeper checks; local only (see Release in `docs/PROJECT.md`). Disk image packaging uses Python 3.11+ and hash-pinned dmgbuild dependencies in a project-local virtual environment.
 - `./scripts/shortcut.sh`: sign the generic shortcut with `shortcuts sign`, which needs a signed-in Mac; run it locally and commit the signed `Resources/Shortcuts/发送到 Mac.shortcut`.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint, test and build on the `macos-26` runner with its newest installed Xcode, installing SwiftFormat and SwiftLint from pinned release binaries (`SWIFTFORMAT_VERSION`, `SWIFTLINT_VERSION`, each checked by SHA-256); update a pin together with its local version. CI never signs shortcuts or runs `release.sh`. Pull requests merge only through `.github/workflows/auto-merge.yml` (see Merging pull requests in `docs/PROJECT.md`).
