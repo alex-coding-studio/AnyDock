@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="704" viewBox="0 0 640 352">
+  <defs>
+    <linearGradient id="paper" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#ffffff"/><stop offset=".55" stop-color="#f2f8ff"/><stop offset="1" stop-color="#ddecff"/>
+    </linearGradient>
+    <radialGradient id="sky" cx=".96" cy="0" r=".8">
+      <stop stop-color="#a9d8ff" stop-opacity=".84"/><stop offset=".88" stop-color="#f4faff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#ffffff" stop-opacity=".94"/><stop offset="1" stop-color="#ffffff" stop-opacity=".66"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="352" fill="url(#paper)"/>
+  <rect width="640" height="352" fill="url(#sky)"/>
+  <g font-family="Helvetica Neue, Helvetica, sans-serif">
+    <text x="48" y="70" fill="#172e4c" font-size="43" font-weight="600">AnyDock</text>
+    <path d="M251 44v23" stroke="#aac4dc"/>
+    <text x="269" y="65" fill="#456580" font-family="PingFang SC, sans-serif" font-size="20" font-weight="500">随手坞</text>
+    <rect x="43" y="102" width="554" height="151" rx="31" fill="#547da5" opacity=".09"/>
+    <rect x="43" y="99" width="554" height="151" rx="31" fill="url(#glass)" stroke="#ffffff" stroke-width="2"/>
+    <g fill="#2485e7">
+      <circle cx="284" cy="164" r="2" opacity=".26"/><circle cx="294" cy="164" r="2.5" opacity=".5"/>
+    </g>
+    <path d="M305 164h48m-12-12 12 12-12 12" fill="none" stroke="#2583df" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="320" y="293" text-anchor="middle" fill="#253d57" font-family="PingFang SC, sans-serif" font-size="18" font-weight="600">将随手坞拖入「应用程序」</text>
+    <text x="320" y="317" text-anchor="middle" fill="#486783" font-size="14">Drag AnyDock to Applications to install.</text>
+  </g>
+</svg>
