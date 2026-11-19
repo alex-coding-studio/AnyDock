@@ -39,6 +39,6 @@
 
 ## 开发
 
-使用 Xcode 26 或更新版本，运行 `./scripts/run.sh`。构建环境和检查命令见 [ProjectContext.md](ProjectContext.md)。
+使用 Xcode 26 或更新版本，运行 `./scripts/run.sh`。构建环境和检查命令见 [docs/ENGINEERING.md](docs/ENGINEERING.md)。
 
 个人维护，不接受外部 issue 和 PR，欢迎 fork。[MIT 许可证](LICENSE) · [CI](https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml) · [SnapKit](https://github.com/SnapKit/SnapKit)。第三方许可证随应用分发。
