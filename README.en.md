@@ -39,6 +39,6 @@ Transfers use unencrypted HTTP on the local network. Use a trusted network, keep
 
 ## Development
 
-Run `./scripts/run.sh` with Xcode 26 or later. See [ProjectContext.md](ProjectContext.md) for the development environment and checks.
+Run `./scripts/run.sh` with Xcode 26 or later. See [docs/ENGINEERING.md](docs/ENGINEERING.md) for the development environment and checks.
 
 Personally maintained. External issues and pull requests are closed to contributions. Forks are welcome. [MIT License](LICENSE) · [CI](https://github.com/alex-coding-studio/AnyDock/actions/workflows/ci.yml) · [SnapKit](https://github.com/SnapKit/SnapKit). Third-party licenses ship with the app.

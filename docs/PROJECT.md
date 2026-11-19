@@ -1,6 +1,6 @@
 # Product Behaviour and Operations
 
-User-visible behaviour that must not regress, and release and operations procedures. See `AGENTS.md` for what belongs here.
+User-visible behaviour that must not regress, and release and operations procedures. See [AGENTS.md](../AGENTS.md) for Agent workflow and [AnyDock Engineering](ENGINEERING.md) for development and validation.
 
 ## Tray
 
@@ -103,6 +103,8 @@ The receive address is `http://<LocalHostName>.local:<port>/upload` from the Bon
 
 ## Release
 
+Follow the [shared Sparkle 2 and signed DMG reference](https://github.com/alex-coding-studio/alex-agent-infra/blob/09ee34fb80e7b19fce49cb7f609997ea290c3c47/instructions/references/macos-sparkle-release.md) for framework embedding, signing order, feed and enclosure verification, and the two-build upgrade check. Use AnyDock's settings below for the local release.
+
 `./scripts/release.sh` runs on a developer Mac, never in CI. It takes the version from `Resources/Info.plist` `CFBundleShortVersionString`, builds, re-signs under the hardened runtime (never with `--deep`), and produces a signed, notarized and stapled `dist/AnyDock-<version>.dmg` (volume `AnyDock` with the app and an `Applications` link) that passes `spctl`.
 
 The mounted volume opens in Finder icon view. A bilingual background guides the user to drag the original app icon onto the Applications link. Both items remain native Finder objects.
@@ -117,7 +119,8 @@ Icons are approved rendered exports; replace them directly rather than regenerat
 
 - The app runs as an accessory without a Dock icon. Quit with ⌘Q while the tray or Settings is key, or with Quit in Settings → About. No LaunchAgent is installed; login startup is a user setting. Reopening the running app opens Settings.
 - `open dist/AnyDock.app --args --settings` opens Settings on launch; `--tray` opens the tray for authorized local UI checks.
-- Debug with Console filtered to the AnyDock process, or run the built executable from a terminal.
+- For an authorized build swap, quit the running app before opening the build under test. Confirm only one instance remains and use the configured port when checking the listener.
+- Debug with Console filtered to the AnyDock process, or run the built executable from a terminal. Where a problem requires interaction to reproduce, use narrowly scoped diagnostics and ask the user to reproduce it. Keep secrets and received content out of those diagnostics.
 
 ## Merging pull requests
 
