@@ -7,6 +7,7 @@ import Testing
 @MainActor
 private func makeGeneral(
     preferences: FakePreferences = FakePreferences(),
+    notifications: FakeNotificationPermissions = FakeNotificationPermissions(),
     hotKeys: FakeHotKeys = FakeHotKeys(),
     restarter: FakeRestarter = FakeRestarter(),
     sharing: AnyPublisher<Bool, Never> = Just(false).eraseToAnyPublisher()
@@ -14,6 +15,7 @@ private func makeGeneral(
     GeneralSettingsViewModel(
         preferences: preferences,
         loginItem: FakeLoginItem(),
+        notifications: notifications,
         hotKeys: hotKeys,
         restarter: restarter,
         sharing: sharing
@@ -102,4 +104,32 @@ func savedHotKeyFailureShowsWhenSettingsOpen() throws {
         "hotkey.unavailable",
         saved.displayString
     ))
+}
+
+@MainActor
+@Test("系统拒绝时保留原收件方式，允许后可启用，关闭时不再申请权限")
+func receiveNotificationsRespectAuthorization() async {
+    let preferences = FakePreferences()
+    let permissions = FakeNotificationPermissions()
+    let model = makeGeneral(preferences: preferences, notifications: permissions)
+    await model.setReceiveNotifications(true)
+    #expect(!preferences.receiveNotifications)
+    #expect(model.state.notificationsDenied)
+
+    model.setOpensTrayOnArrival(false)
+    permissions.denied = false
+    await model.refreshNotificationPermission()
+    #expect(!model.state.notificationsDenied)
+    await model.setReceiveNotifications(true)
+    #expect(preferences.receiveNotifications)
+    #expect(!preferences.opensTrayOnArrival)
+    model.setOpensTrayOnArrival(true)
+    #expect(preferences.receiveNotifications)
+
+    permissions.denied = true
+    await model.refreshNotificationPermission()
+    #expect(model.state.notificationsDenied)
+    await model.setReceiveNotifications(false)
+    #expect(!preferences.receiveNotifications)
+    #expect(permissions.requests == 2)
 }

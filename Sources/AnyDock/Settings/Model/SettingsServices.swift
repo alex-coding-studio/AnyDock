@@ -16,6 +16,8 @@ protocol ReceiverSettings: AnyObject {
 protocol SettingsPreferences: AnyObject {
     var appearance: PKYAppearance.Mode { get set }
     var language: AppLanguage { get set }
+    var receiveNotifications: Bool { get set }
+    var opensTrayOnArrival: Bool { get set }
     var copiesNewItems: Bool { get set }
     var keepsClipboardHistory: Bool { get set }
     var convertsScreenshotsToPNG: Bool { get set }

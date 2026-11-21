@@ -20,6 +20,16 @@ final class UserSettingsPreferences: SettingsPreferences {
         set { newValue.save() }
     }
 
+    var receiveNotifications: Bool {
+        get { Preferences.receiveNotifications }
+        set { Preferences.receiveNotifications = newValue }
+    }
+
+    var opensTrayOnArrival: Bool {
+        get { Preferences.opensTrayOnArrival }
+        set { Preferences.opensTrayOnArrival = newValue }
+    }
+
     var copiesNewItems: Bool {
         get { Preferences.copiesNewItems }
         set { Preferences.copiesNewItems = newValue }

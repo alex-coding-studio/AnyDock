@@ -38,6 +38,8 @@
     private final class PreviewPreferences: SettingsPreferences {
         var appearance = PKYAppearance.Mode.system
         var language = AppLanguage.system
+        var receiveNotifications = false
+        var opensTrayOnArrival = true
         var copiesNewItems = false
         var keepsClipboardHistory = true
         var convertsScreenshotsToPNG = false
@@ -46,7 +48,7 @@
 
     @MainActor
     private final class PreviewServices: LoginItemControlling, WakeHotKeyRegistering, ApplicationRestarting,
-        HostInformation, SettingsPasteboard, ShortcutSharing {
+        HostInformation, SettingsPasteboard, ShortcutSharing, NotificationAuthorizing {
         var isEnabled = false
         var requiresApproval = false
         var isRegistered = true
@@ -56,6 +58,14 @@
         func setEnabled(_: Bool) throws {}
 
         func register(_: KeyCombination?) -> Bool {
+            true
+        }
+
+        func isDenied() async -> Bool {
+            false
+        }
+
+        func requestAuthorization() async throws -> Bool {
             true
         }
 
@@ -87,6 +97,7 @@
             GeneralSettingsViewModel(
                 preferences: PreviewPreferences(),
                 loginItem: services,
+                notifications: services,
                 hotKeys: services,
                 restarter: services,
                 sharing: Just(false).eraseToAnyPublisher()

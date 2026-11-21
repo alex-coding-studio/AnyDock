@@ -146,3 +146,11 @@
 "tray.update.available" = "有新版本 %@ 可用";
 "Convert received screenshots to PNG" = "将收到的截图转为 PNG";
 "settings.receiving.convertScreenshots.detail" = "收到可识别的非 PNG 截图时自动转换，其他照片保持原格式。";
+"Notifications" = "通知";
+"Notify when items arrive" = "收到新内容时通知我";
+"Allow AnyDock notifications in System Settings." = "请在系统设置中允许随手坞发送通知。";
+"Banners and sounds" = "横幅与声音";
+"System Settings…" = "系统设置…";
+"Open the tray when items arrive" = "收到新内容时自动展开托盘";
+"New item received" = "已收到新内容";
+"Open the tray to view it." = "打开托盘即可查看。";

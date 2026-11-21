@@ -30,6 +30,7 @@ If AirDrop is unavailable, export the generic shortcut from **Connection → Man
 ## Useful settings
 
 - **Copy on arrival.** Enable **Copy new items automatically** under **Settings → General → Tray**, then paste in your destination app.
+- **Receive notifications.** Turn them on in **Settings → General → Notifications**. Click a notification to open the tray. To stop the tray opening automatically on arrival, turn that option off under **General → Tray**.
 - **Send with Back Tap.** On iPhone, assign the shortcut in **Settings → Accessibility → Touch → Back Tap**. Copy an item, then tap the back of your iPhone to send it. [Apple's Back Tap guide](https://support.apple.com/en-ca/guide/shortcuts/apd897693606/ios)
 - **Find received files.** Click **Show in Finder** under **Settings → Receiving**. The default folder is `~/Downloads/AnyDock`.
 

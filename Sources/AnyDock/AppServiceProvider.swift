@@ -13,6 +13,7 @@ final class AppServiceProvider {
     private let clipboard = ClipboardMonitor(isEnabled: Preferences.keepsClipboardHistoryChanges)
     private let hotKeys = GlobalHotKeyCenter()
     private let updates = SparkleUpdates(bundle: .main)
+    private let notifications = ReceiveNotifications(bundle: .main)
     private let mainMenu = MainMenu()
     private var subscriptions = Set<AnyCancellable>()
 
@@ -81,6 +82,7 @@ final class AppServiceProvider {
         let general = GeneralSettingsViewModel(
             preferences: preferences,
             loginItem: SystemLoginItem(),
+            notifications: notifications,
             hotKeys: hotKeys,
             restarter: ApplicationRestarter(),
             sharing: connection.isSending
@@ -101,6 +103,12 @@ final class AppServiceProvider {
         trayPopover.settingsRequests
             .merge(with: mainMenu.settingsRequests)
             .sink { [weak self] in self?.showSettings() }
+            .store(in: &subscriptions)
+        inbox.received
+            .sink { [weak self] _ in self?.notifications.postArrival() }
+            .store(in: &subscriptions)
+        notifications.trayRequests
+            .sink { [weak self] in self?.trayPopover.show() }
             .store(in: &subscriptions)
         hotKeys.presses
             .sink { [weak self] in self?.trayPopover.toggle() }

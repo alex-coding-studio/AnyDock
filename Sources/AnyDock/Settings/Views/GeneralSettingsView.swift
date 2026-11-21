@@ -7,6 +7,8 @@ private let typography = PKYThemeFallback.system.typography
 struct GeneralSettingsView: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
+    @Environment(\.controlActiveState) private var controlActiveState
+
     private var languageBinding: Binding<AppLanguage> {
         Binding(get: { viewModel.state.language }, set: { viewModel.selectLanguage($0) })
     }
@@ -22,11 +24,14 @@ struct GeneralSettingsView: View {
             }
             SettingsGroup(title: L10n.text("Tray")) {
                 SettingsCard {
+                    openTrayRow
+                    Divider()
                     copyNewItemsRow
                     Divider()
                     clipboardHistoryRow
                 }
             }
+            notificationGroup
             SettingsGroup(title: L10n.text("Startup & Keyboard")) {
                 SettingsCard {
                     launchAtLoginRow
@@ -36,6 +41,57 @@ struct GeneralSettingsView: View {
                 SettingsMessageText(error: viewModel.state.loginMessage)
                 SettingsMessageText(error: viewModel.state.hotKeyMessage)
             }
+        }
+        .task(id: controlActiveState) {
+            await viewModel.refreshNotificationPermission()
+        }
+    }
+
+    private var notificationGroup: some View {
+        SettingsGroup(title: L10n.text("Notifications")) {
+            SettingsCard {
+                SettingsRow(
+                    title: L10n.text("Notify when items arrive"),
+                    detail: viewModel.state.notificationsDenied
+                        ? L10n.text("Allow AnyDock notifications in System Settings.") : nil
+                ) {
+                    Toggle(
+                        L10n.text("Notify when items arrive"),
+                        isOn: Binding(
+                            get: { viewModel.state.receiveNotifications },
+                            set: { enabled in Task { await viewModel.setReceiveNotifications(
+                                enabled
+                            ) } }
+                        )
+                    )
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .disabled(viewModel.state.requestingNotifications)
+                }
+                Divider()
+                SettingsRow(title: L10n.text("Banners and sounds")) {
+                    if let url = URL(
+                        string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
+                    ) {
+                        Link(L10n.text("System Settings…"), destination: url)
+                    }
+                }
+            }
+            SettingsMessageText(error: viewModel.state.notificationError)
+        }
+    }
+
+    private var openTrayRow: some View {
+        SettingsRow(title: L10n.text("Open the tray when items arrive")) {
+            Toggle(
+                L10n.text("Open the tray when items arrive"),
+                isOn: Binding(
+                    get: { viewModel.state.opensTrayOnArrival },
+                    set: { viewModel.setOpensTrayOnArrival($0) }
+                )
+            )
+            .toggleStyle(.switch)
+            .labelsHidden()
         }
     }
 
