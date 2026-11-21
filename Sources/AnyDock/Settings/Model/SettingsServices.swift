@@ -18,6 +18,7 @@ protocol SettingsPreferences: AnyObject {
     var language: AppLanguage { get set }
     var copiesNewItems: Bool { get set }
     var keepsClipboardHistory: Bool { get set }
+    var convertsScreenshotsToPNG: Bool { get set }
     var wakeHotKey: KeyCombination? { get set }
 }
 

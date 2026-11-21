@@ -30,6 +30,11 @@ final class UserSettingsPreferences: SettingsPreferences {
         set { Preferences.keepsClipboardHistory = newValue }
     }
 
+    var convertsScreenshotsToPNG: Bool {
+        get { Preferences.convertsScreenshotsToPNG }
+        set { Preferences.convertsScreenshotsToPNG = newValue }
+    }
+
     var wakeHotKey: KeyCombination? {
         get { Preferences.wakeHotKey }
         set { Preferences.wakeHotKey = newValue }

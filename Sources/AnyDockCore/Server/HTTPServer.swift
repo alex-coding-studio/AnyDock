@@ -56,6 +56,7 @@ public actor HTTPServer {
 
     public func start(
         configuration: ConnectionConfiguration.Receiver,
+        convertScreenshotsToPNG: @escaping @Sendable () -> Bool = { false },
         onReceive: @escaping @Sendable (ReceivedItem) async -> Void,
         onFailure: @escaping @Sendable (String) async -> Void
     ) async throws {
@@ -76,6 +77,7 @@ public actor HTTPServer {
                     connection,
                     generation: current,
                     configuration: configuration,
+                    convertScreenshotsToPNG: convertScreenshotsToPNG,
                     onReceive: onReceive
                 )
             }
@@ -133,6 +135,7 @@ public actor HTTPServer {
         _ connection: NWConnection,
         generation current: UUID,
         configuration: ConnectionConfiguration.Receiver,
+        convertScreenshotsToPNG: @escaping @Sendable () -> Bool,
         onReceive: @escaping @Sendable (ReceivedItem) async -> Void
     ) {
         guard current == generation, connections.count < 4 else {
@@ -142,13 +145,22 @@ public actor HTTPServer {
         let id = UUID()
         connections[id] = connection
         connection.start(queue: .global(qos: .userInitiated))
-        Task { await serve(connection, id: id, configuration: configuration, onReceive: onReceive) }
+        Task {
+            await serve(
+                connection,
+                id: id,
+                configuration: configuration,
+                convertScreenshotsToPNG: convertScreenshotsToPNG,
+                onReceive: onReceive
+            )
+        }
     }
 
     private func serve(
         _ connection: NWConnection,
         id: UUID,
         configuration: ConnectionConfiguration.Receiver,
+        convertScreenshotsToPNG: @Sendable () -> Bool,
         onReceive: @Sendable (ReceivedItem) async -> Void
     ) async {
         let timeout = Task {
@@ -169,7 +181,11 @@ public actor HTTPServer {
                     throw UploadError.incompleteRequest
                 }
                 if let request = try decoder.append(data) {
-                    let image = try await store.save(request, in: configuration.directory)
+                    let image = try await store.save(
+                        request,
+                        in: configuration.directory,
+                        convertScreenshotsToPNG: convertScreenshotsToPNG()
+                    )
                     await onReceive(image)
                     try await Self.send(
                         connection,

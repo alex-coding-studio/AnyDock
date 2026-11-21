@@ -14,6 +14,7 @@ final class Inbox: TrayInbox {
     private(set) var configuration: ConnectionConfiguration
 
     private let store: ConnectionConfigurationStore
+    private let convertsScreenshotsToPNG: @Sendable () -> Bool
     private let inboxStore = InboxStore()
     private let statusSubject = CurrentValueSubject<InboxStatus, Never>(.starting)
     private let folderReadErrorSubject = CurrentValueSubject<String?, Never>(nil)
@@ -39,9 +40,16 @@ final class Inbox: TrayInbox {
         itemsSubject.eraseToAnyPublisher()
     }
 
-    init(configuration: ConnectionConfiguration, store: ConnectionConfigurationStore) {
+    init(
+        configuration: ConnectionConfiguration,
+        store: ConnectionConfigurationStore,
+        convertsScreenshotsToPNG: @escaping @Sendable () -> Bool = {
+            Preferences.convertsScreenshotsToPNG
+        }
+    ) {
         self.configuration = configuration
         self.store = store
+        self.convertsScreenshotsToPNG = convertsScreenshotsToPNG
     }
 
     func start() async {
@@ -141,6 +149,7 @@ final class Inbox: TrayInbox {
         do {
             try await server.start(
                 configuration: receiver,
+                convertScreenshotsToPNG: convertsScreenshotsToPNG,
                 onReceive: { [weak self] item in
                     await self?.receive(item, directory: receiver.directory)
                 },

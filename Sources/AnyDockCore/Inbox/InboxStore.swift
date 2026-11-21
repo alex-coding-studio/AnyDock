@@ -5,8 +5,15 @@ public actor InboxStore {
 
     public init() {}
 
-    public func save(_ request: UploadRequest, in directory: URL) throws -> ReceivedItem {
-        let content = try ReceivedContent.make(from: request)
+    public func save(
+        _ request: UploadRequest,
+        in directory: URL,
+        convertScreenshotsToPNG: Bool = false
+    ) throws -> ReceivedItem {
+        let content = try ReceivedContent.make(
+            from: request,
+            convertScreenshotsToPNG: convertScreenshotsToPNG
+        )
         let writer = try ItemWriter(in: directory, kind: content.kind)
         let filename = Self.uniqueStem() + content.nameSuffix
         try writer.write(content.data, named: filename, quarantined: content.isQuarantined)

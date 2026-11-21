@@ -21,7 +21,7 @@ private func settled<State: Sendable>(
 @Test("接收页只有文件夹或端口与已应用配置不同时才能应用，还原后恢复已应用值")
 func receivingApplyAndRevertFollowAppliedConfiguration() async {
     let receiver = FakeReceiver(port: 8765)
-    let viewModel = ReceivingSettingsViewModel(receiver: receiver)
+    let viewModel = ReceivingSettingsViewModel(receiver: receiver, preferences: FakePreferences())
     #expect(viewModel.state.canApply == false)
 
     viewModel.setPortText(" 8765 ")
@@ -50,7 +50,7 @@ func receivingApplyAndRevertFollowAppliedConfiguration() async {
 @Test("端口必须是 1024–65535 的整数，否则提示错误且不应用", arguments: ["80", "abc", "70000", "1023"])
 func receivingRejectsPortsOutsideRange(text: String) {
     let receiver = FakeReceiver()
-    let viewModel = ReceivingSettingsViewModel(receiver: receiver)
+    let viewModel = ReceivingSettingsViewModel(receiver: receiver, preferences: FakePreferences())
     viewModel.setPortText(text)
     viewModel.apply()
     #expect(
@@ -65,7 +65,10 @@ func receivingRejectsPortsOutsideRange(text: String) {
 @MainActor
 @Test("底栏说明哪一项未应用：只改端口、只改文件夹或两者都改")
 func receivingPendingMessageNamesChangedItem() {
-    let viewModel = ReceivingSettingsViewModel(receiver: FakeReceiver())
+    let viewModel = ReceivingSettingsViewModel(
+        receiver: FakeReceiver(),
+        preferences: FakePreferences()
+    )
     viewModel.setPortText("9002")
     #expect(viewModel.state.pendingMessage == L10n.text("settings.pending.port"))
     viewModel.selectFolder(
@@ -81,12 +84,34 @@ func receivingPendingMessageNamesChangedItem() {
 func receivingKeepsChangesWhenApplyFails() async {
     let receiver = FakeReceiver()
     receiver.applyError = CocoaError(.fileWriteNoPermission)
-    let viewModel = ReceivingSettingsViewModel(receiver: receiver)
+    let viewModel = ReceivingSettingsViewModel(receiver: receiver, preferences: FakePreferences())
     viewModel.setPortText("9001")
     viewModel.apply()
     let failed = await settled(viewModel.$state.eraseToAnyPublisher()) { !$0.isApplying }
     #expect(failed.hasChanges)
     #expect(failed.errorMessage == CocoaError(.fileWriteNoPermission).localizedDescription)
+}
+
+@MainActor
+@Test("接收页截图转 PNG 开关立即持久化，不产生未应用更改也不受还原影响")
+func receivingScreenshotConversionPersistsImmediatelyWithoutPendingChanges() {
+    let preferences = FakePreferences()
+    let viewModel = ReceivingSettingsViewModel(receiver: FakeReceiver(), preferences: preferences)
+    #expect(viewModel.state.convertsScreenshotsToPNG == false)
+    #expect(viewModel.state.hasChanges == false)
+
+    viewModel.setConvertsScreenshotsToPNG(true)
+    #expect(preferences.convertsScreenshotsToPNG)
+    #expect(viewModel.state.convertsScreenshotsToPNG)
+    #expect(viewModel.state.hasChanges == false)
+    #expect(viewModel.state.canApply == false)
+
+    viewModel.setPortText("9005")
+    #expect(viewModel.state.hasChanges)
+    viewModel.revert()
+    #expect(viewModel.state.convertsScreenshotsToPNG)
+    #expect(preferences.convertsScreenshotsToPNG)
+    #expect(viewModel.state.portText == "8765")
 }
 
 @MainActor

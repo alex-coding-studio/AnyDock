@@ -11,9 +11,12 @@ struct ReceivedContent {
         kind != .image
     }
 
-    static func make(from request: UploadRequest) throws -> ReceivedContent {
+    static func make(
+        from request: UploadRequest,
+        convertScreenshotsToPNG: Bool = false
+    ) throws -> ReceivedContent {
         let content = switch resolvedKind(of: request) {
-        case .image: try image(request.body)
+        case .image: try image(request.body, convertScreenshotsToPNG: convertScreenshotsToPNG)
         case .text: text(request.body)
         case .link: try link(request.body)
         case .file: try file(request)
@@ -31,12 +34,15 @@ struct ReceivedContent {
         return request.kind
     }
 
-    private static func image(_ body: Data) throws -> ReceivedContent {
-        let preview = try ImagePreview(body)
+    private static func image(
+        _ body: Data,
+        convertScreenshotsToPNG: Bool
+    ) throws -> ReceivedContent {
+        let preview = try ImagePreview(body, convertScreenshotToPNG: convertScreenshotsToPNG)
         return ReceivedContent(
             kind: .image,
-            data: body,
-            nameSuffix: "." + preview.originalExtension,
+            data: preview.storedData,
+            nameSuffix: "." + preview.storedExtension,
             thumbnail: preview.png,
             isPlainText: false
         )

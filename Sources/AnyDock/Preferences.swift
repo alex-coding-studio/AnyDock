@@ -8,6 +8,7 @@ import PockyFoundation
 enum Preferences {
     enum Key: String {
         case appearance = "appearance"
+        case convertScreenshotsToPNG = "convertScreenshotsToPNG"
         case copyNewItems = "copyNewItems"
         case keepClipboardHistory = "keepClipboardHistory"
         case wakeHotKey = "wakeHotKey"
@@ -28,6 +29,11 @@ enum Preferences {
     static var wakeHotKey: KeyCombination? {
         get { KeyCombination(preference: defaults.object(forKey: Key.wakeHotKey.rawValue)) }
         set { defaults.set(newValue?.preference, forKey: Key.wakeHotKey.rawValue) }
+    }
+
+    nonisolated static var convertsScreenshotsToPNG: Bool {
+        get { UserDefaults.standard.bool(forKey: Key.convertScreenshotsToPNG.rawValue) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.convertScreenshotsToPNG.rawValue) }
     }
 
     nonisolated static var keepsClipboardHistoryChanges: AnyPublisher<Bool, Never> {

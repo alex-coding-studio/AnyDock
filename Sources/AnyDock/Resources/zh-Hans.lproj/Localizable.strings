@@ -144,3 +144,5 @@
 "New Version Available" = "发现新版本";
 "settings.update.available" = "可更新到版本 %@";
 "tray.update.available" = "有新版本 %@ 可用";
+"Convert received screenshots to PNG" = "将收到的截图转为 PNG";
+"settings.receiving.convertScreenshots.detail" = "收到可识别的非 PNG 截图时自动转换，其他照片保持原格式。";

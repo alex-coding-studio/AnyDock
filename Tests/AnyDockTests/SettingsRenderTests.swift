@@ -64,7 +64,7 @@ private func makePages() -> [(String, AnyView, NSSize)] {
         sharing: FakeSharing(),
         pasteboard: FakePasteboard()
     )
-    let receiving = ReceivingSettingsViewModel(receiver: receiver)
+    let receiving = ReceivingSettingsViewModel(receiver: receiver, preferences: FakePreferences())
     receiving.setPortText("8767")
     let settings = SettingsViewModel(
         status: receiver.status,

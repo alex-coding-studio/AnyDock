@@ -7,6 +7,7 @@ struct ReceivingSettingsState: Equatable {
     var folderReadError: String?
     var folder: URL
     var portText: String
+    var convertsScreenshotsToPNG = false
     var isApplying: Bool
     var errorMessage: String?
     var folderChanged = false
@@ -44,15 +45,18 @@ final class ReceivingSettingsViewModel: ObservableObject {
     @Published private(set) var state: ReceivingSettingsState
 
     private let receiver: any ReceiverSettings
+    private let preferences: any SettingsPreferences
     private var subscriptions = Set<AnyCancellable>()
 
-    init(receiver: any ReceiverSettings) {
+    init(receiver: any ReceiverSettings, preferences: any SettingsPreferences) {
         self.receiver = receiver
+        self.preferences = preferences
         let applied = receiver.configuration.receiver
         state = ReceivingSettingsState(
             status: ListenerStatus(.starting),
             folder: applied.directory,
             portText: String(applied.port),
+            convertsScreenshotsToPNG: preferences.convertsScreenshotsToPNG,
             isApplying: false
         )
         receiver.folderReadError
@@ -74,6 +78,11 @@ final class ReceivingSettingsViewModel: ObservableObject {
 
     func setPortText(_ text: String) {
         update { $0.portText = text }
+    }
+
+    func setConvertsScreenshotsToPNG(_ enabled: Bool) {
+        preferences.convertsScreenshotsToPNG = enabled
+        update { $0.convertsScreenshotsToPNG = enabled }
     }
 
     func revert() {

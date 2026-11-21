@@ -27,6 +27,9 @@ struct ReceivingSettingsView: View {
                 SettingsNote(symbol: "info.circle", text: L10n.text("settings.folder.note"))
                     .padding(.horizontal, PKYLayout.Gap.content(.compact))
             }
+            SettingsGroup(title: L10n.text("Images")) {
+                imagesCard
+            }
             SettingsGroup(title: L10n.text("Network")) {
                 networkCard
                 SettingsMessageText(error: viewModel.state.errorMessage)
@@ -121,6 +124,25 @@ struct ReceivingSettingsView: View {
                     SettingsChip(kind: kind)
                         .help(kind.directoryName + "/")
                 }
+            }
+        }
+    }
+
+    private var imagesCard: some View {
+        SettingsCard {
+            SettingsRow(
+                title: L10n.text("Convert received screenshots to PNG"),
+                detail: L10n.text("settings.receiving.convertScreenshots.detail")
+            ) {
+                Toggle(
+                    L10n.text("Convert received screenshots to PNG"),
+                    isOn: Binding(
+                        get: { viewModel.state.convertsScreenshotsToPNG },
+                        set: { viewModel.setConvertsScreenshotsToPNG($0) }
+                    )
+                )
+                .toggleStyle(.switch)
+                .labelsHidden()
             }
         }
     }
