@@ -9,6 +9,11 @@ struct GeneralSettingsState: Equatable {
     var restartMessage: String?
     var launchesAtLogin: Bool
     var loginMessage: String?
+    var receiveNotifications: Bool
+    var opensTrayOnArrival: Bool
+    var notificationsDenied = false
+    var requestingNotifications = false
+    var notificationError: String?
     var copiesNewItems: Bool
     var keepsClipboardHistory: Bool
     var hotKey: KeyCombination?
@@ -22,6 +27,7 @@ final class GeneralSettingsViewModel: ObservableObject {
 
     private let preferences: any SettingsPreferences
     private let loginItem: any LoginItemControlling
+    private let notifications: any NotificationAuthorizing
     private let hotKeys: any WakeHotKeyRegistering
     private let restarter: any ApplicationRestarting
     private let launchLanguage: AppLanguage
@@ -31,12 +37,14 @@ final class GeneralSettingsViewModel: ObservableObject {
     init(
         preferences: any SettingsPreferences,
         loginItem: any LoginItemControlling,
+        notifications: any NotificationAuthorizing,
         hotKeys: any WakeHotKeyRegistering,
         restarter: any ApplicationRestarting,
         sharing: AnyPublisher<Bool, Never>
     ) {
         self.preferences = preferences
         self.loginItem = loginItem
+        self.notifications = notifications
         self.hotKeys = hotKeys
         self.restarter = restarter
         launchLanguage = preferences.language
@@ -46,6 +54,8 @@ final class GeneralSettingsViewModel: ObservableObject {
             language: preferences.language,
             showsRestartNotice: false,
             launchesAtLogin: loginItem.isEnabled,
+            receiveNotifications: preferences.receiveNotifications,
+            opensTrayOnArrival: preferences.opensTrayOnArrival,
             copiesNewItems: preferences.copiesNewItems,
             keepsClipboardHistory: preferences.keepsClipboardHistory,
             hotKey: saved,
@@ -112,6 +122,42 @@ final class GeneralSettingsViewModel: ObservableObject {
                 )
             }
         }
+    }
+
+    func refreshNotificationPermission() async {
+        let denied = await notifications.isDenied()
+        guard !Task.isCancelled, !state.requestingNotifications else {
+            return
+        }
+        update { $0.notificationsDenied = denied }
+    }
+
+    func setReceiveNotifications(_ enabled: Bool) async {
+        guard !state.requestingNotifications else {
+            return
+        }
+        update { $0.notificationError = nil }
+        if enabled {
+            update { $0.requestingNotifications = true }
+            defer { update { $0.requestingNotifications = false } }
+            do {
+                let granted = try await notifications.requestAuthorization()
+                update { $0.notificationsDenied = !granted }
+                guard granted else {
+                    return
+                }
+            } catch {
+                update { $0.notificationError = error.localizedDescription }
+                return
+            }
+        }
+        preferences.receiveNotifications = enabled
+        update { $0.receiveNotifications = enabled }
+    }
+
+    func setOpensTrayOnArrival(_ enabled: Bool) {
+        preferences.opensTrayOnArrival = enabled
+        update { $0.opensTrayOnArrival = enabled }
     }
 
     func setCopiesNewItems(_ enabled: Bool) {

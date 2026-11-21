@@ -49,10 +49,27 @@ final class FakeReceiver: ReceiverSettings {
 final class FakePreferences: SettingsPreferences {
     var appearance = PKYAppearance.Mode.system
     var language = AppLanguage.system
+    var receiveNotifications = false
+    var opensTrayOnArrival = true
     var copiesNewItems = false
     var keepsClipboardHistory = true
     var convertsScreenshotsToPNG = false
     var wakeHotKey: KeyCombination?
+}
+
+@MainActor
+final class FakeNotificationPermissions: NotificationAuthorizing {
+    var denied = true
+    var requests = 0
+
+    func isDenied() async -> Bool {
+        denied
+    }
+
+    func requestAuthorization() async throws -> Bool {
+        requests += 1
+        return !denied
+    }
 }
 
 @MainActor

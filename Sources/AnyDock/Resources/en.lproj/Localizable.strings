@@ -146,3 +146,11 @@
 "tray.update.available" = "New version %@ available";
 "Convert received screenshots to PNG" = "Convert received screenshots to PNG";
 "settings.receiving.convertScreenshots.detail" = "Converts recognizable non-PNG screenshots when received. Other photos keep their original format.";
+"Notifications" = "Notifications";
+"Notify when items arrive" = "Notify when items arrive";
+"Allow AnyDock notifications in System Settings." = "Allow AnyDock notifications in System Settings.";
+"Banners and sounds" = "Banners and sounds";
+"System Settings…" = "System Settings…";
+"Open the tray when items arrive" = "Open the tray when items arrive";
+"New item received" = "New item received";
+"Open the tray to view it." = "Open the tray to view it.";

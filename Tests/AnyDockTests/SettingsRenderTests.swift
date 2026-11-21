@@ -42,6 +42,7 @@ private func makeGeneral(
     GeneralSettingsViewModel(
         preferences: preferences,
         loginItem: FakeLoginItem(),
+        notifications: FakeNotificationPermissions(),
         hotKeys: hotKeys,
         restarter: FakeRestarter(),
         sharing: Just(false).eraseToAnyPublisher()

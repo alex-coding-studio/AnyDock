@@ -108,8 +108,12 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         if Preferences.copiesNewItems {
             tray.copyToPasteboard(item)
         }
-        show(reloading: false)
-        tray.scrollToLatest()
+        if Preferences.opensTrayOnArrival {
+            show(reloading: false)
+        }
+        if popover.isShown {
+            tray.scrollToLatest()
+        }
     }
 
     private func holdPresentation(_ held: Bool) {

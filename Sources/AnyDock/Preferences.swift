@@ -11,6 +11,8 @@ enum Preferences {
         case convertScreenshotsToPNG = "convertScreenshotsToPNG"
         case copyNewItems = "copyNewItems"
         case keepClipboardHistory = "keepClipboardHistory"
+        case receiveNotifications = "receiveNotifications"
+        case openTrayOnArrival = "openTrayOnArrival"
         case wakeHotKey = "wakeHotKey"
     }
 
@@ -24,6 +26,16 @@ enum Preferences {
     static var keepsClipboardHistory: Bool {
         get { defaults.object(forKey: Key.keepClipboardHistory.rawValue) as? Bool ?? true }
         set { defaults.set(newValue, forKey: Key.keepClipboardHistory.rawValue) }
+    }
+
+    static var receiveNotifications: Bool {
+        get { defaults.bool(forKey: Key.receiveNotifications.rawValue) }
+        set { defaults.set(newValue, forKey: Key.receiveNotifications.rawValue) }
+    }
+
+    static var opensTrayOnArrival: Bool {
+        get { defaults.object(forKey: Key.openTrayOnArrival.rawValue) as? Bool ?? true }
+        set { defaults.set(newValue, forKey: Key.openTrayOnArrival.rawValue) }
     }
 
     static var wakeHotKey: KeyCombination? {
