@@ -45,7 +45,7 @@ Recycling is limited to the generated items listed for the current receive folde
 
 ## Clipboard history
 
-- Privacy: at most the 4 newest plain-text entries, in memory only, never written to disk or logs, cleared on quit. The General switch to keep them is on by default, with a footnote saying they stay in memory only and are cleared on quit. Turning it off clears the history and stops polling; turning it on starts from the current clipboard without recording it.
+- Privacy: at most the 4 newest plain-text entries, in memory only (cached for the session and cleared on quit), never written to disk or logs. The General switch to cache the last 4 clipboard texts is on by default. Turning it off clears the history and stops polling; turning it on starts from the current clipboard without recording it.
 - While on, AnyDock polls the general clipboard about every half second and records plain text, including its own copies. It skips items that also carry a file URL or `org.nspasteboard.ConcealedType`, and deliberately records transient-marked text because voice input uses that marker. A repeat of the newest entry is not added. Copying the connection key in Settings marks it concealed, so no clipboard history records it.
 - Before any tray clipboard write, including copying new items, AnyDock checks the clipboard once so another app's new text is captured first.
 - The clipboard bar is a separate attachment at the bottom of the tray, aligned with the card margins, never part of filters, counts, selection, Quick Look or the selection capsule, and hidden while the history is empty.
