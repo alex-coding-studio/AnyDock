@@ -5,19 +5,13 @@ private let typography = PKYThemeFallback.system.typography
 
 struct SettingsPage<Content: View>: View {
     let title: String
-    let subtitle: String
     @ViewBuilder let content: Content
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: PKYLayout.Gap.section()) {
-                VStack(alignment: .leading, spacing: PKYLayout.Gap.content(.compact)) {
-                    Text(title)
-                        .font(typography.display.bold.font)
-                    Text(subtitle)
-                        .font(typography.body.font)
-                        .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
-                }
+                Text(title)
+                    .font(typography.display.bold.font)
                 content
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -27,15 +21,26 @@ struct SettingsPage<Content: View>: View {
     }
 }
 
-struct SettingsGroup<Content: View>: View {
+struct SettingsGroup<HeaderTrailing: View, Content: View>: View {
     let title: String
+    @ViewBuilder let headerTrailing: HeaderTrailing
     @ViewBuilder let content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: PKYLayout.Gap.content()) {
-            SettingsGroupTitle(title: title)
+            HStack(alignment: .firstTextBaseline, spacing: PKYLayout.Gap.content()) {
+                SettingsGroupTitle(title: title)
+                Spacer(minLength: 0)
+                headerTrailing
+            }
             content
         }
+    }
+}
+
+extension SettingsGroup where HeaderTrailing == EmptyView {
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.init(title: title, headerTrailing: { EmptyView() }, content: content)
     }
 }
 
@@ -146,16 +151,12 @@ struct SettingsMessageText: View {
 }
 
 struct SettingsNote: View {
-    let symbol: String
     let text: String
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: PKYLayout.Gap.content(.compact)) {
-            Image(systemName: symbol)
-            Text(text)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .font(typography.supporting.font)
-        .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
+        Text(text)
+            .font(typography.supporting.font)
+            .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
+            .fixedSize(horizontal: false, vertical: true)
     }
 }

@@ -5,8 +5,17 @@ import UserNotifications
 
 @MainActor
 protocol NotificationAuthorizing: AnyObject {
+    var canRequestAuthorization: Bool { get }
+    var authorizationChanges: AnyPublisher<Void, Never> { get }
     func isDenied() async -> Bool
     func requestAuthorization() async throws -> Bool
+}
+
+@MainActor
+protocol NotificationLaunchPreferences: AnyObject {
+    var receiveNotifications: Bool { get set }
+    var hasReceiveNotificationsPreference: Bool { get }
+    var hasRequestedNotificationPermission: Bool { get set }
 }
 
 @MainActor
@@ -18,15 +27,59 @@ final class ReceiveNotifications: NSObject, NotificationAuthorizing, UNUserNotif
 
     private let center: UNUserNotificationCenter?
     private let trayRequestSubject = PassthroughSubject<Void, Never>()
+    private let authorizationChangeSubject = PassthroughSubject<Void, Never>()
+
+    var canRequestAuthorization: Bool {
+        center != nil
+    }
 
     var trayRequests: AnyPublisher<Void, Never> {
         trayRequestSubject.eraseToAnyPublisher()
+    }
+
+    var authorizationChanges: AnyPublisher<Void, Never> {
+        authorizationChangeSubject.eraseToAnyPublisher()
     }
 
     init(bundle: Bundle) {
         center = bundle.bundleURL.pathExtension == "app" ? .current() : nil
         super.init()
         center?.delegate = self
+    }
+
+    static func requestInitialAuthorizationIfNeeded(
+        using authorizer: any NotificationAuthorizing,
+        preferences: any NotificationLaunchPreferences
+    ) async -> Bool {
+        guard authorizer.canRequestAuthorization,
+              !preferences.hasRequestedNotificationPermission,
+              !preferences.hasReceiveNotificationsPreference
+        else {
+            return false
+        }
+        preferences.hasRequestedNotificationPermission = true
+        do {
+            let granted = try await authorizer.requestAuthorization()
+            if granted, !preferences.hasReceiveNotificationsPreference {
+                preferences.receiveNotifications = true
+            }
+        } catch {
+            logger.error(
+                "Unable to request initial notification authorization: \(error.localizedDescription)"
+            )
+        }
+        return true
+    }
+
+    func requestAuthorizationOnFirstLaunch(
+        preferences: any NotificationLaunchPreferences
+    ) async {
+        if await Self.requestInitialAuthorizationIfNeeded(
+            using: self,
+            preferences: preferences
+        ) {
+            authorizationChangeSubject.send()
+        }
     }
 
     func isDenied() async -> Bool {

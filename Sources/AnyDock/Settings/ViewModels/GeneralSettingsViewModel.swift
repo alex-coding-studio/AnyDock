@@ -64,6 +64,14 @@ final class GeneralSettingsViewModel: ObservableObject {
         sharing
             .sink { [weak self] in self?.isSharing = $0 }
             .store(in: &subscriptions)
+        notifications.authorizationChanges
+            .sink { [weak self] in
+                guard let self else {
+                    return
+                }
+                Task { await self.refreshNotificationPermission() }
+            }
+            .store(in: &subscriptions)
     }
 
     private static func unavailable(_ hotKey: KeyCombination) -> String {
@@ -129,7 +137,10 @@ final class GeneralSettingsViewModel: ObservableObject {
         guard !Task.isCancelled, !state.requestingNotifications else {
             return
         }
-        update { $0.notificationsDenied = denied }
+        update {
+            $0.notificationsDenied = denied
+            $0.receiveNotifications = preferences.receiveNotifications
+        }
     }
 
     func setReceiveNotifications(_ enabled: Bool) async {

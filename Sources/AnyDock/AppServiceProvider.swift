@@ -55,6 +55,11 @@ final class AppServiceProvider {
         NSApp.mainMenu = mainMenu.make()
         _ = hotKeys.register(Preferences.wakeHotKey)
         Task { await inbox.start() }
+        Task {
+            await notifications.requestAuthorizationOnFirstLaunch(
+                preferences: UserSettingsPreferences()
+            )
+        }
         if arguments.contains(Self.settingsArgument) {
             showSettings()
         }

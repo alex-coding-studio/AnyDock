@@ -5,7 +5,7 @@
 "Appearance" = "外观";
 "Apply" = "应用";
 "Change…" = "更改…";
-"settings.folder.note" = "更换位置不会移动或删除已收到的原图。";
+"settings.folder.note" = "更换位置不会移动或删除已有文件。";
 "shortcut.airdrop.choosePhone" = "请选择自己的 iPhone，接收后点「添加快捷指令」。";
 "Connection" = "连接";
 "Connection key" = "连接密钥";
@@ -41,6 +41,7 @@
 "Nothing received yet" = "还没有收到内容";
 "One-step Setup" = "一步设置";
 "Open Folder" = "打开文件夹";
+"Quit" = "退出";
 "Quit AnyDock" = "退出随手坞";
 "Receive address" = "接收地址";
 "Receiver Failed" = "接收失败";
@@ -52,7 +53,7 @@
 "Send to %@" = "发送到 %@";
 "Send to Mac" = "发送到 Mac";
 "Send to iPhone…" = "发送到 iPhone…";
-"settings.shortcut.note" = "快捷指令含连接密钥，系统签名会将副本交给 Apple 验证，请仅发送给自己的 iPhone。";
+"settings.shortcut.note" = "内含密钥且由 Apple 验证签名，仅发送给自己的 iPhone。";
 "Settings" = "设置";
 "Settings…" = "设置…";
 "Share content on your iPhone and choose your Mac’s shortcut." = "在 iPhone 上分享内容，选择这台 Mac 的快捷指令。";
@@ -83,8 +84,8 @@
 "Unable to restart AnyDock: %@" = "无法重启随手坞：%@";
 "Unable to send the shortcut: %@" = "无法发送快捷指令：%@";
 "Unapplied changes" = "有未应用的更改";
-"settings.port.note" = "更改端口后，请重新发送 iPhone 快捷指令。";
-"settings.manual.note" = "仅在可信局域网使用，HTTP 传输不加密。手动导入通用版时，需填写接收地址和连接密钥。";
+"settings.port.note" = "更改端口后需重新发送快捷指令。";
+"settings.manual.note" = "仅限可信局域网使用，HTTP 不加密。";
 "shortcut.name.normalized" = "将使用「%@」；首尾空白已移除，/ 和 : 会替换为 -。";
 "configuration.recovery" = "配置文件保持原样。请检查 Application Support/AnyDock 中的配置后重新启动。";
 "[redacted]" = "[已隐藏]";
@@ -105,8 +106,7 @@
 "New %@: %@, %@" = "新%1$@：%2$@，%3$@";
 "%@: %@, %@" = "%1$@：%2$@，%3$@";
 "meta_separator" = "%1$@ · %2$@";
-"settings.clipboardHistory.note" = "仅存在内存中，退出即清空。";
-"Keep last 4 clipboard texts" = "保留最近 4 条剪贴板文本";
+"Keep last 4 clipboard texts" = "缓存最近 4 条剪贴板文本";
 "Clear" = "清空";
 "clipboard_expanded_title" = "剪贴板 · 双击复制";
 "Collapse Clipboard" = "收起剪贴板";
@@ -126,15 +126,9 @@
 "GitHub Project" = "GitHub 项目";
 "Author @Cunqi" = "作者 @Cunqi";
 "about.copyright" = "© 2026 Cunqi · MIT License";
-"settings.general.subtitle" = "外观、托盘行为与唤醒方式";
-"settings.connection.subtitle" = "让 iPhone 一步连上这台 Mac";
-"settings.receiving.subtitle" = "内容存到哪里，从哪个端口收";
 "Startup & Keyboard" = "启动与键盘";
-"settings.oneStep.description" = "把专属快捷指令隔空投送到 iPhone，打开即可添加，不用手动填写地址和密钥。";
+"settings.oneStep.description" = "隔空投送快捷指令到 iPhone，打开即用。";
 "Listening on port %@" = "正在监听端口 %@";
-"settings.receiving.listening.detail" = "iPhone 发来的内容会直接存进下面的文件夹。";
-"Sorted by type" = "按类型分入";
-"settings.port.range" = "1024–65535";
 "Revert" = "还原";
 "Settings sections" = "设置分区";
 "settings.pending.folder" = "保存位置有未应用的更改";
@@ -145,11 +139,9 @@
 "settings.update.available" = "可更新到版本 %@";
 "tray.update.available" = "有新版本 %@ 可用";
 "Convert received screenshots to PNG" = "将收到的截图转为 PNG";
-"settings.receiving.convertScreenshots.detail" = "收到可识别的非 PNG 截图时自动转换，其他照片保持原格式。";
 "Notifications" = "通知";
 "Notify when items arrive" = "收到新内容时通知我";
 "Allow AnyDock notifications in System Settings." = "请在系统设置中允许随手坞发送通知。";
-"Banners and sounds" = "横幅与声音";
 "System Settings…" = "系统设置…";
 "Open the tray when items arrive" = "收到新内容时自动展开托盘";
 "New item received" = "已收到新内容";

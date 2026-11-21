@@ -133,3 +133,72 @@ func receiveNotificationsRespectAuthorization() async {
     #expect(!preferences.receiveNotifications)
     #expect(permissions.requests == 2)
 }
+
+@MainActor
+@Test("首次启动仅请求一次通知权限：允许时自动开启通知，拒绝、未打包或已有设置不误改")
+func initialNotificationAuthorizationRunsOnceAndSyncsSettings() async {
+    let unbundledPermissions = FakeNotificationPermissions()
+    unbundledPermissions.denied = false
+    unbundledPermissions.canRequestAuthorization = false
+    let unbundledPreferences = FakePreferences()
+    let didRequestUnbundled = await ReceiveNotifications.requestInitialAuthorizationIfNeeded(
+        using: unbundledPermissions,
+        preferences: unbundledPreferences
+    )
+    #expect(!didRequestUnbundled)
+    #expect(unbundledPermissions.requests == 0)
+    #expect(!unbundledPreferences.hasRequestedNotificationPermission)
+    #expect(!unbundledPreferences.receiveNotifications)
+
+    let grantedPermissions = FakeNotificationPermissions()
+    grantedPermissions.denied = false
+    let grantedPreferences = FakePreferences()
+    let viewModel = makeGeneral(preferences: grantedPreferences, notifications: grantedPermissions)
+    let didRequestGranted = await ReceiveNotifications.requestInitialAuthorizationIfNeeded(
+        using: grantedPermissions,
+        preferences: grantedPreferences
+    )
+    #expect(didRequestGranted)
+    #expect(grantedPermissions.requests == 1)
+    #expect(grantedPreferences.hasRequestedNotificationPermission)
+    #expect(grantedPreferences.receiveNotifications)
+
+    grantedPermissions.authorizationChangeSubject.send()
+    for _ in 0 ..< 20 where !viewModel.state.receiveNotifications || viewModel.state.notificationsDenied {
+        await Task.yield()
+    }
+    #expect(viewModel.state.receiveNotifications)
+    #expect(!viewModel.state.notificationsDenied)
+
+    let didRequestSecondLaunch = await ReceiveNotifications.requestInitialAuthorizationIfNeeded(
+        using: grantedPermissions,
+        preferences: grantedPreferences
+    )
+    #expect(!didRequestSecondLaunch)
+    #expect(grantedPermissions.requests == 1)
+
+    let deniedPermissions = FakeNotificationPermissions()
+    deniedPermissions.denied = true
+    let deniedPreferences = FakePreferences()
+    let didRequestDenied = await ReceiveNotifications.requestInitialAuthorizationIfNeeded(
+        using: deniedPermissions,
+        preferences: deniedPreferences
+    )
+    #expect(didRequestDenied)
+    #expect(deniedPermissions.requests == 1)
+    #expect(deniedPreferences.hasRequestedNotificationPermission)
+    #expect(!deniedPreferences.receiveNotifications)
+
+    let existingPermissions = FakeNotificationPermissions()
+    existingPermissions.denied = false
+    let existingPreferences = FakePreferences()
+    existingPreferences.receiveNotifications = false
+    let didRequestExisting = await ReceiveNotifications.requestInitialAuthorizationIfNeeded(
+        using: existingPermissions,
+        preferences: existingPreferences
+    )
+    #expect(!didRequestExisting)
+    #expect(existingPermissions.requests == 0)
+    #expect(!existingPreferences.hasRequestedNotificationPermission)
+    #expect(!existingPreferences.receiveNotifications)
+}
