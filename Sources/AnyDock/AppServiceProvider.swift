@@ -71,6 +71,7 @@ final class AppServiceProvider {
 
     private func makeSettings() -> SettingsWindowController {
         let about = AboutInfo(bundle: .main)
+        let preferences = UserSettingsPreferences()
         let connection = ConnectionSettingsViewModel(
             receiver: inbox,
             host: SystemHostInformation(),
@@ -78,7 +79,7 @@ final class AppServiceProvider {
             pasteboard: SettingsPasteboardWriter()
         )
         let general = GeneralSettingsViewModel(
-            preferences: UserSettingsPreferences(),
+            preferences: preferences,
             loginItem: SystemLoginItem(),
             hotKeys: hotKeys,
             restarter: ApplicationRestarter(),
@@ -92,7 +93,7 @@ final class AppServiceProvider {
             ),
             general: general,
             connection: connection,
-            receiving: ReceivingSettingsViewModel(receiver: inbox)
+            receiving: ReceivingSettingsViewModel(receiver: inbox, preferences: preferences)
         )
     }
 

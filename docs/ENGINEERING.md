@@ -73,7 +73,7 @@ For shortcut generator changes, generate a placeholder-configured shortcut and h
 ## Naming and compatibility
 
 - Use `com.cuxiao.mac.anydock` for the bundle identifier, Logger subsystem and preferences domain. Product names are localized as AnyDock in English and 随手坞 in Simplified Chinese.
-- Preserve existing preference keys: `appearance`, `copyNewItems`, `keepClipboardHistory` and `wakeHotKey` (`keyCode` as a Carbon virtual key and `modifiers` as an `NSEvent.ModifierFlags` raw value limited to ⌃⌥⇧⌘). Language uses the app-local `AppleLanguages` key: `["en"]`, `["zh-Hans"]`, or removed for Follow System; never write the global value.
+- Preserve existing preference keys: `appearance`, `copyNewItems`, `keepClipboardHistory`, `convertScreenshotsToPNG` and `wakeHotKey` (`keyCode` as a Carbon virtual key and `modifiers` as an `NSEvent.ModifierFlags` raw value limited to ⌃⌥⇧⌘). Language uses the app-local `AppleLanguages` key: `["en"]`, `["zh-Hans"]`, or removed for Follow System; never write the global value.
 - The connection configuration file (`Application Support/AnyDock/configuration.json`) holds `ConnectionConfiguration`: `receiver` (port, token, receive folder) and `sender` (personalized shortcut name, saved only after a successful send). Never log configuration bytes or keys.
 - Received files use the `AnyDock-` prefix; only `AnyDock-` items are listed by `InboxStore.list`, and recycling uses that same set.
 - The `X-AnyDock-*` upload headers in [Upload protocol compatibility](PROJECT.md#upload-protocol-compatibility) are a compatibility contract with installed iPhone shortcuts; do not rename them.

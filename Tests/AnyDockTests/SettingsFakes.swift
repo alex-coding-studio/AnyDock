@@ -51,6 +51,7 @@ final class FakePreferences: SettingsPreferences {
     var language = AppLanguage.system
     var copiesNewItems = false
     var keepsClipboardHistory = true
+    var convertsScreenshotsToPNG = false
     var wakeHotKey: KeyCombination?
 }
 

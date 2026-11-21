@@ -40,6 +40,7 @@
         var language = AppLanguage.system
         var copiesNewItems = false
         var keepsClipboardHistory = true
+        var convertsScreenshotsToPNG = false
         var wakeHotKey = KeyCombination(keyCode: 49, modifiers: [.control, .option])
     }
 
@@ -102,7 +103,7 @@
         }
 
         static var receiving: ReceivingSettingsViewModel {
-            ReceivingSettingsViewModel(receiver: receiver)
+            ReceivingSettingsViewModel(receiver: receiver, preferences: PreviewPreferences())
         }
 
         static var settings: SettingsViewModel {

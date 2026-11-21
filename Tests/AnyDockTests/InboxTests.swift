@@ -46,7 +46,7 @@ func folderReadErrorClearsIndependentlyOfListener() async throws {
     )
     try manager.setAttributes([.posixPermissions: 0], ofItemAtPath: images.path)
     await inbox.reload()
-    let settings = ReceivingSettingsViewModel(receiver: inbox)
+    let settings = ReceivingSettingsViewModel(receiver: inbox, preferences: FakePreferences())
     #expect(settings.state.folderReadError != nil)
     #expect(settings.state.status == ListenerStatus(.starting))
     try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: images.path)

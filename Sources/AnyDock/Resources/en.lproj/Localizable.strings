@@ -144,3 +144,5 @@
 "New Version Available" = "New Version Available";
 "settings.update.available" = "Version %@ is available";
 "tray.update.available" = "New version %@ available";
+"Convert received screenshots to PNG" = "Convert received screenshots to PNG";
+"settings.receiving.convertScreenshots.detail" = "Converts recognizable non-PNG screenshots when received. Other photos keep their original format.";
