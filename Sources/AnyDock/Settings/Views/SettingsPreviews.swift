@@ -53,7 +53,12 @@
         var requiresApproval = false
         var isRegistered = true
         var canRestart = true
+        var canRequestAuthorization = true
         var computerName: String? = "MacBook Pro"
+
+        var authorizationChanges: AnyPublisher<Void, Never> {
+            Empty().eraseToAnyPublisher()
+        }
 
         func setEnabled(_: Bool) throws {}
 

@@ -10,6 +10,7 @@ enum Preferences {
         case appearance = "appearance"
         case convertScreenshotsToPNG = "convertScreenshotsToPNG"
         case copyNewItems = "copyNewItems"
+        case hasRequestedNotificationPermission = "hasRequestedNotificationPermission"
         case keepClipboardHistory = "keepClipboardHistory"
         case receiveNotifications = "receiveNotifications"
         case openTrayOnArrival = "openTrayOnArrival"
@@ -31,6 +32,15 @@ enum Preferences {
     static var receiveNotifications: Bool {
         get { defaults.bool(forKey: Key.receiveNotifications.rawValue) }
         set { defaults.set(newValue, forKey: Key.receiveNotifications.rawValue) }
+    }
+
+    static var hasReceiveNotificationsPreference: Bool {
+        defaults.object(forKey: Key.receiveNotifications.rawValue) != nil
+    }
+
+    static var hasRequestedNotificationPermission: Bool {
+        get { defaults.bool(forKey: Key.hasRequestedNotificationPermission.rawValue) }
+        set { defaults.set(newValue, forKey: Key.hasRequestedNotificationPermission.rawValue) }
     }
 
     static var opensTrayOnArrival: Bool {

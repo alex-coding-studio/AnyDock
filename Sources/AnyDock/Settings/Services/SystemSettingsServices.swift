@@ -4,7 +4,7 @@ import PockyFoundation
 import ServiceManagement
 
 @MainActor
-final class UserSettingsPreferences: SettingsPreferences {
+final class UserSettingsPreferences: SettingsPreferences, NotificationLaunchPreferences {
     private static let domain = "com.cuxiao.mac.anydock"
 
     var appearance: PKYAppearance.Mode {
@@ -23,6 +23,15 @@ final class UserSettingsPreferences: SettingsPreferences {
     var receiveNotifications: Bool {
         get { Preferences.receiveNotifications }
         set { Preferences.receiveNotifications = newValue }
+    }
+
+    var hasReceiveNotificationsPreference: Bool {
+        Preferences.hasReceiveNotificationsPreference
+    }
+
+    var hasRequestedNotificationPermission: Bool {
+        get { Preferences.hasRequestedNotificationPermission }
+        set { Preferences.hasRequestedNotificationPermission = newValue }
     }
 
     var opensTrayOnArrival: Bool {

@@ -14,10 +14,7 @@ struct GeneralSettingsView: View {
     }
 
     var body: some View {
-        SettingsPage(
-            title: SettingsSection.general.title,
-            subtitle: L10n.text("settings.general.subtitle")
-        ) {
+        SettingsPage(title: SettingsSection.general.title) {
             SettingsGroup(title: L10n.text("Appearance")) {
                 appearanceCard
                 SettingsMessageText(error: viewModel.state.restartMessage)
@@ -49,6 +46,8 @@ struct GeneralSettingsView: View {
 
     private var notificationGroup: some View {
         SettingsGroup(title: L10n.text("Notifications")) {
+            notificationSettingsLink
+        } content: {
             SettingsCard {
                 SettingsRow(
                     title: L10n.text("Notify when items arrive"),
@@ -68,16 +67,22 @@ struct GeneralSettingsView: View {
                     .labelsHidden()
                     .disabled(viewModel.state.requestingNotifications)
                 }
-                Divider()
-                SettingsRow(title: L10n.text("Banners and sounds")) {
-                    if let url = URL(
-                        string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
-                    ) {
-                        Link(L10n.text("System Settings…"), destination: url)
-                    }
-                }
             }
             SettingsMessageText(error: viewModel.state.notificationError)
+        }
+    }
+
+    @ViewBuilder
+    private var notificationSettingsLink: some View {
+        if let url = URL(
+            string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
+        ) {
+            Link(L10n.text("System Settings…"), destination: url)
+                .font(Font(PKYTypographyRole.supporting.nsFont(
+                    in: PKYThemeFallback.system,
+                    referenceSize: SettingsMetrics.compactLabelPointSize
+                )))
+                .padding(.trailing, PKYLayout.Gap.content(.compact))
         }
     }
 
@@ -163,10 +168,7 @@ struct GeneralSettingsView: View {
     }
 
     private var clipboardHistoryRow: some View {
-        SettingsRow(
-            title: L10n.text("Keep last 4 clipboard texts"),
-            detail: L10n.text("settings.clipboardHistory.note")
-        ) {
+        SettingsRow(title: L10n.text("Keep last 4 clipboard texts")) {
             Toggle(
                 L10n.text("Keep last 4 clipboard texts"),
                 isOn: Binding(

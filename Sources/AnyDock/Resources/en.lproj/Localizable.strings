@@ -5,7 +5,7 @@
 "Appearance" = "Appearance";
 "Apply" = "Apply";
 "Change…" = "Change…";
-"settings.folder.note" = "Changing folders does not move or delete received originals.";
+"settings.folder.note" = "Changing folders won’t move or delete existing files.";
 "shortcut.airdrop.choosePhone" = "Choose your own iPhone, then tap Add Shortcut after receiving the file.";
 "Connection" = "Connection";
 "Connection key" = "Connection key";
@@ -41,6 +41,7 @@
 "Nothing received yet" = "Nothing received yet";
 "One-step Setup" = "One-step Setup";
 "Open Folder" = "Open Folder";
+"Quit" = "Quit";
 "Quit AnyDock" = "Quit AnyDock";
 "Receive address" = "Receive address";
 "Receiver Failed" = "Receiver Failed";
@@ -52,7 +53,7 @@
 "Send to %@" = "Send to %@";
 "Send to Mac" = "Send to Mac";
 "Send to iPhone…" = "Send to iPhone…";
-"settings.shortcut.note" = "The shortcut contains your connection key, and system signing sends a copy to Apple for validation. Send it only to your own iPhone.";
+"settings.shortcut.note" = "Contains your key and is verified by Apple when signed. Send only to your own iPhone.";
 "Settings" = "Settings";
 "Settings…" = "Settings…";
 "Share content on your iPhone and choose your Mac’s shortcut." = "Share content on your iPhone and choose your Mac’s shortcut.";
@@ -83,8 +84,8 @@
 "Unable to restart AnyDock: %@" = "Unable to restart AnyDock: %@";
 "Unable to send the shortcut: %@" = "Unable to send the shortcut: %@";
 "Unapplied changes" = "Unapplied changes";
-"settings.port.note" = "Resend the iPhone shortcut after changing the port.";
-"settings.manual.note" = "Use only on a trusted LAN; HTTP is not encrypted. Enter the address and key when importing the generic shortcut.";
+"settings.port.note" = "Resend the shortcut after changing the port.";
+"settings.manual.note" = "Trusted LAN only — HTTP is not encrypted.";
 "shortcut.name.normalized" = "Will use “%@”. Leading and trailing spaces are removed; / and : become -.";
 "configuration.recovery" = "Your configuration has not been changed. Check Application Support/AnyDock and restart.";
 "[redacted]" = "[redacted]";
@@ -105,8 +106,7 @@
 "New %@: %@, %@" = "New %1$@: %2$@, %3$@";
 "%@: %@, %@" = "%1$@: %2$@, %3$@";
 "meta_separator" = "%1$@ · %2$@";
-"settings.clipboardHistory.note" = "Memory only, cleared on quit.";
-"Keep last 4 clipboard texts" = "Keep last 4 clipboard texts";
+"Keep last 4 clipboard texts" = "Cache last 4 clipboard texts";
 "Clear" = "Clear";
 "clipboard_expanded_title" = "Clipboard · Double-click to copy";
 "Collapse Clipboard" = "Collapse Clipboard";
@@ -126,15 +126,9 @@
 "GitHub Project" = "GitHub Project";
 "Author @Cunqi" = "Author @Cunqi";
 "about.copyright" = "© 2026 Cunqi · MIT License";
-"settings.general.subtitle" = "Appearance, tray behaviour and how to wake AnyDock";
-"settings.connection.subtitle" = "Connect your iPhone to this Mac in one step";
-"settings.receiving.subtitle" = "Where content is saved and which port receives it";
 "Startup & Keyboard" = "Startup & Keyboard";
-"settings.oneStep.description" = "AirDrop a personal shortcut to your iPhone. Open it to add it; there is no address or key to enter.";
+"settings.oneStep.description" = "AirDrop a ready-to-use shortcut to your iPhone.";
 "Listening on port %@" = "Listening on port %@";
-"settings.receiving.listening.detail" = "Content from your iPhone is saved straight into the folder below.";
-"Sorted by type" = "Sorted by type";
-"settings.port.range" = "1024–65535";
 "Revert" = "Revert";
 "Settings sections" = "Settings sections";
 "settings.pending.folder" = "Save location has unapplied changes";
@@ -145,11 +139,9 @@
 "settings.update.available" = "Version %@ is available";
 "tray.update.available" = "New version %@ available";
 "Convert received screenshots to PNG" = "Convert received screenshots to PNG";
-"settings.receiving.convertScreenshots.detail" = "Converts recognizable non-PNG screenshots when received. Other photos keep their original format.";
 "Notifications" = "Notifications";
 "Notify when items arrive" = "Notify when items arrive";
 "Allow AnyDock notifications in System Settings." = "Allow AnyDock notifications in System Settings.";
-"Banners and sounds" = "Banners and sounds";
 "System Settings…" = "System Settings…";
 "Open the tray when items arrive" = "Open the tray when items arrive";
 "New item received" = "New item received";

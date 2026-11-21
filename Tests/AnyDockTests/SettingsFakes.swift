@@ -46,10 +46,15 @@ final class FakeReceiver: ReceiverSettings {
 }
 
 @MainActor
-final class FakePreferences: SettingsPreferences {
+final class FakePreferences: SettingsPreferences, NotificationLaunchPreferences {
     var appearance = PKYAppearance.Mode.system
     var language = AppLanguage.system
-    var receiveNotifications = false
+    var receiveNotifications = false {
+        didSet { hasReceiveNotificationsPreference = true }
+    }
+
+    var hasReceiveNotificationsPreference = false
+    var hasRequestedNotificationPermission = false
     var opensTrayOnArrival = true
     var copiesNewItems = false
     var keepsClipboardHistory = true
@@ -59,8 +64,14 @@ final class FakePreferences: SettingsPreferences {
 
 @MainActor
 final class FakeNotificationPermissions: NotificationAuthorizing {
+    let authorizationChangeSubject = PassthroughSubject<Void, Never>()
+    var canRequestAuthorization = true
     var denied = true
     var requests = 0
+
+    var authorizationChanges: AnyPublisher<Void, Never> {
+        authorizationChangeSubject.eraseToAnyPublisher()
+    }
 
     func isDenied() async -> Bool {
         denied

@@ -12,17 +12,14 @@ struct ConnectionSettingsView: View {
     }
 
     var body: some View {
-        SettingsPage(
-            title: SettingsSection.connection.title,
-            subtitle: L10n.text("settings.connection.subtitle")
-        ) {
+        SettingsPage(title: SettingsSection.connection.title) {
             VStack(alignment: .leading, spacing: PKYLayout.Gap.content()) {
                 hero
                 SettingsMessageText(viewModel.state.message)
             }
             SettingsGroup(title: L10n.text("Manual Setup")) {
                 manualCard
-                SettingsNote(symbol: "shield", text: L10n.text("settings.manual.note"))
+                SettingsNote(text: L10n.text("settings.manual.note"))
                     .padding(.horizontal, PKYLayout.Gap.content(.compact))
             }
         }
@@ -62,7 +59,7 @@ struct ConnectionSettingsView: View {
                     .controlSize(.large)
                     SettingsMessageText(viewModel.state.nameMessage)
                 }
-                SettingsNote(symbol: "lock", text: L10n.text("settings.shortcut.note"))
+                SettingsNote(text: L10n.text("settings.shortcut.note"))
             }
         }
         .padding(PKYLayout.Inset.container(.wide))

@@ -16,15 +16,12 @@ struct ReceivingSettingsView: View {
     }
 
     var body: some View {
-        SettingsPage(
-            title: SettingsSection.receiving.title,
-            subtitle: L10n.text("settings.receiving.subtitle")
-        ) {
+        SettingsPage(title: SettingsSection.receiving.title) {
             statusBanner
             SettingsGroup(title: L10n.text("Save Location")) {
                 folderCard
                 SettingsMessageText(error: viewModel.state.folderReadError)
-                SettingsNote(symbol: "info.circle", text: L10n.text("settings.folder.note"))
+                SettingsNote(text: L10n.text("settings.folder.note"))
                     .padding(.horizontal, PKYLayout.Gap.content(.compact))
             }
             SettingsGroup(title: L10n.text("Images")) {
@@ -111,29 +108,15 @@ struct ReceivingSettingsView: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button(L10n.text("Show in Finder"), action: showInFinder)
-                    .settingsButton(.secondary)
                 Button(L10n.text("Change…"), action: chooseFolder)
                     .settingsButton(.secondary)
-            }
-            HStack(spacing: PKYLayout.Gap.content()) {
-                Text(L10n.text("Sorted by type"))
-                    .font(typography.supporting.font)
-                    .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
-                ForEach(ReceivedKind.allCases, id: \.self) { kind in
-                    SettingsChip(kind: kind)
-                        .help(kind.directoryName + "/")
-                }
             }
         }
     }
 
     private var imagesCard: some View {
         SettingsCard {
-            SettingsRow(
-                title: L10n.text("Convert received screenshots to PNG"),
-                detail: L10n.text("settings.receiving.convertScreenshots.detail")
-            ) {
+            SettingsRow(title: L10n.text("Convert received screenshots to PNG")) {
                 Toggle(
                     L10n.text("Convert received screenshots to PNG"),
                     isOn: Binding(
@@ -151,11 +134,7 @@ struct ReceivingSettingsView: View {
         SettingsCard {
             SettingsRow(
                 title: L10n.text("Listening port"),
-                detail: L10n.text(
-                    "meta_separator",
-                    L10n.text("settings.port.range"),
-                    L10n.text("settings.port.note")
-                )
+                detail: L10n.text("settings.port.note")
             ) {
                 TextField(
                     String(ConnectionConfiguration.Receiver.defaultPort),
@@ -194,10 +173,6 @@ struct ReceivingSettingsView: View {
         .padding(.horizontal, PKYLayout.Inset.page(.wide))
         .background(.bar)
         .overlay(alignment: .top) { Divider() }
-    }
-
-    private func showInFinder() {
-        NSWorkspace.shared.activateFileViewerSelecting([viewModel.state.folder])
     }
 
     private func chooseFolder() {

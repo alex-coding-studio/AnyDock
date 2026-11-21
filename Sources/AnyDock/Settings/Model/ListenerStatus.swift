@@ -21,7 +21,7 @@ struct ListenerStatus: Equatable {
             tone = .listening
             summary = L10n.text("Listening · %@", String(port))
             title = L10n.text("Listening on port %@", String(port))
-            detail = L10n.text("settings.receiving.listening.detail")
+            detail = ""
         case let .failed(message):
             tone = .failed
             summary = L10n.text("Receiver Failed")

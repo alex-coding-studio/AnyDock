@@ -13,18 +13,10 @@ struct AboutSettingsView: View {
                 .padding(.top, SettingsMetrics.aboutIconTopOffset)
             Spacer(minLength: PKYLayout.Gap.section())
             Divider()
-            HStack {
-                Text(L10n.text("about.copyright"))
-                    .font(typography.supporting.font)
-                    .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
-                Spacer()
-                Button(action: { NSApp.terminate(nil) }) {
-                    Text(L10n.text("Quit AnyDock"))
-                        .foregroundStyle(Color(nsColor: .pkyStatus(.destructive)))
-                }
-                .settingsButton(.secondary)
-            }
-            .padding(.vertical, PKYLayout.Inset.page())
+            Text(L10n.text("about.copyright"))
+                .font(typography.supporting.font)
+                .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
+                .padding(.vertical, PKYLayout.Inset.page())
         }
         .padding(.horizontal, PKYLayout.Inset.page(.wide))
         .padding(.top, PKYLayout.Inset.page(.wide))

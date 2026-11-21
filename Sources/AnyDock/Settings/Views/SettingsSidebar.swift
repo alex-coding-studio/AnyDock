@@ -1,3 +1,4 @@
+import AppKit
 import PockyFoundation
 import SwiftUI
 
@@ -18,15 +19,8 @@ struct SettingsSidebar: View {
             header
             navigation
             Spacer(minLength: 0)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: PKYLayout.Gap.content()) {
-                    footer
-                }
-                VStack(alignment: .leading, spacing: PKYLayout.Gap.content()) {
-                    footer
-                }
-            }
-            .padding(.horizontal, PKYLayout.Inset.control.horizontal())
+            footer
+                .padding(.horizontal, PKYLayout.Inset.control.horizontal())
         }
         .padding(.horizontal, PKYLayout.Inset.row.horizontal(.compact))
         .padding(.top, PKYLayout.Gap.content())
@@ -34,21 +28,35 @@ struct SettingsSidebar: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    @ViewBuilder
     private var footer: some View {
-        if let version = viewModel.about.version {
-            Text(version)
-                .font(typography.supporting.font)
-                .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
-                .fixedSize()
-        }
-        if let update = viewModel.availableUpdate {
-            Button(L10n.text("New Version Available"), action: viewModel.checkForUpdates)
-                .settingsButton(.primary)
-                .buttonBorderShape(.capsule)
+        VStack(alignment: .leading, spacing: PKYLayout.Gap.content()) {
+            if let update = viewModel.availableUpdate {
+                Button(L10n.text("New Version Available"), action: viewModel.checkForUpdates)
+                    .settingsButton(.primary)
+                    .buttonBorderShape(.capsule)
+                    .controlSize(.small)
+                    .fixedSize()
+                    .help(L10n.text("settings.update.available", update))
+            }
+            HStack(spacing: PKYLayout.Gap.content()) {
+                if let version = viewModel.about.version {
+                    Text(version)
+                        .font(typography.supporting.font)
+                        .foregroundStyle(Color(nsColor: .pkyContent(.secondary)))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                Spacer(minLength: 0)
+                Button(action: { NSApp.terminate(nil) }) {
+                    Text(L10n.text("Quit"))
+                        .foregroundStyle(Color(nsColor: .pkyStatus(.destructive)))
+                }
+                .settingsButton(.secondary)
                 .controlSize(.small)
                 .fixedSize()
-                .help(L10n.text("settings.update.available", update))
+                .help(L10n.text("Quit AnyDock"))
+                .accessibilityLabel(L10n.text("Quit AnyDock"))
+            }
         }
     }
 
